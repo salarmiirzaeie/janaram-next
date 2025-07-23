@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 const Header: React.FC = () => {
@@ -35,9 +36,11 @@ const Header: React.FC = () => {
           <a href="#وبلاگ" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
             وبلاگ
           </a>
-          <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg">
-            دانلود
-          </button>
+          <Link href={"https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"}>
+            <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg">
+              دانلود
+            </button>
+          </Link>
         </nav>
 
         {/* Mobile Menu Button (Hamburger Icon) */}
@@ -103,9 +106,11 @@ const Header: React.FC = () => {
             >
               وبلاگ
             </a>
-            <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg w-fit">
-              دانلود
-            </button>
+            <Link href={"https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"}>
+              <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg w-fit">
+                دانلود
+              </button>
+            </Link>
           </div>
         </nav>
       </header>

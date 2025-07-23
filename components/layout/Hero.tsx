@@ -1,4 +1,5 @@
 // components/HeroSection.tsx
+import Link from "next/link";
 import React from "react";
 
 const HeroSection: React.FC = () => {
@@ -20,9 +21,11 @@ const HeroSection: React.FC = () => {
         </p>
 
         {/* Call to Action Button */}
-        <button className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
-          دانلود
-        </button>
+        <Link href={"https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"}>
+          <button className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+            دانلود
+          </button>
+        </Link>
       </div>
     </section>
   );
