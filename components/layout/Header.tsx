@@ -18,7 +18,7 @@ const Header: React.FC = () => {
         <div className="flex items-center z-10">
           {/* Using an SVG for a simple logo icon */}
           <Image src="/logo.webp" alt="Logo" width={60} height={60} />
-          <span className="text-xl font-semibold text-gray-800">YourApp</span>
+          <span className="text-xl font-semibold text-gray-800">جانارام</span>
         </div>
 
         {/* Desktop Navigation */}
