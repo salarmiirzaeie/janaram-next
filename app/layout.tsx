@@ -15,6 +15,21 @@ const iranSans = localFont({
   ],
   variable: "--font-iransans",
 });
+const vazir = localFont({
+  src: [
+    {
+      path: "../public/fonts/vazir-bold.ttf",
+      weight: "700",
+      style: "bold",
+    },
+    {
+      path: "../public/fonts/vazir-medium.ttf",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-vazir",
+});
 
 export const metadata: Metadata = {
   title: "جانارام | اپلیکیشن مدیتیشن و آرامش ذهن",
@@ -29,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${iranSans.variable}  antialiased`}>
+      <body className={`${iranSans.variable} ${vazir.variable}  antialiased`}>
         <Header />
 
         {children}

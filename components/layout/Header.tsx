@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { Link as LinkScroll } from "react-scroll";
 
 const Header: React.FC = () => {
   // State to manage the visibility of the mobile menu
@@ -27,20 +28,28 @@ const Header: React.FC = () => {
           <a href="#تماس با ما" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
             تماس با ما
           </a>
-          <a href="#سوالات متداول" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
-            سوالات متداول
-          </a>
+          <LinkScroll
+            className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
+            to="faqSection"
+            offset={-100}
+            spy={true}
+            smooth={true}
+            duration={500}
+          >
+            <button>سوالات متداول</button>
+          </LinkScroll>
+
           <a href="#نظرات" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
             نظرات
           </a>
           <a href="#وبلاگ" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
             وبلاگ
           </a>
-          <Link href={"https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"}>
+          <LinkScroll to="downloadSection" spy={true} smooth={true} offset={-100} duration={500}>
             <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg">
               دانلود
             </button>
-          </Link>
+          </LinkScroll>
         </nav>
 
         {/* Mobile Menu Button (Hamburger Icon) */}
@@ -85,13 +94,17 @@ const Header: React.FC = () => {
             >
               تماس با ما
             </a>
-            <a
-              href="#سوالات متداول"
+            <LinkScroll
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-              onClick={toggleMobileMenu}
+              to="faqSection"
+              offset={-100}
+              spy={true}
+              smooth={true}
+              duration={500}
             >
-              سوالات متداول
-            </a>
+              <button>سوالات متداول</button>
+            </LinkScroll>
+
             <a
               href="#نظرات"
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
@@ -106,11 +119,11 @@ const Header: React.FC = () => {
             >
               وبلاگ
             </a>
-            <Link href={"https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"}>
+            <LinkScroll to="downloadSection" offset={-100} spy={true} smooth={true} duration={500}>
               <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg w-fit">
                 دانلود
               </button>
-            </Link>
+            </LinkScroll>
           </div>
         </nav>
       </header>
