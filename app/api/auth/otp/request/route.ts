@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     // Generate 6-digit OTP using crypto
     const otp = (randomBytes(3).readUIntBE(0, 3) % 1000000).toString().padStart(6, "0");
     const expiresAt = Date.now() + 2 * 60 * 1000; // 2-minute expiry
+    const today = new Date().toISOString().split("T")[0]; // Current date for conversation tracking
 
     const db = (await clientPromise).db("janaram-db");
 
@@ -55,8 +56,8 @@ export async function POST(req: Request) {
         "https://api.sms.ir/v1/send/verify",
         {
           mobile: phoneNumber,
-          templateId: 123456,
-          parameters: [{ name: "Code", value: "000000" }],
+          templateId: 371815,
+          parameters: [{ name: "Code", value: otp }],
         },
         {
           headers: {

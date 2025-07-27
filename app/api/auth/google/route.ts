@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 import clientPromise from "@/lib/mongodb";
+import { User } from "@/lib/types/user";
 
 // Initialize Google OAuth client once
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_WEB_CLIENT_ID;
@@ -32,16 +33,18 @@ export async function POST(req: Request) {
     }
 
     const db = (await clientPromise).db("janaram-db");
-    const users = db.collection("users");
+    const users = db.collection<User>("users");
 
     // Find user by googleId or email
-    let user = await users.findOne({
+    let user: User | null = await users.findOne({
       $or: [{ googleId: payload.sub }, { email: payload.email }],
     });
 
+    const today = new Date().toISOString().split("T")[0]; // Current date for conversation tracking
+
     if (!user) {
       // Check if email is linked to an OTP user
-      const otpUser = await users.findOne({ email: payload.email });
+      const otpUser: User | null = await users.findOne({ email: payload.email });
       if (otpUser) {
         // Link Google account to existing OTP user
         await users.updateOne(
@@ -51,6 +54,8 @@ export async function POST(req: Request) {
               googleId: payload.sub,
               name: payload.name,
               picture: payload.picture,
+              plan: otpUser.plan || "free",
+              conversationCount: otpUser.conversationCount || { date: today, count: 0 },
               updatedAt: new Date(),
             },
           }
@@ -58,19 +63,22 @@ export async function POST(req: Request) {
         user = {
           ...otpUser,
           googleId: payload.sub,
-          name: payload.name,
-          picture: payload.picture,
+          name: payload.name || null,
+          picture: payload.picture || null,
+          plan: otpUser.plan || "free",
+          conversationCount: otpUser.conversationCount || { date: today, count: 0 },
           updatedAt: new Date(),
         };
       } else {
         // Create new user
-        const newUser = {
+        const newUser: Omit<User, "_id"> = {
           phoneNumber: null,
-          email: payload.email,
+          email: payload.email || null,
           googleId: payload.sub,
-          name: payload.name,
-          picture: payload.picture,
+          name: payload.name || null,
+          picture: payload.picture || null,
           plan: "free",
+          conversationCount: { date: today, count: 0 },
           createdAt: new Date(),
           updatedAt: null,
         };
@@ -87,6 +95,8 @@ export async function POST(req: Request) {
             email: payload.email,
             name: payload.name,
             picture: payload.picture,
+            plan: user.plan || "free",
+            conversationCount: user.conversationCount || { date: today, count: 0 },
             updatedAt: new Date(),
           },
         }
@@ -94,9 +104,11 @@ export async function POST(req: Request) {
       user = {
         ...user,
         googleId: payload.sub,
-        email: payload.email,
-        name: payload.name,
-        picture: payload.picture,
+        email: payload.email || null,
+        name: payload.name || null,
+        picture: payload.picture || null,
+        plan: user.plan || "free",
+        conversationCount: user.conversationCount || { date: today, count: 0 },
         updatedAt: new Date(),
       };
     }
@@ -104,7 +116,7 @@ export async function POST(req: Request) {
     // Generate JWT
     const jwtToken = jwt.sign(
       {
-        sub: user._id.toString(),
+        sub: user._id!.toString(), // Non-null assertion since _id is set
         phoneNumber: user.phoneNumber,
         email: user.email,
         plan: user.plan,

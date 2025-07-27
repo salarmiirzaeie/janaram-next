@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import jwt from "jsonwebtoken";
+import { User } from "@/lib/types/user";
 
 // Environment variable validation
 const JWT_SECRET = process.env.JWT_SECRET || "";
@@ -40,12 +41,14 @@ export async function POST(req: Request) {
     await db.collection("otp_codes").updateOne({ _id: otpRecord._id }, { $set: { verified: true } });
 
     // Register or login user
-    const users = db.collection("users");
-    let user = await users.findOne({ phoneNumber });
+    const users = db.collection<User>("users");
+    let user: User | null = await users.findOne({ phoneNumber });
+
+    const today = new Date().toISOString().split("T")[0]; // Current date for conversation tracking
 
     if (!user) {
       // Check if phoneNumber is linked to a Google user
-      const googleUser = await users.findOne({ phoneNumber });
+      const googleUser: User | null = await users.findOne({ phoneNumber });
       if (googleUser) {
         // Link OTP to existing Google user
         await users.updateOne(
@@ -53,20 +56,29 @@ export async function POST(req: Request) {
           {
             $set: {
               phoneNumber,
+              plan: googleUser.plan || "free",
+              conversationCount: googleUser.conversationCount || { date: today, count: 0 },
               updatedAt: new Date(),
             },
           }
         );
-        user = { ...googleUser, phoneNumber, updatedAt: new Date() };
+        user = {
+          ...googleUser,
+          phoneNumber,
+          plan: googleUser.plan || "free",
+          conversationCount: googleUser.conversationCount || { date: today, count: 0 },
+          updatedAt: new Date(),
+        };
       } else {
         // Create new user
-        const newUser = {
+        const newUser: Omit<User, "_id"> = {
           phoneNumber,
           email: null,
           googleId: null,
           name: null,
           picture: null,
           plan: "free",
+          conversationCount: { date: today, count: 0 },
           createdAt: new Date(),
           updatedAt: null,
         };
@@ -75,14 +87,28 @@ export async function POST(req: Request) {
       }
     } else {
       // Update existing user
-      await users.updateOne({ _id: user._id }, { $set: { updatedAt: new Date() } });
-      user.updatedAt = new Date();
+      await users.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            updatedAt: new Date(),
+            plan: user.plan || "free",
+            conversationCount: user.conversationCount || { date: today, count: 0 },
+          },
+        }
+      );
+      user = {
+        ...user,
+        updatedAt: new Date(),
+        plan: user.plan || "free",
+        conversationCount: user.conversationCount || { date: today, count: 0 },
+      };
     }
 
     // Generate JWT
     const token = jwt.sign(
       {
-        sub: user._id.toString(),
+        sub: user._id!.toString(), // Non-null assertion since _id is set
         phoneNumber: user.phoneNumber,
         email: user.email,
         plan: user.plan,
