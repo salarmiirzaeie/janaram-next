@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 import { Element } from "react-scroll";
 
@@ -17,9 +18,9 @@ const DownloadSection = () => {
             </h2>
             <p className="text-center"> اپلیکیشن اندروید جانارام را می‌توانید از مسیر‌های‌ زیر دریافت نمایید</p>
             <div className="flex flex-col md:flex-row mx-auto mb-8 items-center justify-center gap-2 mt-8">
-              <div className="">
+              <Link href={"https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"} className="">
                 <Image src="/bazarDownload.png" alt="Bazar Download" width={200} height={100} />
-              </div>
+              </Link>
               <div className="">
                 <Image src="/directInstall.png" alt="Direct Install" width={200} height={100} />
               </div>

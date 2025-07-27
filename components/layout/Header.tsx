@@ -25,9 +25,16 @@ const Header: React.FC = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center space-x-6  z-10">
-          <a href="#تماس با ما" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
-            تماس با ما
-          </a>
+          <LinkScroll
+            className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
+            to="quoteForm"
+            offset={-100}
+            spy={true}
+            smooth={true}
+            duration={500}
+          >
+            <button>تماس با ما</button>
+          </LinkScroll>
           <LinkScroll
             className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
             to="faqSection"
@@ -39,12 +46,20 @@ const Header: React.FC = () => {
             <button>سوالات متداول</button>
           </LinkScroll>
 
-          <a href="#نظرات" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
-            نظرات
-          </a>
+          <LinkScroll
+            className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
+            to="reviewSection"
+            offset={-100}
+            spy={true}
+            smooth={true}
+            duration={500}
+          >
+            <button>نظرات</button>
+          </LinkScroll>
+          {/*           
           <a href="#وبلاگ" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
             وبلاگ
-          </a>
+          </a> */}
           <LinkScroll to="downloadSection" spy={true} smooth={true} offset={-100} duration={500}>
             <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg">
               دانلود
@@ -87,13 +102,16 @@ const Header: React.FC = () => {
           style={{ zIndex: 40 }} // Ensure it's below the header but above other content
         >
           <div className="flex flex-col items-center py-4 space-y-4">
-            <a
-              href="#تماس با ما"
+            <LinkScroll
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-              onClick={toggleMobileMenu}
+              to="quoteForm"
+              offset={-100}
+              spy={true}
+              smooth={true}
+              duration={500}
             >
-              تماس با ما
-            </a>
+              <button>تماس با ما</button>
+            </LinkScroll>
             <LinkScroll
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
               to="faqSection"
@@ -105,20 +123,23 @@ const Header: React.FC = () => {
               <button>سوالات متداول</button>
             </LinkScroll>
 
-            <a
-              href="#نظرات"
+            <LinkScroll
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-              onClick={toggleMobileMenu}
+              to="reviewSection"
+              offset={-100}
+              spy={true}
+              smooth={true}
+              duration={500}
             >
-              نظرات
-            </a>
-            <a
+              <button>نظرات</button>
+            </LinkScroll>
+            {/* <a
               href="#وبلاگ"
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
               onClick={toggleMobileMenu}
             >
               وبلاگ
-            </a>
+            </a> */}
             <LinkScroll to="downloadSection" offset={-100} spy={true} smooth={true} duration={500}>
               <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg w-fit">
                 دانلود

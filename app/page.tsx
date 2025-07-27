@@ -3,8 +3,9 @@ import BlogSection from "@/components/home/BlogSection";
 import DownloadSection from "@/components/home/DownloadSection";
 import FAQSection from "@/components/home/Faq";
 import Hero from "@/components/home/Hero";
-import Image from "next/image";
 import React from "react";
+import QuoteForm from "@/components/home/QuoteForm";
+import CustomerReviewsSection from "@/components/home/Reviews";
 
 const page = () => {
   return (
@@ -13,8 +14,10 @@ const page = () => {
 
       <About />
       <DownloadSection />
-      <BlogSection />
+      {/* <BlogSection /> */}
+      <CustomerReviewsSection />
       <FAQSection />
+      <QuoteForm />
     </div>
   );
 };
