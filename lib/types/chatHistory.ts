@@ -4,11 +4,7 @@ export interface ChatHistory {
   _id?: ObjectId;
   userId: ObjectId;
   conversationId: string;
-  messages: {
-    role: "user" | "assistant";
-    content: string;
-    timestamp: Date;
-  }[];
+  messages: { role: "user" | "assistant"; content: string; timestamp: Date }[];
   createdAt: Date;
   updatedAt: Date;
 }
