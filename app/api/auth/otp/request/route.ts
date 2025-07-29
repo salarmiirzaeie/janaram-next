@@ -4,7 +4,7 @@ import axios from "axios";
 import { randomBytes } from "crypto";
 
 // Environment variable validation
-const SMS_API_KEY = process.env.SMS_API_KEY_TEST || "";
+const SMS_API_KEY = process.env.SMS_API_KEY_PRO || "";
 if (!SMS_API_KEY) throw new Error("SMS_API_KEY_TEST is not defined");
 
 // Phone number validation (example for Iranian numbers)
