@@ -16,7 +16,7 @@ const Header: React.FC = () => {
   return (
     <div
       style={{ backgroundImage: "url('/hero-bg.webp')", backgroundSize: "cover", backgroundPosition: "center" }}
-      className="h-[100vh] absolute top-0 left-0 w-full z-0"
+      className="min-h-screen  top-0 left-0 w-full z-0"
     >
       <div className="px-4 pt-4 lg:pt-8">
         <header className="relative bg-white w-full max-w-4xl mx-auto   rounded-xl  px-4 py-1 flex items-center justify-between z-50">
