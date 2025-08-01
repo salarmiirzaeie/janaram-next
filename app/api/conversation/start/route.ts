@@ -106,7 +106,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
 
     // فراخوانی API DeepSeek
     const completion = await client.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3-0324",
+      model: "deepseek/deepseek-chat-v3-0324:free",
       messages,
     });
 

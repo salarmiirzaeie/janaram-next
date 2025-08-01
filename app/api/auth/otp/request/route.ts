@@ -76,7 +76,6 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       message: "کد تایید ارسال شد",
-      otp,
     });
   } catch (err: any) {
     console.error("Error in OTP sending:", err);
