@@ -45,7 +45,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
 
     return NextResponse.json({
       success: true,
-      message: "طرح شما با موفقیت به unlimited ارتقا یافت",
+      message: "طرح شما با موفقیت به نامحدود ارتقا یافت",
     });
   } catch (err: any) {
     console.error("خطا در ارتقای طرح:", err);

@@ -5,26 +5,33 @@ import { randomBytes } from "crypto";
 
 // Environment variable validation
 const SMS_API_KEY = process.env.SMS_API_KEY_PRO || "";
-if (!SMS_API_KEY) throw new Error("SMS_API_KEY_TEST is not defined");
+if (!SMS_API_KEY) throw new Error("SMS_API_KEY_PRO is not defined");
 
-// Phone number validation (example for Iranian numbers)
+// Phone number validation (for Iranian numbers)
 const validatePhoneNumber = (phone: string): boolean => {
   return /^(\+98|0)?9\d{9}$/.test(phone);
 };
 
+// App hash validation (11 characters or null)
+const validateAppHash = (appHash: string | null): boolean => {
+  return appHash === null || (typeof appHash === "string" && appHash.length === 11);
+};
+
 export async function POST(req: Request) {
   try {
-    const { phoneNumber } = await req.json();
+    const { phoneNumber, appHash } = await req.json();
 
     // Input validation
     if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
       return NextResponse.json({ success: false, message: "شماره تلفن نامعتبر است" }, { status: 400 });
     }
+    if (!validateAppHash(appHash)) {
+      return NextResponse.json({ success: false, message: "مقدار appHash نامعتبر است" }, { status: 400 });
+    }
 
     // Generate 6-digit OTP using crypto
     const otp = (randomBytes(3).readUIntBE(0, 3) % 1000000).toString().padStart(6, "0");
     const expiresAt = Date.now() + 2 * 60 * 1000; // 2-minute expiry
-    const today = new Date().toISOString().split("T")[0]; // Current date for conversation tracking
 
     const db = (await clientPromise).db("janaram-db");
 
@@ -50,14 +57,19 @@ export async function POST(req: Request) {
       verified: false,
     });
 
-    // Send OTP via SMS
+    // Send OTP via SMS.ir
     try {
+      const smsParameters = [{ name: "Code", value: otp }];
+      if (appHash) {
+        smsParameters.push({ name: "Hash", value: appHash });
+      }
+
       const smsResponse = await axios.post(
         "https://api.sms.ir/v1/send/verify",
         {
           mobile: phoneNumber,
-          templateId: 371815,
-          parameters: [{ name: "Code", value: otp }],
+          templateId: 371815, // Ensure this template supports Code and AppHash
+          parameters: smsParameters,
         },
         {
           headers: {
