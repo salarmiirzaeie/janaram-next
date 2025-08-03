@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
     // Generate 6-digit OTP using crypto
     const otp = (randomBytes(3).readUIntBE(0, 3) % 1000000).toString().padStart(6, "0");
-    const expiresAt = Date.now() + 2 * 60 * 1000; // 2-minute expiry
+    const expiresAt = Date.now() + 4 * 60 * 1000; // 2-minute expiry
 
     const db = (await clientPromise).db("janaram-db");
 
