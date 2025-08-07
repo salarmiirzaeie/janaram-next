@@ -58,7 +58,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         ],
         isActive: userDoc.plan === "unlimited",
         id: "123456",
-        price: 299000,
+        price: 29000,
       },
     ];
 
