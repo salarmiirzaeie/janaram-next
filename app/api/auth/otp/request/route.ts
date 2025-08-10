@@ -72,7 +72,8 @@ export async function POST(req: Request) {
     const from = "";
     const text = `
     
-    کد تایید شما:${otp}/n
+    کد تایید شما:${otp}
+    
     تیم جانارام ${appHash ? appHash : ""}
     `;
     // Send OTP via SMS.ir
