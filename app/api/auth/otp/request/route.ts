@@ -70,12 +70,9 @@ export async function POST(req: Request) {
     const sms = api.sms();
     const to = phoneNumber;
     const from = "";
-    const text = `
-    
-    کد تایید شما:${otp}
-    
-    تیم جانارام ${appHash ? appHash : ""}
-    `;
+    const text = `کد تایید شما: ${otp}
+
+    تیم جانارام ${appHash ? appHash : ""}`;
     // Send OTP via SMS.ir
     try {
       // const smsResponse = await axios.post(
