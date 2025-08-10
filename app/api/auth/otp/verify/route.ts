@@ -17,7 +17,7 @@ const validateOtp = (otp: string): boolean => {
 
 export async function POST(req: Request) {
   try {
-    const { phoneNumber, code: otp } = await req.json();
+    const { phoneNumber, code: otp, name } = await req.json();
     console.log(phoneNumber, otp, "req");
 
     // Input validation
@@ -56,6 +56,7 @@ export async function POST(req: Request) {
           {
             $set: {
               phoneNumber,
+              name: name || "",
               plan: googleUser.plan || "free",
               conversationCount: googleUser.conversationCount || { date: today, count: 0 },
               updatedAt: new Date(),
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
         user = {
           ...googleUser,
           phoneNumber,
+          name: name || "",
           plan: googleUser.plan || "free",
           conversationCount: googleUser.conversationCount || { date: today, count: 0 },
           updatedAt: new Date(),
@@ -75,7 +77,7 @@ export async function POST(req: Request) {
           phoneNumber,
           email: null,
           googleId: null,
-          name: null,
+          name: name || null,
           picture: null,
           plan: "free",
           conversationCount: { date: today, count: 0 },
