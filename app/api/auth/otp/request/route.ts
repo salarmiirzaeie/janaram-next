@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import axios from "axios";
 import { randomBytes } from "crypto";
+const MelipayamakApi = require("melipayamak");
 
 // Environment variable validation
 const SMS_API_KEY = process.env.SMS_API_KEY_PRO || "";
@@ -63,30 +64,46 @@ export async function POST(req: Request) {
     if (appHash) {
       smsParameters.push({ name: "Hash", value: appHash });
     }
-
+    const username = "9381811680";
+    const password = "BO2A4";
+    const api = new MelipayamakApi(username, password);
+    const sms = api.sms();
+    const to = phoneNumber;
+    const from = "";
+    const text = `کد تایید\n این کد محرمانه است. برای دیگران نفرستید${appHash}:${otp}`;
     // Send OTP via SMS.ir
     try {
-      const smsResponse = await axios.post(
-        "https://api.sms.ir/v1/send/verify",
-        {
-          mobile: phoneNumber,
-          templateId: 371815,
-          parameters: smsParameters,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "text/plain",
-            "x-api-key": SMS_API_KEY,
-          },
-        }
-      );
-      console.log("SMS sent successfully:", {
-        phoneNumber,
-        templateId: 371815,
-        hasAppHash: !!appHash,
-        response: smsResponse.data,
-      });
+      // const smsResponse = await axios.post(
+      //   "https://api.sms.ir/v1/send/verify",
+      //   {
+      //     mobile: phoneNumber,
+      //     templateId: 371815,
+      //     parameters: smsParameters,
+      //   },
+      //   {
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Accept: "text/plain",
+      //       "x-api-key": SMS_API_KEY,
+      //     },
+      //   }
+      // );
+      // console.log("SMS sent successfully:", {
+      //   phoneNumber,
+      //   templateId: 371815,
+      //   hasAppHash: !!appHash,
+      //   response: smsResponse.data,
+      // });
+
+      sms
+        .send(to, from, text)
+        .then((res: any) => {
+          console.log(res, "red");
+        })
+        .catch((err: any) => {
+          console.log(err, "err");
+          //
+        });
     } catch (smsError: any) {
       console.error("SMS API error:", {
         phoneNumber,
