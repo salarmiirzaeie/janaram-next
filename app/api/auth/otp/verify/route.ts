@@ -42,49 +42,29 @@ export async function POST(req: Request) {
 
     // Register or login user
     const users = db.collection<User>("users");
+    console.log(phoneNumber);
     let user: User | null = await users.findOne({ phoneNumber });
+    console.log(user);
+    let isNewUser = false; // Flag to track if user is new
 
     const today = new Date().toISOString().split("T")[0]; // Current date for conversation tracking
 
     if (!user) {
-      // Check if phoneNumber is linked to a Google user
-      const googleUser: User | null = await users.findOne({ phoneNumber });
-      if (googleUser) {
-        // Link OTP to existing Google user
-        await users.updateOne(
-          { _id: googleUser._id },
-          {
-            $set: {
-              phoneNumber,
-              plan: googleUser.plan || "free",
-              conversationCount: googleUser.conversationCount || { date: today, count: 0 },
-              updatedAt: new Date(),
-            },
-          }
-        );
-        user = {
-          ...googleUser,
-          phoneNumber,
-          plan: googleUser.plan || "free",
-          conversationCount: googleUser.conversationCount || { date: today, count: 0 },
-          updatedAt: new Date(),
-        };
-      } else {
-        // Create new user
-        const newUser: Omit<User, "_id"> = {
-          phoneNumber,
-          email: null,
-          googleId: null,
-          name: null,
-          picture: null,
-          plan: "free",
-          conversationCount: { date: today, count: 0 },
-          createdAt: new Date(),
-          updatedAt: null,
-        };
-        const result = await users.insertOne(newUser);
-        user = { ...newUser, _id: result.insertedId };
-      }
+      // Create new user
+      const newUser: Omit<User, "_id"> = {
+        phoneNumber,
+        email: null,
+        googleId: null,
+        name: null,
+        picture: null,
+        plan: "free",
+        conversationCount: { date: today, count: 0 },
+        createdAt: new Date(),
+        updatedAt: null,
+      };
+      const result = await users.insertOne(newUser);
+      user = { ...newUser, _id: result.insertedId };
+      isNewUser = true; // Set flag to true for new user
     } else {
       // Update existing user
       await users.updateOne(
@@ -122,6 +102,7 @@ export async function POST(req: Request) {
       success: true,
       token,
       user,
+      isNewUser, // Add isNewUser flag to response
     });
   } catch (err: any) {
     console.error("Error in OTP verification:", err);

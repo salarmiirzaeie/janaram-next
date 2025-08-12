@@ -73,39 +73,16 @@ export async function POST(req: Request) {
     const text = `کد تایید شما: ${otp}
 
     تیم جانارام ${appHash ? appHash : ""}`;
-    // Send OTP via SMS.ir
     try {
-      // const smsResponse = await axios.post(
-      //   "https://api.sms.ir/v1/send/verify",
-      //   {
-      //     mobile: phoneNumber,
-      //     templateId: 371815,
-      //     parameters: smsParameters,
-      //   },
-      //   {
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Accept: "text/plain",
-      //       "x-api-key": SMS_API_KEY,
-      //     },
-      //   }
-      // );
-      // console.log("SMS sent successfully:", {
-      //   phoneNumber,
-      //   templateId: 371815,
-      //   hasAppHash: !!appHash,
-      //   response: smsResponse.data,
-      // });
-
-      sms
-        .send(to, from, text)
-        .then((res: any) => {
-          console.log(res, "red");
-        })
-        .catch((err: any) => {
-          console.log(err, "err");
-          //
-        });
+      // sms
+      //   .send(to, from, text)
+      //   .then((res: any) => {
+      //     console.log(res, "red");
+      //   })
+      //   .catch((err: any) => {
+      //     console.log(err, "err");
+      //   });
+      console.log(otp);
     } catch (smsError: any) {
       console.error("SMS API error:", {
         phoneNumber,
