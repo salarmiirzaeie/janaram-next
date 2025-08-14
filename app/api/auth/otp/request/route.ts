@@ -74,6 +74,7 @@ export async function POST(req: Request) {
 
     تیم جانارام ${appHash ? appHash : ""}`;
     // Send OTP via SMS.ir
+<<<<<<< Updated upstream
     try {
       // const smsResponse = await axios.post(
       //   "https://api.sms.ir/v1/send/verify",
@@ -113,6 +114,26 @@ export async function POST(req: Request) {
       });
       return NextResponse.json({ success: false, message: "خطا در ارسال پیامک" }, { status: 500 });
     }
+=======
+    console.log(otp);
+    // try {
+    //   sms
+    //     .send(to, from, text)
+    //     .then((res: any) => {
+    //       console.log(res, "red");
+    //     })
+    //     .catch((err: any) => {
+    //       console.log(err, "err");
+    //       //
+    //     });
+    // } catch (smsError: any) {
+    //   console.error("SMS API error:", {
+    //     phoneNumber,
+    //     error: smsError.response?.data || smsError.message,
+    //   });
+    //   return NextResponse.json({ success: false, message: "خطا در ارسال پیامک" }, { status: 500 });
+    // }
+>>>>>>> Stashed changes
 
     return NextResponse.json({
       success: true,
