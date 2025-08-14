@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "formidable": "^3.5.4",
     "google-auth-library": "^10.1.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.525.0",
     "melipayamak": "^1.0.5",
     "mongodb": "^6.18.0",
+    "multer": "^2.0.2",
     "next": "15.4.2",
     "openai": "^5.10.2",
     "react": "19.1.0",
@@ -23,7 +25,9 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/formidable": "^3.4.5",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
