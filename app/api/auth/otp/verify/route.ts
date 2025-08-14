@@ -61,6 +61,7 @@ export async function POST(req: Request) {
         conversationCount: { date: today, count: 0 },
         createdAt: new Date(),
         updatedAt: null,
+        messages: [],
       };
       const result = await users.insertOne(newUser);
       user = { ...newUser, _id: result.insertedId };

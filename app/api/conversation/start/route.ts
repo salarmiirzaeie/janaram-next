@@ -67,8 +67,11 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     let messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
 
     // System prompt
-    const systemPrompt = "شما یک روانشناس حرفه ای هستید فقط در دو جمله پاسخ دهید";
-
+    const systemPrompt =
+      userDoc.plan === "free"
+        ? `شما یک روانشناس حرفه ای هستید فقط در دو جمله پاسخ دهید`
+        : `شما یک روانشناس حرفه ای هستید فقط در دو جمله پاسخ دهید.مخاطب  ${userDoc.name}است `;
+    console.log(systemPrompt);
     // Retrieve last two conversations from user's messages array, if they exist
     const recentMessages = userDoc.messages?.slice(-2) || [];
     if (recentMessages.length > 0) {
