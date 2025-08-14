@@ -3,38 +3,10 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
-import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 
 // Configure multer to save files to public/profilephotos
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: async (req, file, cb) => {
-      const dir = path.join(process.cwd(), "public/profilephotos");
-      await fs.mkdir(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      const user = (req as any).user;
-      const userId = user?.sub || "unknown";
-      const ext = path.extname(file.originalname) || ".jpg";
-      cb(null, `${userId}-${Date.now()}${ext}`);
-    },
-  }),
-  fileFilter: (req, file, cb) => {
-    if (!["image/jpeg", "image/png"].includes(file.mimetype)) {
-      return cb(new Error("فقط فرمت‌های JPEG و PNG مجاز هستند"));
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      return cb(new Error("فایل عکس باید کمتر از ۵ مگابایت باشد"));
-    }
-    cb(null, true);
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024,
-  },
-});
 
 // Phone number validation
 const validatePhoneNumber = (phone: string): boolean => {
@@ -42,42 +14,15 @@ const validatePhoneNumber = (phone: string): boolean => {
 };
 
 // Middleware to handle multer and FormData parsing
-const runMulter = async (req: NextRequest) => {
-  const formData = await req.formData();
-  const fields: { [key: string]: string } = {};
-  for (const [key, value] of formData.entries()) {
-    if (typeof value === "string") {
-      fields[key] = value;
-    }
-  }
-
-  return new Promise<{ fields: { [key: string]: string }; files: any }>((resolve, reject) => {
-    upload.single("profilePhoto")(req as any, {} as any, (err) => {
-      if (err) return reject(err);
-      resolve({
-        fields,
-        files: (req as any).file,
-      });
-    });
-  });
-};
 
 export const PUT = withAuth(async (req: NextRequest, user: any) => {
   try {
+    const { name, phoneNumber } = await req.json();
     // Validate user.sub
     if (!user?.sub) {
       console.error("No user.sub provided by withAuth middleware");
       return NextResponse.json({ success: false, message: "شناسه کاربر ارائه نشده است" }, { status: 401 });
     }
-
-    // Parse form data
-    const { fields, files } = await runMulter(req);
-    console.log("Parsed fields:", fields);
-    console.log("Parsed files:", files);
-
-    const name = fields.name;
-    const phoneNumber = fields.phoneNumber;
-    const profilePhotoFile = files;
 
     // Validate inputs
     if (!name || !phoneNumber) {
@@ -119,19 +64,6 @@ export const PUT = withAuth(async (req: NextRequest, user: any) => {
       phoneNumber,
       updatedAt: new Date(),
     };
-
-    // Handle profile photo
-    let profilePhotoUrl: string | undefined;
-    if (profilePhotoFile) {
-      profilePhotoUrl = `/profilephotos/${profilePhotoFile.filename}`;
-      updateFields.picture = profilePhotoUrl;
-
-      // Delete old profile photo
-      if (userDoc.picture) {
-        const oldFilePath = path.join(process.cwd(), "public", userDoc.picture);
-        await fs.unlink(oldFilePath).catch(() => {});
-      }
-    }
 
     // Update user in the database
     const updateResult = await users.updateOne({ _id: userId }, { $set: updateFields });
