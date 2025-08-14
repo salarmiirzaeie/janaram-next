@@ -73,16 +73,16 @@ export async function POST(req: Request) {
     const text = `کد تایید شما: ${otp}
 
     تیم جانارام ${appHash ? appHash : ""}`;
+
     try {
-      // sms
-      //   .send(to, from, text)
-      //   .then((res: any) => {
-      //     console.log(res, "red");
-      //   })
-      //   .catch((err: any) => {
-      //     console.log(err, "err");
-      //   });
-      console.log(otp);
+      sms
+        .send(to, from, text)
+        .then((res: any) => {
+          console.log(res, "red");
+        })
+        .catch((err: any) => {
+          console.log(err, "err");
+        });
     } catch (smsError: any) {
       console.error("SMS API error:", {
         phoneNumber,

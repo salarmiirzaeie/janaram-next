@@ -14,4 +14,5 @@ export interface User {
   };
   createdAt: Date;
   updatedAt: Date | null;
+  messages: { user: string; ai: string; timestamp: Date }[];
 }

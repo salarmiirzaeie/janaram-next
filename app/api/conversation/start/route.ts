@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { OpenAI } from "openai";
-import { randomBytes } from "crypto";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
-import { ChatHistory } from "@/lib/types/chatHistory";
 import { withAuth } from "@/lib/middleware/withAuth";
 
 // Environment variable validation
@@ -18,14 +16,13 @@ const client = new OpenAI({
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
-    const { message, conversationId } = await req.json();
+    const { message } = await req.json();
     if (!message || typeof message !== "string") {
       return NextResponse.json({ success: false, message: "پیام نامعتبر است" }, { status: 400 });
     }
 
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
-    const chatHistory = db.collection<ChatHistory>("chat_history");
     const today = new Date().toISOString().split("T")[0];
 
     // Convert user.sub to ObjectId
@@ -70,43 +67,29 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     let messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
 
     // System prompt
-    const systemPrompt =
-      userDoc.plan === "free"
-        ? "شما یک روانشناس حرفه‌ای هستید که در روش‌های مبتنی بر شواهد مانند درمان شناختی-رفتاری و درمان فردمحور آموزش دیده‌اید. با لحنی همدلانه و متناسب با فرهنگ ایرانی، در دو جمله پاسخ دهید که احساسات کاربر را تأیید کند و پیشنهادی سازنده ارائه دهد."
-        : `شما یک روانشناس حرفه‌ای هستید که در روش‌های مبتنی بر شواهد مانند درمان شناختی-رفتاری و درمان فردمحور آموزش دیده‌اید. با توجه به اطلاعات کاربر (نام: ${
-            userDoc.name || "کاربر"
-          }، طرح: ${
-            userDoc.plan
-          })، با لحنی همدلانه و متناسب با فرهنگ ایرانی، در دو جمله پاسخ دهید که احساسات کاربر را تأیید کند و پیشنهادی سازنده ارائه دهد.`;
+    const systemPrompt = "شما یک روانشناس حرفه ای هستید فقط در دو جمله پاسخ دهید";
 
-    messages.push({ role: "system", content: systemPrompt });
-
-    // Retrieve conversation history
-    let newConversationId = conversationId || randomBytes(16).toString("hex");
-    if (conversationId) {
-      const existingConversation = await chatHistory.findOne({
-        userId,
-        conversationId,
-      });
-      if (existingConversation) {
-        const recentMessages = existingConversation.messages.slice(-3);
-        messages.push(
-          ...recentMessages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          }))
-        );
-      }
+    // Retrieve last two conversations from user's messages array, if they exist
+    const recentMessages = userDoc.messages?.slice(-2) || [];
+    if (recentMessages.length > 0) {
+      messages.push(
+        ...recentMessages.flatMap((msg) => [
+          { role: "user" as "user" | "assistant", content: msg.user },
+          { role: "assistant" as "user" | "assistant", content: msg.ai },
+        ])
+      );
     }
 
     // Add new user message
     messages.push({ role: "user", content: message });
+    messages.push({ role: "system", content: systemPrompt });
 
     // Call OpenRouter API
+    console.log(messages);
     let completion;
     try {
       completion = await client.chat.completions.create({
-        model: "deepseek/deepseek-chat-v3-0324:free", // Verify this model exists
+        model: "openai/gpt-oss-20b:free",
         messages,
       });
     } catch (apiError: any) {
@@ -117,8 +100,13 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       });
       if (apiError.response?.status === 429) {
         return NextResponse.json(
-          { success: false, message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان OpenRouter به پایان رسیده است" },
+          { success: false, message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است" },
           { status: 429 }
+        );
+      } else if (apiError.response?.status === 524) {
+        return NextResponse.json(
+          { success: false, message: "درخواست به دلیل زمان‌بندی سرور هوش مصنوعی ناموفق بود. لطفاً دوباره تلاش کنید." },
+          { status: 502 }
         );
       }
       return NextResponse.json({ success: false, message: "خطا در ارتباط با هوش مصنوعی" }, { status: 500 });
@@ -136,41 +124,26 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json({ success: false, message: "پاسخی از هوش مصنوعی دریافت نشد" }, { status: 500 });
     }
 
-    // Store conversation
-    const newMessage: { role: "user" | "assistant"; content: string; timestamp: Date }[] = [
-      { role: "user", content: message, timestamp: new Date() },
-      { role: "assistant", content: aiResponse, timestamp: new Date() },
-    ];
+    // Store new conversation in user's messages array
+    const newConversation = {
+      user: message,
+      ai: aiResponse,
+      timestamp: new Date(),
+    };
 
-    await chatHistory.updateOne(
-      { userId, conversationId: newConversationId },
+    await users.updateOne(
+      { _id: userId },
       {
-        $push: { messages: { $each: newMessage } },
+        $push: {
+          messages: newConversation,
+        },
         $set: { updatedAt: new Date() },
-        $setOnInsert: { createdAt: new Date(), userId, conversationId: newConversationId },
-      },
-      { upsert: true }
-    );
-
-    // Limit conversations for free plan
-    if (userDoc.plan === "free") {
-      const conversationCount = await chatHistory.countDocuments({ userId });
-      if (conversationCount > 10) {
-        const oldestConversations = await chatHistory
-          .find({ userId })
-          .sort({ createdAt: 1 })
-          .limit(conversationCount - 10)
-          .toArray();
-        await chatHistory.deleteMany({
-          userId,
-          conversationId: { $in: oldestConversations.map((c) => c.conversationId) },
-        });
       }
-    }
+    );
 
     return NextResponse.json({
       success: true,
-      data: { response: aiResponse, conversationId: newConversationId },
+      data: { response: aiResponse },
     });
   } catch (err: any) {
     console.error("Error in conversation:", {
@@ -180,3 +153,18 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
   }
 });
+// if (userDoc.plan === "free") {
+//   const messageCount = (userDoc.messages?.length || 0) + newMessages.length;
+//   if (messageCount > 20) {
+//     await users.updateOne(
+//       { _id: userId },
+//       {
+//         $trim: {
+//           messages: {
+//             size: 20,
+//           },
+//         },
+//       }
+//     );
+//   }
+// }
