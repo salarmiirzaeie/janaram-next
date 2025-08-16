@@ -1,3 +1,4 @@
+// route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { OpenAI } from "openai";
@@ -35,10 +36,26 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     }
 
     // Fetch user data
-    const userDoc = await users.findOne({ _id: userId });
-    if (!userDoc) {
-      console.error("User not found for _id:", userId.toString());
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+    let userDoc = await users.findOne({ _id: userId });
+    if (!userDoc || !userDoc._id) {
+      console.error("User not found or missing _id for user.sub:", user.sub);
+      return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
+    }
+
+    // Check if unlimited plan has expired
+    const now = new Date();
+    if (userDoc.plan !== "free" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
+      await users.updateOne(
+        { _id: userId },
+        {
+          $set: { plan: "free", updatedAt: now },
+          $unset: { subscriptionEndDate: "", subscriptionDuration: "" },
+        }
+      );
+      if (!userDoc || !userDoc._id) {
+        console.error("User not found after update for _id:", userId.toString());
+        return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+      }
     }
 
     // Check conversation limit for free plan
@@ -69,9 +86,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     // System prompt
     const systemPrompt =
       userDoc.plan === "free"
-        ? `شما یک روانشناس حرفه ای هستید فقط در دو جمله پاسخ دهید`
-        : `شما یک روانشناس حرفه ای هستید فقط در دو جمله پاسخ دهید.مخاطب  ${userDoc.name}است `;
-    console.log(systemPrompt);
+        ? `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله پاسخ دهید`
+        : `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله پاسخ دهید. مخاطب ${userDoc.name} است`;
+
     // Retrieve last two conversations from user's messages array, if they exist
     const recentMessages = userDoc.messages?.slice(-2) || [];
     if (recentMessages.length > 0) {
@@ -83,12 +100,11 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       );
     }
 
-    // Add new user message
+    // Add new user message and system prompt
     messages.push({ role: "user", content: message });
     messages.push({ role: "system", content: systemPrompt });
 
     // Call OpenRouter API
-    console.log(messages);
     let completion;
     try {
       completion = await client.chat.completions.create({
@@ -106,7 +122,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           { success: false, message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است" },
           { status: 429 }
         );
-      } else if (apiError.response?.status === 524) {
+      } else if (apiError.response?.status === 524 || apiError.response?.status === 502) {
         return NextResponse.json(
           { success: false, message: "درخواست به دلیل زمان‌بندی سرور هوش مصنوعی ناموفق بود. لطفاً دوباره تلاش کنید." },
           { status: 502 }
@@ -133,16 +149,17 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       ai: aiResponse,
       timestamp: new Date(),
     };
-
-    await users.updateOne(
-      { _id: userId },
-      {
-        $push: {
-          messages: newConversation,
-        },
-        $set: { updatedAt: new Date() },
-      }
-    );
+    if (userDoc.plan === "premium" || userDoc.plan === "pro") {
+      await users.updateOne(
+        { _id: userId },
+        {
+          $push: {
+            messages: newConversation,
+          },
+          $set: { updatedAt: new Date() },
+        }
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -156,18 +173,3 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
   }
 });
-// if (userDoc.plan === "free") {
-//   const messageCount = (userDoc.messages?.length || 0) + newMessages.length;
-//   if (messageCount > 20) {
-//     await users.updateOne(
-//       { _id: userId },
-//       {
-//         $trim: {
-//           messages: {
-//             size: 20,
-//           },
-//         },
-//       }
-//     );
-//   }
-// }

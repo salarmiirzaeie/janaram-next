@@ -1,64 +1,101 @@
+// route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
 
-interface Plan {
-  name: "free" | "unlimited" | "unlimited_plus";
+export interface Plan {
+  name: "free" | "unlimited" | "premium" | "pro";
   description: string;
   features: string[];
-  isActive: boolean;
+  isActive?: boolean;
   price: number;
   id: string;
+  duration?: number; // Duration in months for unlimited plans
 }
 
 export const GET = withAuth(async (req: NextRequest, user: any) => {
   try {
-    // تبدیل user.sub به ObjectId
+    // Convert user.sub to ObjectId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
     } catch (err) {
-      console.error("فرمت user.sub نامعتبر است:", user.sub, err);
+      console.error("Invalid user.sub format:", user.sub, err);
       return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
     }
 
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
 
-    // دریافت اطلاعات کاربر
-    const userDoc = await users.findOne({ _id: userId });
-    if (!userDoc) {
-      console.error("کاربر یافت نشد برای _id:", userId.toString());
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+    // Fetch user data
+    let userDoc = await users.findOne({ _id: userId });
+    if (!userDoc || !userDoc._id) {
+      console.error("User not found or missing _id for user.sub:", user.sub);
+      return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
     }
 
-    // تعریف طرح‌ها با توضیحات به فارسی
+    // Check if unlimited plan has expired
+    const now = new Date();
+    if (userDoc.plan === "unlimited" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
+      await users.updateOne(
+        { _id: userId },
+        {
+          $set: { plan: "free", updatedAt: now },
+          $unset: { subscriptionEndDate: "", subscriptionDuration: "" },
+        }
+      );
+      if (!userDoc || !userDoc._id) {
+        console.error("User not found after update for _id:", userId.toString());
+        return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+      }
+    }
+
+    // Define plans
     const plans: Plan[] = [
       {
         name: "free",
         description: "طرح رایگان با امکانات پایه",
-        features: [
-          "حداکثر 10 گفت‌وگوی روزانه",
-          "دسترسی به تاریخچه 10 گفت‌وگوی اخیر",
-          "پاسخ‌های همدلانه مبتنی بر روانشناسی",
-        ],
+        features: ["حداکثر 10 گفت‌وگوی روزانه"],
         isActive: userDoc.plan === "free",
         id: "0",
         price: 0,
       },
       {
         name: "unlimited",
-        description: "طرح نامحدود با امکانات پیشرفته",
+        description: "طرح نامحدود با امکانات پیشرفته برای ۱ ماه",
+        features: ["گفت‌وگوهای نامحدود روزانه", "پاسخ‌های شخصی‌سازی‌شده با نام کاربر"],
+        isActive: userDoc.plan === "unlimited" && (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
+        id: "123456",
+        price: 29,
+        duration: 1,
+      },
+      {
+        name: "premium",
+        description: "طرح نامحدود با امکانات پیشرفته برای ۳ ماه",
         features: [
           "گفت‌وگوهای نامحدود روزانه",
           "دسترسی به تاریخچه کامل گفت‌وگوها",
           "پاسخ‌های شخصی‌سازی‌شده با نام کاربر",
         ],
-        isActive: userDoc.plan === "unlimited",
-        id: "123456",
-        price: 29,
+        isActive: userDoc.plan === "premium" && userDoc.subscriptionDuration === 3,
+        id: "1234567",
+        price: 79,
+        duration: 3,
+      },
+      {
+        name: "pro",
+        description: "طرح نامحدود با امکانات پیشرفته برای ۶ ماه",
+        features: [
+          "گفت‌وگوهای نامحدود روزانه",
+          "دسترسی به تاریخچه کامل گفت‌وگوها",
+          "پاسخ‌های شخصی‌سازی‌شده با نام کاربر",
+        ],
+        isActive: userDoc.plan === "pro" && userDoc.subscriptionDuration === 6,
+        id: "12345678",
+        price: 149,
+        duration: 6,
       },
     ];
 
@@ -67,7 +104,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       data: { plans },
     });
   } catch (err: any) {
-    console.error("خطا در دریافت طرح‌ها:", err);
+    console.error("Error fetching plans:", err);
     return NextResponse.json({ success: false, message: "خطای سرور در دریافت طرح‌ها" }, { status: 500 });
   }
 });

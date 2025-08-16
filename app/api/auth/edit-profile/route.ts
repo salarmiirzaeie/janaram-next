@@ -93,7 +93,7 @@ export const PUT = withAuth(async (req: NextRequest, user: any) => {
       response.profilePhoto = updatedUser.picture;
     }
 
-    return NextResponse.json({ success: true, data: response, message: "Profile updated successfully" });
+    return NextResponse.json({ success: true, data: response, message: "پروفایل شما به‌روزرسانی شد  " });
   } catch (err: any) {
     console.error("Error in updating user profile:", err.message);
     return NextResponse.json({ success: false, message: err.message || "خطای سرور" }, { status: 500 });
