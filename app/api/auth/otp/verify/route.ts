@@ -84,6 +84,9 @@ export async function POST(req: Request) {
         plan: user.plan || "free",
         conversationCount: user.conversationCount || { date: today, count: 0 },
       };
+      if (!user.name) {
+        isNewUser = true;
+      }
     }
 
     // Generate JWT
