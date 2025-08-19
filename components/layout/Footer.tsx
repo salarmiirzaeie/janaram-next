@@ -34,7 +34,7 @@ const Footer: React.FC = () => {
           </div>
           <div className="text-right">
             <h3 className="text-lg font-semibold mb-4">تماس با ما</h3>
-            <p className="text-sm"> salarmiirzapour@gmail.com : ایمیل</p>
+            <p className="text-sm"> info@janaram.ir : ایمیل</p>
             {/* <p className="text-sm">تلفن: +1-234-567-890</p> */}
             {/* <div className="mt-4">
               <a href="#" className="text-gray-300 hover:text-white mr-4">
