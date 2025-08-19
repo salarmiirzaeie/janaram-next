@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import "../globals.css";
 import Header from "@/components/layout/Header";
 
 import localFont from "next/font/local";
@@ -8,7 +8,7 @@ import Footer from "@/components/layout/Footer";
 const iranSans = localFont({
   src: [
     {
-      path: "../public/fonts/IranianSans.ttf",
+      path: "../../public/fonts/IranianSans.ttf",
       weight: "400",
       style: "normal",
     },
@@ -18,12 +18,12 @@ const iranSans = localFont({
 const vazir = localFont({
   src: [
     {
-      path: "../public/fonts/vazir-bold.ttf",
+      path: "../../public/fonts/vazir-bold.ttf",
       weight: "700",
       style: "bold",
     },
     {
-      path: "../public/fonts/vazir-medium.ttf",
+      path: "../../public/fonts/vazir-medium.ttf",
       weight: "400",
       style: "normal",
     },
