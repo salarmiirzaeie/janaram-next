@@ -4,6 +4,7 @@ export interface AuthUser {
   sub: string;
   phoneNumber?: string;
   email?: string;
+  role?: "user" | "admin"; // Add role to support both users and admins
 }
 
 export function verifyToken(token: string): AuthUser | null {

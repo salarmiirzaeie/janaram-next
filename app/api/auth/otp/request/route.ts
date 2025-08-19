@@ -83,7 +83,6 @@ export async function POST(req: Request) {
         .catch((err: any) => {
           console.log(err, "err");
         });
-      console.log(otp);
     } catch (smsError: any) {
       console.error("SMS API error:", {
         phoneNumber,
