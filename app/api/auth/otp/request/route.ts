@@ -19,6 +19,8 @@ const validateAppHash = (appHash: string | null | undefined): boolean => {
 };
 
 export async function POST(req: Request) {
+  migrateUnlimitedUsers().catch(console.error);
+
   try {
     const { phoneNumber, appHash } = await req.json();
 
@@ -100,5 +102,55 @@ export async function POST(req: Request) {
       stack: err.stack,
     });
     return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
+  }
+}
+
+async function migrateUnlimitedUsers() {
+  const client = await clientPromise;
+
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB");
+
+    const db = client.db("janaram-db");
+    const users = db.collection("users");
+
+    // Calculate subscription end date (1 month from August 19, 2025, 10:45 AM BST)
+    const now = new Date("2025-08-19T09:45:00Z"); // BST is UTC+1, so adjust to UTC
+    const subscriptionEndDate = new Date(now);
+    subscriptionEndDate.setMonth(now.getMonth() + 1); // Add 1 month
+
+    // Update users with plan: "unlimited" and missing subscription fields
+    const result = await users.updateMany(
+      {
+        plan: "unlimited",
+        $or: [{ subscriptionDuration: { $exists: false } }, { subscriptionEndDate: { $exists: false } }],
+      },
+      {
+        $set: {
+          subscriptionDuration: 1,
+          subscriptionEndDate: subscriptionEndDate,
+          updatedAt: now,
+        },
+      }
+    );
+
+    console.log(`Updated ${result.modifiedCount} users with unlimited plan`);
+    console.log(`Matched ${result.matchedCount} users`);
+
+    // Verify updated documents
+    const updatedUsers = await users
+      .find({
+        plan: "unlimited",
+        subscriptionDuration: 1,
+        subscriptionEndDate: subscriptionEndDate,
+      })
+      .toArray();
+    console.log("Updated users:", updatedUsers);
+  } catch (err) {
+    console.error("Error during migration:", err);
+  } finally {
+    await client.close();
+    console.log("MongoDB connection closed");
   }
 }
