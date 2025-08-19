@@ -149,17 +149,17 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       ai: aiResponse,
       timestamp: new Date(),
     };
-    if (userDoc.plan === "premium" || userDoc.plan === "pro") {
-      await users.updateOne(
-        { _id: userId },
-        {
-          $push: {
-            messages: newConversation,
-          },
-          $set: { updatedAt: new Date() },
-        }
-      );
-    }
+    // if (userDoc.plan === "premium" || userDoc.plan === "pro") {
+    await users.updateOne(
+      { _id: userId },
+      {
+        $push: {
+          messages: newConversation,
+        },
+        $set: { updatedAt: new Date() },
+      }
+    );
+    // }
 
     return NextResponse.json({
       success: true,

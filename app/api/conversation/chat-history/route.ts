@@ -26,10 +26,34 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
     }
 
+    // Check user's plan
+    const userDoc = await users.findOne({ _id: userId }, { projection: { plan: 1 } });
+    if (!userDoc) {
+      console.error("User not found for _id:", userId.toString());
+      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+    }
+
+    // Return empty array if user does not have pro or premium plan
+    if (!["pro", "premium"].includes(userDoc.plan)) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          messages: [],
+          pagination: {
+            page,
+            limit,
+            totalMessages: 0,
+            totalPages: 0,
+          },
+        },
+      });
+    }
+
+    // Proceed with fetching chat history for pro/premium users
     const pipeline = [
       { $match: { _id: userId } },
-      { $unwind: { path: "$messages", preserveNullAndEmptyArrays: true } }, // Handle empty messages array
-      { $sort: { "messages.timestamp": -1 } }, // Sort newest first
+      { $unwind: { path: "$messages", preserveNullAndEmptyArrays: true } },
+      { $sort: { "messages.timestamp": -1 } },
       { $skip: (page - 1) * limit },
       { $limit: limit },
       {
@@ -40,9 +64,9 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       },
     ];
 
-    const [userDoc] = await users.aggregate(pipeline).toArray();
+    const [chatHistory] = await users.aggregate(pipeline).toArray();
 
-    if (!userDoc) {
+    if (!chatHistory) {
       console.error("User not found for _id:", userId.toString());
       return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
     }
@@ -59,7 +83,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     return NextResponse.json({
       success: true,
       data: {
-        messages: (userDoc.messages || []).filter((msg: any) => msg !== null), // Filter out null messages from unwind
+        messages: (chatHistory.messages || []).filter((msg: any) => msg !== null),
         pagination: {
           page,
           limit,
