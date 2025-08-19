@@ -21,7 +21,7 @@ const DownloadSection = () => {
               <Link href={"https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"} className="">
                 <Image src="/bazarDownload.png" alt="Bazar Download" width={200} height={100} />
               </Link>
-              <a href="/apk/1.0.8.apk" download>
+              <a href="https://janaram.storage.c2.liara.space/apk/1.0.8.apk" download>
                 <div className="">
                   <Image src="/directInstall.png" alt="Direct Install" width={200} height={100} />
                 </div>
