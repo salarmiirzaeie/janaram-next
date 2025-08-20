@@ -37,18 +37,18 @@ export async function POST(req: Request) {
     const db = (await clientPromise).db("janaram-db");
 
     // Check for existing unexpired OTP
-    const existingOtp = await db.collection("otp_codes").findOne({
-      phoneNumber,
-      expiresAt: { $gt: Date.now() },
-      verified: false,
-    });
+    // const existingOtp = await db.collection("otp_codes").findOne({
+    //   phoneNumber,
+    //   expiresAt: { $gt: Date.now() },
+    //   verified: false,
+    // });
 
-    if (existingOtp) {
-      return NextResponse.json(
-        { success: false, message: "لطفاً از کد قبلی استفاده کنید یا صبر کنید" },
-        { status: 429 }
-      );
-    }
+    // if (existingOtp) {
+    //   return NextResponse.json(
+    //     { success: false, message: "لطفاً از کد قبلی استفاده کنید یا صبر کنید" },
+    //     { status: 429 }
+    //   );
+    // }
 
     // Store OTP
     await db.collection("otp_codes").insertOne({
@@ -73,15 +73,16 @@ export async function POST(req: Request) {
     const text = `کد تایید شما: ${otp}
 
     تیم جانارام ${appHash ? appHash : ""}`;
+    console.log(otp);
     try {
-      sms
-        .send(to, from, text)
-        .then((res: any) => {
-          console.log(res, "red");
-        })
-        .catch((err: any) => {
-          console.log(err, "err");
-        });
+      // sms
+      //   .send(to, from, text)
+      //   .then((res: any) => {
+      //     console.log(res, "red");
+      //   })
+      //   .catch((err: any) => {
+      //     console.log(err, "err");
+      //   });
     } catch (smsError: any) {
       console.error("SMS API error:", {
         phoneNumber,

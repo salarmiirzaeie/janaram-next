@@ -8,15 +8,9 @@ import { Expo } from "expo-server-sdk";
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const { pushToken } = await req.json();
-
     // Validate request body
     if (!pushToken) {
       return NextResponse.json({ success: false, message: "توکن اعلان الزامی است" }, { status: 400 });
-    }
-
-    // Validate push token
-    if (!Expo.isExpoPushToken(pushToken)) {
-      return NextResponse.json({ success: false, message: "توکن اعلان نامعتبر است" }, { status: 400 });
     }
 
     // Convert user.sub to ObjectId

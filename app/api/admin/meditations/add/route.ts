@@ -5,6 +5,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import { ObjectId } from "mongodb";
+import { sendToAll } from "@/lib/notifications";
 
 // Define directories for file storage
 const meditationsDir = path.join(process.cwd(), "public", "meditations");
@@ -73,7 +74,11 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       isSuggested,
       createdAt: new Date(),
     });
-
+    await sendToAll({
+      title,
+      body: `New meditation added: ${title}`,
+      data: { meditationId: result.insertedId.toString() },
+    });
     return NextResponse.json(
       {
         success: true,

@@ -4,6 +4,7 @@ import { OpenAI } from "openai";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
+import { sendNotification } from "@/lib/notifications";
 
 // Environment variable validation
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_CHATBOT_KEY_NEW || "";
@@ -68,6 +69,11 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     if (userDoc.plan === "free") {
       const conversationCount = userDoc.conversationCount?.date === today ? userDoc.conversationCount.count : 0;
       if (conversationCount >= 10) {
+        // sendNotification({
+        //   title: "حداکثر تعداد گفت‌وگوهای روزانه",
+        //   body: "حداکثر تعداد گفت‌وگوهای روزانه برای طرح رایگان به پایان رسیده است",
+        //   userId: userId.toString(),
+        // });
         return NextResponse.json(
           { success: false, message: "حداکثر تعداد گفت‌وگوهای روزانه برای طرح رایگان به پایان رسیده است" },
           { status: 429 }
