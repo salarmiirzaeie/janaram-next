@@ -129,7 +129,11 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           { success: false, message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است" },
           { status: 429 }
         );
-      } else if (apiError.response?.status === 524 || apiError.response?.status === 502) {
+      } else if (
+        apiError.response?.status === 524 ||
+        apiError.response?.status === 502 ||
+        apiError.response?.status === 503
+      ) {
         return NextResponse.json(
           { success: false, message: "درخواست به دلیل زمان‌بندی سرور هوش مصنوعی ناموفق بود. لطفاً دوباره تلاش کنید." },
           { status: 502 }
