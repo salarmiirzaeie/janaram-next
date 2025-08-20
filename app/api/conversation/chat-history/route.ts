@@ -17,6 +17,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
 
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
+    const chatHistory = db.collection("chat-history");
 
     let userId: ObjectId;
     try {
@@ -49,41 +50,21 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       });
     }
 
-    // Proceed with fetching chat history for pro/premium users
-    const pipeline = [
-      { $match: { _id: userId } },
-      { $unwind: { path: "$messages", preserveNullAndEmptyArrays: true } },
-      { $sort: { "messages.timestamp": -1 } },
-      { $skip: (page - 1) * limit },
-      { $limit: limit },
-      {
-        $group: {
-          _id: "$_id",
-          messages: { $push: "$messages" },
-        },
-      },
-    ];
-
-    const [chatHistory] = await users.aggregate(pipeline).toArray();
-
-    if (!chatHistory) {
-      console.error("User not found for _id:", userId.toString());
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
-    }
-
-    const totalMessagesResult = await users
-      .aggregate([
-        { $match: { _id: userId } },
-        { $project: { messageCount: { $size: { $ifNull: ["$messages", []] } } } },
-      ])
+    // Fetch chat history from chat-history collection
+    const messages = await chatHistory
+      .find({ userId: userId })
+      .sort({ timestamp: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
       .toArray();
-    const totalMessages = totalMessagesResult[0]?.messageCount || 0;
+
+    const totalMessages = await chatHistory.countDocuments({ userId: userId });
     const totalPages = Math.ceil(totalMessages / limit);
 
     return NextResponse.json({
       success: true,
       data: {
-        messages: (chatHistory.messages || []).filter((msg: any) => msg !== null),
+        messages: messages.filter((msg) => msg !== null),
         pagination: {
           page,
           limit,

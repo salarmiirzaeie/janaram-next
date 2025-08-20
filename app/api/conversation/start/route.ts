@@ -1,11 +1,27 @@
-// route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { OpenAI } from "openai";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
+const migrateMessages = async () => {
+  const db = (await clientPromise).db("janaram-db");
+  const users = db.collection("users");
+  const chatHistory = db.collection("chat-history");
 
+  const usersWithMessages = await users.find({ messages: { $exists: true, $ne: [] } }).toArray();
+  for (const user of usersWithMessages) {
+    const messages = user.messages.map((msg: any) => ({
+      userId: user._id,
+      user: msg.user,
+      ai: msg.ai,
+      timestamp: msg.timestamp || new Date(),
+    }));
+    await chatHistory.insertMany(messages);
+    await users.updateOne({ _id: user._id }, { $unset: { messages: "" } });
+  }
+  console.log("Migration completed");
+};
 // Environment variable validation
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_CHATBOT_KEY_NEW || "";
 if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not defined");
@@ -17,6 +33,7 @@ const client = new OpenAI({
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
+    await migrateMessages();
     const { message } = await req.json();
     if (!message || typeof message !== "string") {
       return NextResponse.json({ success: false, message: "پیام نامعتبر است" }, { status: 400 });
@@ -24,6 +41,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
 
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
+    const chatHistory = db.collection("chat-history");
     const today = new Date().toISOString().split("T")[0];
 
     // Convert user.sub to ObjectId
@@ -52,6 +70,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           $unset: { subscriptionEndDate: "", subscriptionDuration: "" },
         }
       );
+      userDoc = await users.findOne({ _id: userId });
       if (!userDoc || !userDoc._id) {
         console.error("User not found after update for _id:", userId.toString());
         return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
@@ -89,8 +108,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         ? `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله پاسخ دهید`
         : `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله پاسخ دهید. مخاطب ${userDoc.name} است`;
 
-    // Retrieve last two conversations from user's messages array, if they exist
-    const recentMessages = userDoc.messages?.slice(-2) || [];
+    // Retrieve last two conversations from chat-history collection
+    const recentMessages = await chatHistory.find({ userId: userId }).sort({ timestamp: -1 }).limit(2).toArray();
+
     if (recentMessages.length > 0) {
       messages.push(
         ...recentMessages.flatMap((msg) => [
@@ -143,23 +163,14 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json({ success: false, message: "پاسخی از هوش مصنوعی دریافت نشد" }, { status: 500 });
     }
 
-    // Store new conversation in user's messages array
+    // Store new conversation in chat-history collection
     const newConversation = {
+      userId: userId,
       user: message,
       ai: aiResponse,
       timestamp: new Date(),
     };
-    // if (userDoc.plan === "premium" || userDoc.plan === "pro") {
-    await users.updateOne(
-      { _id: userId },
-      {
-        $push: {
-          messages: newConversation,
-        },
-        $set: { updatedAt: new Date() },
-      }
-    );
-    // }
+    await chatHistory.insertOne(newConversation);
 
     return NextResponse.json({
       success: true,
