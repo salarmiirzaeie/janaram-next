@@ -15,74 +15,12 @@ const client = new OpenAI({
 });
 
 // Migration function to transform chat_history to chat-history
-async function migrateChatHistory(db: any) {
-  const migrationsCollection = db.collection("migrations");
-  const migrationFlag = await migrationsCollection.findOne({ name: "chat_history_to_chat-history" });
-
-  // Skip migration if it has already run
-  if (migrationFlag) {
-    console.log("Migration already completed.");
-    return;
-  }
-
-  const sourceCollection = db.collection("chat_history");
-  const targetCollection = db.collection("chat-history");
-
-  // Fetch all documents from chat_history
-  const chatHistoryDocs = await sourceCollection.find({}).toArray();
-  const newDocs = [];
-
-  for (const doc of chatHistoryDocs) {
-    const userId = doc.userId;
-    const messages = doc.messages;
-
-    // Iterate through messages to create user-assistant pairs
-    for (let i = 0; i < messages.length; i++) {
-      if (messages[i].role === "user") {
-        const userMessage = messages[i];
-        const assistantMessage = messages[i + 1]?.role === "assistant" ? messages[i + 1] : null;
-
-        const newDoc = {
-          userId,
-          user: userMessage.content,
-          ai: assistantMessage ? assistantMessage.content : "",
-          timestamp: userMessage.timestamp,
-        };
-
-        newDocs.push(newDoc);
-
-        // Skip the assistant message since it’s already paired
-        if (assistantMessage) i++;
-      }
-    }
-  }
-
-  // Insert new documents into chat-history
-  if (newDocs.length > 0) {
-    const result = await targetCollection.insertMany(newDocs);
-    console.log(`${result.insertedCount} documents migrated successfully.`);
-
-    // Mark migration as complete
-    await migrationsCollection.insertOne({
-      name: "chat_history_to_chat-history",
-      completedAt: new Date(),
-    });
-  } else {
-    console.log("No documents to migrate.");
-    // Still mark migration as complete to avoid re-running
-    await migrationsCollection.insertOne({
-      name: "chat_history_to_chat-history",
-      completedAt: new Date(),
-    });
-  }
-}
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const db = (await clientPromise).db("janaram-db");
 
     // Run migration once at the start
-    await migrateChatHistory(db);
 
     const { message } = await req.json();
     if (!message || typeof message !== "string") {
