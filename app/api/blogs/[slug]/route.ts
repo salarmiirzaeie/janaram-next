@@ -2,7 +2,13 @@ import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
+interface Context {
+  params: {
+    slug: string;
+  };
+}
+
+export async function GET(req: NextRequest, { params }: Context) {
   try {
     const { slug } = params;
 
@@ -11,12 +17,10 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       return NextResponse.json({ success: false, message: "Missing slug" }, { status: 400 });
     }
 
-    // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    // Fetch single blog by slug
     const blog = await collection.findOne({ slug });
     if (!blog) {
       console.error("Blog not found for slug:", slug);
