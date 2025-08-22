@@ -2,9 +2,9 @@ import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(req: NextRequest, context: { params: Record<string, string> }) {
   try {
-    const { slug } = params;
+    const { slug } = context.params;
 
     if (!slug) {
       console.error("Missing slug");
