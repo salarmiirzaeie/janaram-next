@@ -88,9 +88,6 @@ const BlogsPage: React.FC = () => {
       });
       if (response.ok) {
         await fetchBlogs();
-      } else {
-        const errorData = await response.json();
-        console.error("Failed to delete blog:", errorData);
       }
     } catch (error) {
       console.error("Error deleting blog:", error);
@@ -125,19 +122,17 @@ const BlogsPage: React.FC = () => {
         setShowForm(false);
         setMode("add");
         setEditingBlog(null);
-      } else {
-        const errorData = await response.json();
-        console.error(`Failed to ${mode === "add" ? "create" : "update"} blog:`, errorData);
       }
     } catch (error) {
-      console.error(`Error ${mode === "add" ? "submitting" : "updating"} blog:`, error);
+      console.error("Error submitting blog:", error);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Manage Blogs</h2>
+    <div className="bg-white p-4 md:p-6 rounded-lg shadow-md max-w-full mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-800">Manage Blogs</h2>
         <button
           onClick={() => {
             setShowForm(!showForm);
@@ -145,16 +140,19 @@ const BlogsPage: React.FC = () => {
             setEditingBlog(null);
             reset({ title: "", content: "", authorId: "6898d5e1bd209f8e85e72877" });
           }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition w-full sm:w-auto"
         >
           {showForm ? "Cancel" : "Add Blog"}
         </button>
       </div>
 
+      {/* Form */}
       {showForm && (
-        <form onSubmit={handleSubmit(onSubmit)} className="mb-8 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="mb-8 space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           {mode === "edit" && <input type="hidden" {...register("_id")} />}
-          <div>
+
+          {/* Title */}
+          <div className="col-span-1">
             <label htmlFor="title" className="block text-sm font-medium text-gray-700">
               Blog Title
             </label>
@@ -162,25 +160,13 @@ const BlogsPage: React.FC = () => {
               id="title"
               type="text"
               {...register("title", { required: "Title is required" })}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
             {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
           </div>
 
-          <div>
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-              Content
-            </label>
-            <textarea
-              id="content"
-              {...register("content", { required: "Content is required" })}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-              rows={4}
-            />
-            {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>}
-          </div>
-
-          <div>
+          {/* Image */}
+          <div className="col-span-1">
             <label htmlFor="image" className="block text-sm font-medium text-gray-700">
               Image {mode === "edit" && "(optional)"}
             </label>
@@ -194,22 +180,46 @@ const BlogsPage: React.FC = () => {
             {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image.message}</p>}
           </div>
 
-          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
-            {mode === "add" ? "Submit" : "Update"}
-          </button>
+          {/* Content */}
+          <div className="col-span-1 md:col-span-2">
+            <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+              Content
+            </label>
+            <textarea
+              id="content"
+              {...register("content", { required: "Content is required" })}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              rows={4}
+            />
+            {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>}
+          </div>
+
+          {/* Submit */}
+          <div className="col-span-1 md:col-span-2">
+            <button
+              type="submit"
+              className="w-full md:w-auto bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition"
+            >
+              {mode === "add" ? "Submit" : "Update"}
+            </button>
+          </div>
         </form>
       )}
 
+      {/* Table / Mobile Cards */}
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-gray-50">
+        <table className="min-w-full text-sm md:text-base bg-white border border-gray-200">
+          {/* Desktop header */}
+          <thead className="hidden sm:table-header-group bg-gray-50">
+            <tr>
               <th className="py-2 px-4 border-b text-left text-gray-600">Title</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Content</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Image</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Actions</th>
             </tr>
           </thead>
+
+          {/* Hybrid body */}
           <tbody>
             {blogs.length === 0 ? (
               <tr>
@@ -219,32 +229,48 @@ const BlogsPage: React.FC = () => {
               </tr>
             ) : (
               blogs.map((blog) => (
-                <tr key={blog._id} className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">{blog.title}</td>
-                  <td className="py-2 px-4 border-b">
+                <tr
+                  key={blog._id}
+                  className="block sm:table-row border sm:border-0 rounded-md sm:rounded-none mb-4 sm:mb-0 shadow sm:shadow-none"
+                >
+                  {/* Title */}
+                  <td className="block sm:table-cell py-2 px-4 sm:border-b">
+                    <span className="sm:hidden font-bold text-gray-600">Title: </span>
+                    {blog.title}
+                  </td>
+
+                  {/* Content */}
+                  <td className="block sm:table-cell py-2 px-4 sm:border-b">
+                    <span className="sm:hidden font-bold text-gray-600">Content: </span>
                     {blog.content.length > 50 ? blog.content.substring(0, 50) + "..." : blog.content}
                   </td>
-                  <td className="py-2 px-4 border-b">
+
+                  {/* Image */}
+                  <td className="block sm:table-cell py-2 px-4 sm:border-b">
+                    <span className="sm:hidden font-bold text-gray-600">Image: </span>
                     {blog.imageUrl ? (
                       <img
                         src={BASE_URL_IMAGES + blog.imageUrl}
                         alt={blog.title}
-                        className="w-16 h-16 object-cover rounded"
+                        className="w-12 h-12 md:w-16 md:h-16 object-cover rounded mx-auto sm:mx-0"
                       />
                     ) : (
                       "No image"
                     )}
                   </td>
-                  <td className="py-2 px-4 border-b flex space-x-2">
+
+                  {/* Actions */}
+                  <td className="block sm:table-cell py-2 px-4 sm:border-b flex flex-col sm:flex-row gap-2">
+                    <span className="sm:hidden font-bold text-gray-600">Actions: </span>
                     <button
                       onClick={() => handleEdit(blog)}
-                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition"
+                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition w-full sm:w-auto"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(blog._id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition w-full sm:w-auto"
                     >
                       Delete
                     </button>

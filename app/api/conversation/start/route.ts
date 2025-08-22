@@ -5,6 +5,16 @@ import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
 
+const retryRequest = async (fn: () => Promise<any>, maxAttempts = 3, delay = 1000) => {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (attempt === maxAttempts || error.response?.status === 429) throw error;
+      await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, attempt - 1))); // Exponential backoff
+    }
+  }
+};
 // Environment variable validation
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_CHATBOT_KEY_NEW || "";
 if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not defined");
@@ -12,6 +22,9 @@ if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not defined");
 const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "X-OpenRouter-Provider": "openai,deepseek", // Specify allowed providers
+  },
 });
 
 // Migration function to transform chat_history to chat-history
@@ -112,34 +125,38 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "system", content: systemPrompt });
 
     // Call OpenRouter API
+    const models = ["openai/gpt-oss-20b:free", "deepseek/deepseek-chat-v3-0324:free"];
     let completion;
-    try {
-      completion = await client.chat.completions.create({
-        model: "openai/gpt-oss-20b:free",
-        messages,
-      });
-    } catch (apiError: any) {
-      console.error("OpenRouter API error:", {
-        status: apiError.response?.status,
-        data: apiError.response?.data,
-        message: apiError.message,
-      });
-      if (apiError.response?.status === 429) {
-        return NextResponse.json(
-          { success: false, message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است" },
-          { status: 429 }
+    for (const model of models) {
+      try {
+        completion = await retryRequest(() =>
+          client.chat.completions.create({
+            model,
+            messages,
+          })
         );
-      } else if (
-        apiError.response?.status === 524 ||
-        apiError.response?.status === 502 ||
-        apiError.response?.status === 503
-      ) {
-        return NextResponse.json(
-          { success: false, message: "درخواست به دلیل زمان‌بندی سرور هوش مصنوعی ناموفق بود. لطفاً دوباره تلاش کنید." },
-          { status: 502 }
-        );
+        break;
+      } catch (apiError: any) {
+        console.error("OpenRouter API Error:", {
+          model,
+          status: apiError.response?.status,
+          message: apiError.message,
+          details: apiError.response?.data,
+        });
+        if (apiError.response?.status === 429) {
+          return NextResponse.json(
+            { success: false, message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است" },
+            { status: 429 }
+          );
+        }
+        if (model === models[models.length - 1]) {
+          return NextResponse.json(
+            { success: false, message: "خطای سرور هوش مصنوعی. لطفاً دوباره تلاش کنید." },
+            { status: apiError.response?.status || 502 }
+          );
+        }
+        continue; // Try next model
       }
-      return NextResponse.json({ success: false, message: "خطا در ارتباط با هوش مصنوعی" }, { status: 500 });
     }
 
     // Validate API response
