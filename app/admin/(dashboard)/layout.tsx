@@ -39,6 +39,10 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               مدیتیشن
             </a>
 
+            <a href="/admin/blogs" className="block  text-right py-2 px-4 hover:bg-gray-700">
+              بلاگ ها
+            </a>
+
             <button
               onClick={() => {
                 localStorage.removeItem("authToken"); // Clear token

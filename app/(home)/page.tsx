@@ -14,9 +14,10 @@ const page = () => {
 
       <About />
       <DownloadSection />
-      {/* <BlogSection /> */}
-      <CustomerReviewsSection />
+      <BlogSection />
       <FAQSection />
+      <CustomerReviewsSection />
+
       <QuoteForm />
     </div>
   );

@@ -23,7 +23,7 @@ export default function BlogCardHome({ imageSrc, title, summary, date, post_name
             src={imageSrc} // Replace with optimized image URL
             alt={title}
             loading={index === 0 ? "eager" : "lazy"}
-            className="w-full"
+            className="w-full h-60 object-cover"
           />
           <div className="p-4">
             <Link href={`/blog/${post_name}`}>
@@ -40,7 +40,7 @@ export default function BlogCardHome({ imageSrc, title, summary, date, post_name
               <span>{formatDate(date)}</span>
             </div>
 
-            <Link href={`/blog/${post_name}`}>
+            <Link href={`/blogs/${post_name}`}>
               <p className="text-primary text-left text-sm mt-4 sm:text-base font-semibold">Read More</p>
             </Link>
           </div>
