@@ -301,7 +301,7 @@ const MeditationPage: React.FC = () => {
                   <td className="py-2 px-4 border-b">{meditation.type}</td>
                   <td className="py-2 px-4 border-b">
                     <a
-                      href={meditation.file}
+                      href={BASE_URL_IMAGES + meditation.file}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-500 hover:underline"

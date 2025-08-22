@@ -1,5 +1,6 @@
 "use client";
 
+import { BASE_URL_IMAGES } from "@/lib/constants";
 import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
@@ -225,7 +226,11 @@ const BlogsPage: React.FC = () => {
                   </td>
                   <td className="py-2 px-4 border-b">
                     {blog.imageUrl ? (
-                      <img src={blog.imageUrl} alt={blog.title} className="w-16 h-16 object-cover rounded" />
+                      <img
+                        src={BASE_URL_IMAGES + blog.imageUrl}
+                        alt={blog.title}
+                        className="w-16 h-16 object-cover rounded"
+                      />
                     ) : (
                       "No image"
                     )}

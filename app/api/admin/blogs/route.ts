@@ -1,14 +1,11 @@
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { randomUUID } from "crypto";
 import { ObjectId, Sort } from "mongodb";
 import { generateUniqueSlug } from "@/lib/slugify";
-
-// Define directory for image storage
-const imagesDir = path.join(process.cwd(), "public", "images");
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { s3 } from "@/lib/s3";
 
 export const POST = withAdminAuth(async function (req: NextRequest) {
   try {
@@ -30,17 +27,18 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     // Generate unique slug
     const slug = await generateUniqueSlug(title);
 
-    // Ensure images directory exists
-    await fs.mkdir(imagesDir, { recursive: true });
-
     // Generate unique filename for image
-    const imageExtension = path.extname(image.name) || ".jpg";
-    const uniqueImageName = `${randomUUID()}${imageExtension}`;
-    const imagePath = path.join(imagesDir, uniqueImageName);
+    const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";
+    const uniqueImageName = `${randomUUID()}.${imageExtension}`;
 
-    // Save image to public directory
+    // Upload image to S3
     const imageBuffer = Buffer.from(await image.arrayBuffer());
-    await fs.writeFile(imagePath, imageBuffer);
+    const command = new PutObjectCommand({
+      Bucket: process.env.LIARA_BUCKET_NAME,
+      Key: `images/${uniqueImageName}`,
+      Body: imageBuffer,
+    });
+    await s3.send(command);
 
     // Generate public URL for the image
     const imageUrl = `/images/${uniqueImageName}`;

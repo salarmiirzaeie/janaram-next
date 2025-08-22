@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { BASE_URL_IMAGES } from "@/lib/constants";
 
 interface Blog {
   _id: string;
@@ -73,7 +74,11 @@ const BlogPage: React.FC = () => {
               key={blog._id}
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <img src={blog.imageUrl || "/hero-bg.webp"} alt={blog.title} className="w-full h-48 object-cover" />
+              <img
+                src={BASE_URL_IMAGES + blog.imageUrl || "/hero-bg.webp"}
+                alt={blog.title}
+                className="w-full h-48 object-cover"
+              />
               <div className="p-4">
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">{blog.title}</h3>
                 {/* <p className="text-gray-600 text-sm mb-4">

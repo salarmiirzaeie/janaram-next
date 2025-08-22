@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { BASE_URL_IMAGES } from "@/lib/constants";
 
 interface Blog {
   _id: string;
@@ -80,7 +81,7 @@ const BlogDetailPage: React.FC = () => {
     <div className="max-w-6xl mt-28 mx-auto py-16 px-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-4">{blog.title}</h1>
       <img
-        src={blog.imageUrl || "/hero-bg.webp"}
+        src={BASE_URL_IMAGES + blog.imageUrl || "/hero-bg.webp"}
         alt={blog.title}
         className="w-full h-64 object-cover rounded-lg mb-6"
       />

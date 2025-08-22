@@ -1,14 +1,11 @@
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { randomUUID } from "crypto";
 import { ObjectId } from "mongodb";
 import { generateUniqueSlug } from "@/lib/slugify";
-
-// Define directory for image storage
-const imagesDir = path.join(process.cwd(), "public", "images");
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { s3 } from "@/lib/s3";
 
 export const GET = withAdminAuth(async function (req: NextRequest) {
   try {
@@ -59,7 +56,7 @@ export const PUT = withAdminAuth(async function (req: NextRequest) {
     const formData = await req.formData();
     const title = formData.get("title")?.toString();
     const content = formData.get("content")?.toString();
-    const image = formData.get("image") as File;
+    const image = formData.get("image") as File | null; // Allow null since image is optional
 
     // Log FormData for debugging
     console.log("PUT FormData entries:");
@@ -96,12 +93,17 @@ export const PUT = withAdminAuth(async function (req: NextRequest) {
 
     // Handle image update if provided
     if (image) {
-      await fs.mkdir(imagesDir, { recursive: true });
-      const imageExtension = path.extname(image.name) || ".jpg";
-      const uniqueImageName = `${randomUUID()}${imageExtension}`;
-      const imagePath = path.join(imagesDir, uniqueImageName);
+      const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";
+      const uniqueImageName = `${randomUUID()}.${imageExtension}`;
       const imageBuffer = Buffer.from(await image.arrayBuffer());
-      await fs.writeFile(imagePath, imageBuffer);
+
+      const command = new PutObjectCommand({
+        Bucket: process.env.LIARA_BUCKET_NAME,
+        Key: `images/${uniqueImageName}`,
+        Body: imageBuffer,
+      });
+      await s3.send(command);
+
       updateFields.imageUrl = `/images/${uniqueImageName}`;
     }
 
@@ -133,6 +135,27 @@ export const DELETE = withAdminAuth(async function (req: NextRequest) {
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
+
+    // Find the blog to get the image URL
+    const blog = await collection.findOne({ _id: new ObjectId(id) });
+    if (!blog) {
+      console.error("Blog not found for ID:", id);
+      return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
+    }
+
+    // Delete associated image from S3 if it exists
+    if (blog.imageUrl) {
+      const imageKey = blog.imageUrl.replace("/images/", "");
+      try {
+        const command = new DeleteObjectCommand({
+          Bucket: process.env.LIARA_BUCKET_NAME,
+          Key: `images/${imageKey}`,
+        });
+        await s3.send(command);
+      } catch (error) {
+        console.warn(`Failed to delete S3 image ${imageKey}:`, error);
+      }
+    }
 
     // Delete blog
     const result = await collection.deleteOne({ _id: new ObjectId(id) });
