@@ -1,5 +1,6 @@
 "use client";
 
+import { BASE_URL_IMAGES } from "@/lib/constants";
 import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
@@ -309,7 +310,11 @@ const MeditationPage: React.FC = () => {
                     </a>
                   </td>
                   <td className="py-2 px-4 border-b">
-                    <img src={meditation.image} alt={meditation.title} className="w-16 h-16 object-cover rounded" />
+                    <img
+                      src={BASE_URL_IMAGES + meditation.image}
+                      alt={meditation.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
                   </td>
                   <td className="py-2 px-4 border-b">{meditation.description}</td>
                   <td className="py-2 px-4 border-b">{meditation.duration}</td>

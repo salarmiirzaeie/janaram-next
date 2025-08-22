@@ -1,16 +1,22 @@
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { randomUUID } from "crypto";
-import { ObjectId } from "mongodb";
 import { sendToAll } from "@/lib/notifications";
-
-// Define directories for file storage
-const meditationsDir = path.join(process.cwd(), "public", "meditations");
-const imagesDir = path.join(process.cwd(), "public", "images");
-
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+const sw3client = new S3Client({
+  region: "default",
+  endpoint: process.env.LIARA_ENDPOINT || "",
+  credentials: {
+    accessKeyId: process.env.LIARA_ACCESS_KEY || "",
+    secretAccessKey: process.env.LIARA_SECRET_KEY || "",
+  },
+});
+const params = {
+  Body: "<Binary String>",
+  Bucket: process.env.LIARA_BUCKET_NAME,
+  Key: "objectkey",
+};
 export const POST = withAdminAuth(async function (req: NextRequest) {
   try {
     // Parse multipart/form-data
@@ -34,29 +40,43 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid meditation type" }, { status: 400 });
     }
 
-    // Ensure directories exist
-    await fs.mkdir(meditationsDir, { recursive: true });
-    await fs.mkdir(imagesDir, { recursive: true });
+    // Generate file extensions from file names
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "mp3";
+    const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";
+    const uniqueFileName = `meditations/${randomUUID()}.${fileExtension}`;
+    const uniqueImageName = `images/${randomUUID()}.${imageExtension}`;
 
-    // Generate unique filenames
-    const fileExtension = path.extname(file.name) || ".mp3";
-    const imageExtension = path.extname(image.name) || ".jpg";
-    const uniqueFileName = `${randomUUID()}${fileExtension}`;
-    const uniqueImageName = `${randomUUID()}${imageExtension}`;
-
-    // Define file paths
-    const filePath = path.join(meditationsDir, uniqueFileName);
-    const imagePath = path.join(imagesDir, uniqueImageName);
-
-    // Save files to the public directory
+    // Convert files to buffers
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const imageBuffer = Buffer.from(await image.arrayBuffer());
-    await fs.writeFile(filePath, fileBuffer);
-    await fs.writeFile(imagePath, imageBuffer);
+
+    // Upload files to Liara S3
+    const bucketName = process.env.LIARA_BUCKET_NAME || "janaram-bucket";
+
+    await sw3client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: uniqueFileName,
+        Body: fileBuffer,
+        ContentType: file.type,
+        ACL: "public-read", // Make file publicly accessible
+      })
+    );
+
+    // Upload image file
+    await sw3client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: uniqueImageName,
+        Body: imageBuffer,
+        ContentType: image.type,
+        ACL: "public-read", // Make image publicly accessible
+      })
+    );
 
     // Generate public URLs for the files
-    const fileUrl = `/meditations/${uniqueFileName}`;
-    const imageUrl = `/images/${uniqueImageName}`;
+    const fileUrl = `${process.env.LIARA_ENDPOINT}/${bucketName}/${uniqueFileName}`;
+    const imageUrl = `${process.env.LIARA_ENDPOINT}/${bucketName}/${uniqueImageName}`;
 
     // Connect to MongoDB
     const client = await clientPromise;
@@ -74,11 +94,13 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       isSuggested,
       createdAt: new Date(),
     });
+
     await sendToAll({
       title,
       body: `New meditation added: ${title}`,
       data: { meditationId: result.insertedId.toString() },
     });
+
     return NextResponse.json(
       {
         success: true,
