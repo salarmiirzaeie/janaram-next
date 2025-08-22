@@ -2,7 +2,7 @@ import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-export const GET = async (req: NextRequest, { params }: { params: { slug: string } }) => {
+export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
 
@@ -43,4 +43,4 @@ export const GET = async (req: NextRequest, { params }: { params: { slug: string
     console.error("Error fetching blog:", error);
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }
-};
+}
