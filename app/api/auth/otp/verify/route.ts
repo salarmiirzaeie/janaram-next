@@ -7,17 +7,13 @@ import { User } from "@/lib/types/user";
 const JWT_SECRET = process.env.JWT_SECRET || "";
 if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
 
-// Phone number and OTP validation
-const validatePhoneNumber = (phone: string): boolean => {
-  return /^(\+98|0)?9\d{9}$/.test(phone);
-};
 const validateOtp = (otp: string): boolean => {
   return /^\d{6}$/.test(otp);
 };
 
 export async function POST(req: Request) {
   try {
-    const { phoneNumber, code: otp } = await req.json();
+    const { phoneNumber, code: otp, goals } = await req.json();
     console.log(phoneNumber, otp, "req");
 
     // Input validation
@@ -62,6 +58,7 @@ export async function POST(req: Request) {
         createdAt: new Date(),
         updatedAt: null,
         messages: [],
+        goals: goals ? goals : [],
       };
       const result = await users.insertOne(newUser);
       user = { ...newUser, _id: result.insertedId };
