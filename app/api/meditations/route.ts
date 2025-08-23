@@ -20,8 +20,8 @@ export const GET = withAuth(async function (req: NextRequest) {
     // Build query: empty for all meditations, or filter by type
     const query = type ? { type } : {};
 
-    // Fetch meditations
-    const meditations = await collection.find(query).toArray();
+    // Fetch meditations, sorted by createdAt in descending order (newer first)
+    const meditations = await collection.find(query).sort({ createdAt: -1 }).toArray();
 
     // Return response
     return NextResponse.json(

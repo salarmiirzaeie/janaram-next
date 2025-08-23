@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import axios from "axios";
 import { randomBytes } from "crypto";
 const MelipayamakApi = require("melipayamak");
+const https = require("https");
 
 // Environment variable validation
 const SMS_API_KEY = process.env.SMS_API_KEY_PRO || "";
@@ -75,14 +76,47 @@ export async function POST(req: Request) {
     تیم جانارام ${appHash ? appHash : ""}`;
     // console.log(otp);
     try {
-      sms
-        .send(to, from, text)
-        .then((res: any) => {
-          console.log(res, "red");
-        })
-        .catch((err: any) => {
-          console.log(err, "err");
+      // sms
+      //   .send(to, from, text)
+      //   .then((res: any) => {
+      //     console.log(res, "red");
+      //   })
+      //   .catch((err: any) => {
+      //     console.log(err, "err");
+      //   });
+
+      const data = JSON.stringify({
+        bodyId: 359521,
+        to,
+        args: [otp, appHash],
+      });
+
+      const options = {
+        hostname: "console.melipayamak.com",
+        port: 443,
+        path: "/api/send/shared/6be212aadaea410b97e5ba4e98171dca",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": data.length,
+        },
+      };
+
+      const req = https.request(options, (res: any) => {
+        console.log("statusCode: " + res.statusCode);
+
+        res.on("data", (d: any) => {
+          process.stdout.write(d);
         });
+      });
+
+      req.on("error", (error: any) => {
+        console.error(error);
+      });
+
+      req.write(data);
+      req.end();
+      console.log(otp);
     } catch (smsError: any) {
       console.error("SMS API error:", {
         phoneNumber,
