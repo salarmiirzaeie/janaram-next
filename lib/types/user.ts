@@ -19,4 +19,5 @@ export interface User {
   subscriptionEndDate?: Date; // Expiration date for unlimited plan
   pushToken?: string;
   goals?: string[];
+  meditationTime?: number;
 }

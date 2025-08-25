@@ -13,7 +13,7 @@ const validateOtp = (otp: string): boolean => {
 
 export async function POST(req: Request) {
   try {
-    const { phoneNumber, code: otp, goals } = await req.json();
+    const { phoneNumber, code: otp } = await req.json();
     console.log(phoneNumber, otp, "req");
 
     // Input validation
@@ -42,6 +42,7 @@ export async function POST(req: Request) {
     let user: User | null = await users.findOne({ phoneNumber });
     console.log(user);
     let isNewUser = false; // Flag to track if user is new
+    let isOnboardingSelected = true; // Flag to track if user is new
 
     const today = new Date().toISOString().split("T")[0]; // Current date for conversation tracking
 
@@ -58,11 +59,11 @@ export async function POST(req: Request) {
         createdAt: new Date(),
         updatedAt: null,
         messages: [],
-        goals: goals ? goals : [],
       };
       const result = await users.insertOne(newUser);
       user = { ...newUser, _id: result.insertedId };
-      isNewUser = true; // Set flag to true for new user
+      isNewUser = true;
+      isOnboardingSelected = false; // Set flag to true for new user
     } else {
       // Update existing user
       await users.updateOne(
@@ -84,6 +85,9 @@ export async function POST(req: Request) {
       if (!user.name) {
         isNewUser = true;
       }
+      if (!user.goals) {
+        isOnboardingSelected = false;
+      }
     }
 
     // Generate JWT
@@ -103,7 +107,8 @@ export async function POST(req: Request) {
       success: true,
       token,
       user,
-      isNewUser, // Add isNewUser flag to response
+      isNewUser,
+      isOnboardingSelected, // Add isNewUser flag to response
     });
   } catch (err: any) {
     console.error("Error in OTP verification:", err);

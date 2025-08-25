@@ -102,20 +102,20 @@ export async function POST(req: Request) {
         },
       };
 
-      const req = https.request(options, (res: any) => {
-        console.log("statusCode: " + res.statusCode);
+      // const req = https.request(options, (res: any) => {
+      //   console.log("statusCode: " + res.statusCode);
 
-        res.on("data", (d: any) => {
-          process.stdout.write(d);
-        });
-      });
+      //   res.on("data", (d: any) => {
+      //     process.stdout.write(d);
+      //   });
+      // });
 
-      req.on("error", (error: any) => {
-        console.error(error);
-      });
+      // req.on("error", (error: any) => {
+      //   console.error(error);
+      // });
 
-      req.write(data);
-      req.end();
+      // req.write(data);
+      // req.end();
       console.log(otp);
     } catch (smsError: any) {
       console.error("SMS API error:", {

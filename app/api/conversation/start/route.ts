@@ -105,7 +105,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     // System prompt
     const systemPrompt =
       userDoc.plan === "free"
-        ? `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله به فارسی پاسخ دهید`
+        ? `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله به سوالات روزمره به فارسی پاسخ دهید . مود کاربر امروز ناراحت`
         : `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله به فارسی پاسخ دهید. مخاطب ${userDoc.name} است`;
 
     // Retrieve last two conversations from chat-history collection
