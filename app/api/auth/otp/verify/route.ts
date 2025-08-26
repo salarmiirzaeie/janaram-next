@@ -7,10 +7,6 @@ import { User } from "@/lib/types/user";
 const JWT_SECRET = process.env.JWT_SECRET || "";
 if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
 
-// Phone number and OTP validation
-const validatePhoneNumber = (phone: string): boolean => {
-  return /^(\+98|0)?9\d{9}$/.test(phone);
-};
 const validateOtp = (otp: string): boolean => {
   return /^\d{6}$/.test(otp);
 };
@@ -46,6 +42,7 @@ export async function POST(req: Request) {
     let user: User | null = await users.findOne({ phoneNumber });
     console.log(user);
     let isNewUser = false; // Flag to track if user is new
+    let isOnboardingSelected = true; // Flag to track if user is new
 
     const today = new Date().toISOString().split("T")[0]; // Current date for conversation tracking
 
@@ -65,7 +62,8 @@ export async function POST(req: Request) {
       };
       const result = await users.insertOne(newUser);
       user = { ...newUser, _id: result.insertedId };
-      isNewUser = true; // Set flag to true for new user
+      isNewUser = true;
+      isOnboardingSelected = false; // Set flag to true for new user
     } else {
       // Update existing user
       await users.updateOne(
@@ -87,6 +85,9 @@ export async function POST(req: Request) {
       if (!user.name) {
         isNewUser = true;
       }
+      if (!user.goals) {
+        isOnboardingSelected = false;
+      }
     }
 
     // Generate JWT
@@ -106,7 +107,8 @@ export async function POST(req: Request) {
       success: true,
       token,
       user,
-      isNewUser, // Add isNewUser flag to response
+      isNewUser,
+      isOnboardingSelected, // Add isNewUser flag to response
     });
   } catch (err: any) {
     console.error("Error in OTP verification:", err);

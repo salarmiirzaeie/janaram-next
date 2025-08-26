@@ -105,8 +105,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     // System prompt
     const systemPrompt =
       userDoc.plan === "free"
-        ? `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله پاسخ دهید`
-        : `شما یک روانشناس حرفه‌ای هستید، فقط در دو جمله پاسخ دهید. مخاطب ${userDoc.name} است`;
+        ? `تو یک روانشناس ایرانی با تجربه هستی. با لحن صمیمی و ساده، به سوالات کاربر درباره استرس، اضطراب، روابط، یا مشکلات روزمره پاسخ بده. راهکارهای عملی و کوتاه پیشنهاد کن`
+        : `تو یک روانشناس ایرانی با تجربه هستی. با لحن صمیمی و ساده، به سوالات کاربر درباره استرس، اضطراب، روابط، یا مشکلات روزمره پاسخ بده. راهکارهای عملی و کوتاه پیشنهاد کن.
+        نام مخاطب شما ${userDoc.name} است`;
 
     // Retrieve last two conversations from chat-history collection
     const recentMessages = await chatHistory.find({ userId: userId }).sort({ timestamp: -1 }).limit(2).toArray();
