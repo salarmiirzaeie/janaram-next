@@ -64,7 +64,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       },
       {
         name: "unlimited",
-        description: "طرح نامحدود با امکانات پیشرفته برای ۱ ماه",
+        description: "طرح نامحدود برای ۱ ماه",
         features: ["گفت‌وگوهای نامحدود روزانه", "امکان شخصی سازی روانشناس"],
         isActive: userDoc.plan === "unlimited" && (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
         id: "123456",
@@ -73,7 +73,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       },
       {
         name: "premium",
-        description: "طرح نامحدود با امکانات پیشرفته برای ۳ ماه",
+        description: "طرح پریمیوم برای ۱ ماه",
         features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "امکان شخصی سازی روانشناس"],
         isActive: userDoc.plan === "premium" && userDoc.subscriptionDuration === 3,
         id: "1234567",
@@ -82,7 +82,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       },
       {
         name: "pro",
-        description: "طرح نامحدود با امکانات پیشرفته برای ۶ ماه",
+        description: "طرح پرو برای ۱ ماه",
         features: [
           "گفت‌وگوهای نامحدود روزانه",
           "دسترسی به تاریخچه کامل گفت‌وگوها",
