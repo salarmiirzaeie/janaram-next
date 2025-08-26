@@ -18,7 +18,11 @@ export const GET = withAuth(async function (req: NextRequest, { params }: { para
     const collection = db.collection("meditations");
 
     // Fetch meditation by ID
-    const meditation = await collection.findOne({ _id: new ObjectId(id) });
+    const meditation = await collection.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $inc: { listenCount: 1 } }, // Only increment listenCount
+      { returnDocument: "after" } // Return the updated document
+    );
 
     if (!meditation) {
       return NextResponse.json({ success: false, message: "Meditation not found" }, { status: 404 });
