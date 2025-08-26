@@ -49,7 +49,7 @@ export const PUT = withAdminAuth(async function (req: NextRequest, { params }: {
     if (title) update.title = title;
     if (type) update.type = type;
     if (description) update.description = description;
-    if (duration) update.duration = parseInt(duration);
+    if (duration) update.duration = duration;
     if (isSuggested !== undefined) update.isSuggested = isSuggested;
 
     // Handle file uploads if provided
