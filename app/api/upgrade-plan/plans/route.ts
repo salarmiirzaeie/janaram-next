@@ -78,16 +78,21 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         isActive: userDoc.plan === "premium" && userDoc.subscriptionDuration === 3,
         id: "1234567",
         price: 79,
-        duration: 3,
+        duration: 1,
       },
       {
         name: "pro",
         description: "طرح نامحدود با امکانات پیشرفته برای ۶ ماه",
-        features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "امکان شخصی سازی روانشناس"],
+        features: [
+          "گفت‌وگوهای نامحدود روزانه",
+          "دسترسی به تاریخچه کامل گفت‌وگوها",
+          "امکان شخصی سازی روانشناس",
+          "پاسخ با تحلیل عمیق",
+        ],
         isActive: userDoc.plan === "pro" && userDoc.subscriptionDuration === 6,
         id: "12345678",
         price: 149,
-        duration: 6,
+        duration: 1,
       },
     ];
 
