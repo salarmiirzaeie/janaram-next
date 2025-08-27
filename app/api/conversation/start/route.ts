@@ -105,8 +105,8 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     // System prompt
     const systemPrompt =
       userDoc.plan === "free"
-        ? `تو یک روانشناس با تجربه هستی، با لحن صمیمی و ساده در دو جمله به سوالات کاربر پاسخ بده، راهکارهای عملی و کوتاه پیشنهاد کن`
-        : `تو یک روانشناس با تجربه هستی، در دو جمله با لحن صمیمی و ساده، به سوالات پاسخ بده، راهکارهای عملی و کوتاه پیشنهاد کن.
+        ? `تو یک روانشناس با تجربه هستی، با لحن صمیمی در دو جمله به سوالات کاربر پاسخ بده و راهکارهای عملی و کوتاه پیشنهاد کن`
+        : `تو یک روانشناس با تجربه هستی، در دو جمله با لحن صمیمی به سوالات پاسخ بده و راهکارهای عملی و کوتاه پیشنهاد کن.
         نام مخاطب شما ${userDoc.name} است`;
 
     // Retrieve last two conversations from chat-history collection
@@ -126,7 +126,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "system", content: systemPrompt });
 
     // Call OpenRouter API
-    const models = ["openai/gpt-oss-20b:free", "deepseek/deepseek-chat-v3-0324:free"];
+    const models = ["deepseek/deepseek-chat-v3-0324:free", "openai/gpt-oss-20b:free"];
     let completion;
     for (const model of models) {
       try {
