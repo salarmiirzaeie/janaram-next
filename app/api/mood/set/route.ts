@@ -2,23 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
+import moment from "moment-timezone"; // For Gregorian date handling with time zone
 
 interface IMood {
-  date: string; // YYYY-MM-DD
   mood: number | null;
   note?: string;
 }
 
-// POST handler to store a user's mood
+// Helper function to get today's Gregorian date in Asia/Tehran time zone
+const getTodayGregorianDate = (): string => {
+  return moment.tz("Asia/Tehran").format("YYYY-MM-DD"); // e.g., 2025-08-27
+};
+const getTommorrowGregorianDate = (): string => {
+  return moment.tz("Asia/Tehran").add(1, "day").format("YYYY-MM-DD"); // e.g., 2025-08-28
+};
+
+// POST handler to set or edit today's mood
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const body = await req.json();
-    const { date, mood, note } = body;
+    const { mood, note } = body;
 
-    // Validate input
-    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return NextResponse.json({ success: false, message: "فرمت تاریخ نامعتبر است" }, { status: 400 });
-    }
+    // Validate mood
     if (mood !== null && (typeof mood !== "number" || mood < 0 || mood > 10)) {
       return NextResponse.json(
         { success: false, message: "مقدار mood باید بین 0 تا 10 یا null باشد" },
@@ -26,6 +31,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       );
     }
 
+    // Validate userId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
@@ -34,35 +40,75 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
     }
 
+    // Sanitize note
+    const sanitizedNote = note;
+
+    // Connect to MongoDB
     const db = (await clientPromise).db("janaram-db");
     const moodHistory = db.collection("mood-history");
 
-    // Check if mood entry for this date already exists
-    const existingMood = await moodHistory.findOne({ userId, date });
+    // Get today's date
+    const today = getTodayGregorianDate();
+
+    // Check if mood entry exists for today
+    const existingMood = await moodHistory.findOne({ userId, date: today });
+
     if (existingMood) {
-      return NextResponse.json({ success: false, message: "برای این تاریخ قبلاً حالتی ثبت شده است" }, { status: 400 });
-    }
+      // Update existing mood
+      const result = await moodHistory.updateOne(
+        { userId, date: today },
+        {
+          $set: {
+            mood,
+            note: sanitizedNote,
+            updatedAt: new Date(),
+          },
+        }
+      );
 
-    // Insert new mood entry
-    const result = await moodHistory.insertOne({
-      userId,
-      date,
-      mood,
-      note: note || "",
-      timestamp: new Date(),
-    });
+      if (result.modifiedCount === 0) {
+        return NextResponse.json({ success: false, message: "به‌روزرسانی انجام نشد" }, { status: 400 });
+      }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        _id: result.insertedId,
-        date,
+      return NextResponse.json({
+        success: true,
+        message: "حالت امروز به‌روزرسانی شد",
+        data: {
+          _id: existingMood._id,
+          date: today,
+          mood,
+          note: sanitizedNote,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      // Create new mood entry
+      const moodEntry = {
+        userId,
+        date: today,
         mood,
-        note,
-      },
-    });
+        note: sanitizedNote,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await moodHistory.insertOne(moodEntry);
+
+      return NextResponse.json({
+        success: true,
+        message: "حالت امروز ثبت شد",
+        data: {
+          _id: result.insertedId,
+          date: today,
+          mood,
+          note: sanitizedNote,
+          createdAt: moodEntry.createdAt,
+          updatedAt: moodEntry.updatedAt,
+        },
+      });
+    }
   } catch (err: any) {
-    console.error("Error storing mood:", {
+    console.error("Error processing mood:", {
       error: err.message,
       stack: err.stack,
     });
@@ -70,23 +116,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
   }
 });
 
-// PUT handler to edit an existing mood entry by date
-export const PUT = withAuth(async (req: NextRequest, user: any) => {
+// GET handler to retrieve user's mood history with pagination
+export const GET = withAuth(async (req: NextRequest, user: any) => {
   try {
-    const body = await req.json();
-    const { date, mood, note } = body;
-
-    // Validate input
-    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return NextResponse.json({ success: false, message: "فرمت تاریخ نامعتبر است" }, { status: 400 });
-    }
-    if (mood !== null && (typeof mood !== "number" || mood < 0 || mood > 10)) {
-      return NextResponse.json(
-        { success: false, message: "مقدار mood باید بین 0 تا 10 یا null باشد" },
-        { status: 400 }
-      );
-    }
-
+    // Validate userId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
@@ -95,42 +128,57 @@ export const PUT = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
     }
 
+    // Get query parameters for pagination
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+
+    // Validate pagination parameters
+    if (isNaN(page) || page < 1) {
+      return NextResponse.json({ success: false, message: "شماره صفحه باید یک عدد مثبت باشد" }, { status: 400 });
+    }
+    if (isNaN(limit) || limit < 1) {
+      return NextResponse.json({ success: false, message: "حداکثر تعداد باید یک عدد مثبت باشد" }, { status: 400 });
+    }
+
+    // Connect to MongoDB
     const db = (await clientPromise).db("janaram-db");
     const moodHistory = db.collection("mood-history");
 
-    // Check if the mood entry exists for the given date and user
-    const existingMood = await moodHistory.findOne({ userId, date });
-    if (!existingMood) {
-      return NextResponse.json({ success: false, message: "حالت برای تاریخ مشخص شده یافت نشد" }, { status: 404 });
-    }
+    // Build query
+    const query = { userId };
 
-    // Update mood entry
-    const result = await moodHistory.updateOne(
-      { userId, date },
-      {
-        $set: {
-          mood,
-          note: note || "",
-          updatedAt: new Date(),
-        },
-      }
-    );
+    // Get total count for pagination
+    const totalRecords = await moodHistory.countDocuments(query);
 
-    if (result.modifiedCount === 0) {
-      return NextResponse.json({ success: false, message: "به‌روزرسانی انجام نشد" }, { status: 400 });
-    }
+    // Calculate pagination
+    const totalPages = Math.ceil(totalRecords / limit);
+    const skip = (page - 1) * limit;
+
+    // Fetch paginated mood records, sorted by date descending
+    const moods = await moodHistory.find(query).sort({ date: -1 }).skip(skip).limit(limit).toArray();
+
+    // Sanitize notes in response
+    const sanitizedMoods = moods.map((mood) => ({
+      _id: mood._id,
+      date: mood.date,
+      mood: mood.mood,
+      note: mood.note,
+    }));
 
     return NextResponse.json({
       success: true,
-      data: {
-        _id: existingMood._id,
-        date,
-        mood,
-        note,
+      message: "سوابق حالت با موفقیت دریافت شد",
+      data: sanitizedMoods,
+      pagination: {
+        totalRecords,
+        currentPage: page,
+        totalPages,
+        limit,
       },
     });
   } catch (err: any) {
-    console.error("Error updating mood:", {
+    console.error("Error retrieving moods:", {
       error: err.message,
       stack: err.stack,
     });
