@@ -30,10 +30,10 @@ export default function BlogCardHome({ imageSrc, title, summary, date, post_name
               <h2 className="text-xl font-bold mb-2 hover:text-primary">{title}</h2>
             </Link>
             <div className="flex flex-row items-center text-sm mb-4 text-gray-500">
-              <p>By </p>
+              <p className="text-right">نوشته شده بوسیله </p>
 
               <Link href={"/"} className="hover:underline ml-1 text-primary">
-                Auto Glass Solutions
+                جانارام
               </Link>
 
               <span className="mx-2">|</span>
@@ -41,7 +41,7 @@ export default function BlogCardHome({ imageSrc, title, summary, date, post_name
             </div>
 
             <Link href={`/blogs/${post_name}`}>
-              <p className="text-primary text-left text-sm mt-4 sm:text-base font-semibold">Read More</p>
+              <p className="text-primary text-left text-sm mt-4 sm:text-base font-semibold">بیشتر</p>
             </Link>
           </div>
         </div>

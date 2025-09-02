@@ -3,6 +3,9 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
 import moment from "moment-timezone"; // For Gregorian date handling with time zone
+import { sendNotification } from "@/lib/notifications";
+import { moods } from "@/lib/mood";
+import { User } from "@/lib/types/user";
 
 interface IMood {
   mood: number | null;
@@ -46,7 +49,8 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     // Connect to MongoDB
     const db = (await clientPromise).db("janaram-db");
     const moodHistory = db.collection("mood-history");
-
+    const users = db.collection<User>("users");
+    const userDoc = await users.findOne({ _id: userId });
     // Get today's date
     const today = getTodayGregorianDate();
 
@@ -79,6 +83,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           mood,
           note: sanitizedNote,
           updatedAt: new Date(),
+          isTodayFirstMood: false,
         },
       });
     } else {
@@ -93,6 +98,22 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       };
 
       const result = await moodHistory.insertOne(moodEntry);
+      // if (mood <= 5) {
+      //   setTimeout(async () => {
+      //     try {
+      //       sendNotification({
+      //         userId: user.sub,
+      //         title: "من همیشه کنارتم",
+      //         body: `${userDoc?.name} جان! می‌دونم امروز  ${
+      //           moods.find((mood) => mood.value === moodEntry.mood)?.label
+      //         } هستی، بیا باهم حرف بزنیم تا حالت رو بهتر کنیم`,
+      //         action: "OPEN_CHATBOT",
+      //       });
+      //     } catch (error) {
+      //       console.error("Error sending notification:", error);
+      //     }
+      //   }, 60000);
+      // }
 
       return NextResponse.json({
         success: true,
@@ -104,6 +125,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           note: sanitizedNote,
           createdAt: moodEntry.createdAt,
           updatedAt: moodEntry.updatedAt,
+          isTodayFirstMood: true,
         },
       });
     }

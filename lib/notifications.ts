@@ -20,9 +20,10 @@ interface NotificationData {
   title: string;
   body: string;
   data?: Record<string, string>;
+  action?: string;
 }
 
-export async function sendNotification({ userId, title, body, data }: NotificationData) {
+export async function sendNotification({ userId, title, body, data, action }: NotificationData) {
   try {
     // Validate userId
     let objectId: ObjectId;
@@ -37,21 +38,27 @@ export async function sendNotification({ userId, title, body, data }: Notificati
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
 
-    // Fetch user with FCM token
+    // Fetch user with FCM token and name
     const user = await users.findOne({ _id: objectId });
     if (!user || !user.pushToken) {
       console.error("User or FCM token not found for userId:", userId);
       throw new Error("کاربر یا توکن اعلان یافت نشد");
     }
 
-    // Prepare notification message
+    // Personalize body with user's name
+    const personalizedBody = body.replace("{name}", user.name || "دوست عزیز");
+
+    // Prepare notification message with action for chatbot
     const message = {
       token: user.pushToken,
       notification: {
         title,
-        body,
+        body: personalizedBody,
       },
-      data: data || {},
+      data: {
+        ...data,
+        action: action || "OPEN_CHATBOT", // Default to OPEN_CHATBOT if not specified
+      },
     };
 
     // Send notification via Firebase

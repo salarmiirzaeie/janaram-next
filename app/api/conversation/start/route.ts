@@ -15,6 +15,7 @@ const retryRequest = async (fn: () => Promise<any>, maxAttempts = 3, delay = 100
     }
   }
 };
+
 // Environment variable validation
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_CHATBOT_KEY_NEW || "";
 if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not defined");
@@ -27,13 +28,28 @@ const client = new OpenAI({
   },
 });
 
-// Migration function to transform chat_history to chat-history
+// Function to suggest a meditation from the meditations collection
+const suggestMeditation = async (
+  db: any,
+  mood: number | null
+): Promise<{ title: string; description: string; _id: string; type: string } | null> => {
+  if (mood === null || mood > 5) return null;
+
+  const meditationsCollection = db.collection("meditations");
+  const validTypes = ["calm", "sleep", "nature"]; // Types suitable for low mood (customize as needed)
+  const suitableMeditations = await meditationsCollection
+    .find({ type: { $in: validTypes } }) // Filter by valid types for low mood
+    .toArray();
+
+  if (suitableMeditations.length === 0) return null;
+  return suitableMeditations[Math.floor(Math.random() * suitableMeditations.length)];
+};
+
+// Migration function to transform chat_history to chat-history (unchanged)
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const db = (await clientPromise).db("janaram-db");
-
-    // Run migration once at the start
 
     const { message } = await req.json();
     if (!message || typeof message !== "string") {
@@ -44,7 +60,6 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     const chatHistory = db.collection("chat-history");
     const today = new Date().toISOString().split("T")[0];
 
-    // Convert user.sub to ObjectId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
@@ -53,14 +68,12 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
     }
 
-    // Fetch user data
     let userDoc = await users.findOne({ _id: userId });
     if (!userDoc || !userDoc._id) {
       console.error("User not found or missing _id for user.sub:", user.sub);
       return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
     }
 
-    // Check if unlimited plan has expired
     const now = new Date();
     if (userDoc.plan !== "free" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
       await users.updateOne(
@@ -77,7 +90,6 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       }
     }
 
-    // Check conversation limit for free plan
     if (userDoc.plan === "free") {
       const conversationCount = userDoc.conversationCount?.date === today ? userDoc.conversationCount.count : 0;
       if (conversationCount >= 10) {
@@ -87,7 +99,6 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         );
       }
 
-      // Increment conversation count
       await users.updateOne(
         { _id: userId },
         {
@@ -99,31 +110,27 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       );
     }
 
-    // Prepare messages for OpenRouter
     let messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
 
-    // System prompt
     const systemPrompt =
       userDoc.plan === "free"
         ? `شما یک روانشناس حرفه‌ای هستید، در دو جمله به کاربر پاسخ دهید`
-        : `شما یک روانشناس حرفه‌ای هستید، در دو جمله به کاربر پاسخ دهید .نام مخاطب شما ${userDoc.name} است`;
+        : `شما یک روانشناس حرفه‌ای هستید، در دو جمله به کاربر پاسخ دهید. نام مخاطب شما ${userDoc.name} است`;
 
-    // Retrieve last two conversations from chat-history collection
     const recentMessages = await chatHistory.find({ userId: userId }).sort({ timestamp: -1 }).limit(2).toArray();
 
     if (recentMessages.length > 0) {
       messages.push(
         ...recentMessages.flatMap((msg) => [
-          { role: "user" as "user" | "assistant", content: msg.user },
-          { role: "assistant" as "user" | "assistant", content: msg.ai },
+          { role: "user" as const, content: msg.user },
+          { role: "assistant" as const, content: msg.ai },
         ])
       );
     }
 
-    // Add new user message and system prompt
     messages.push({ role: "user", content: message });
     messages.push({ role: "system", content: systemPrompt });
-    // Call OpenRouter API
+
     const models = ["deepseek/deepseek-r1-0528:free", "deepseek/deepseek-chat-v3-0324:free"];
     let completion;
     for (const model of models) {
@@ -154,25 +161,36 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
             { status: apiError.response?.status || 502 }
           );
         }
-        continue; // Try next model
+        continue;
       }
     }
 
-    // Validate API response
     if (!completion || !completion.choices || !Array.isArray(completion.choices) || completion.choices.length === 0) {
       console.error("Invalid OpenRouter response:", completion);
       return NextResponse.json({ success: false, message: "پاسخ نامعتبری از هوش مصنوعی دریافت شد" }, { status: 500 });
     }
 
-    const aiResponse = completion.choices[0].message?.content;
+    let aiResponse = completion.choices[0].message?.content;
     if (!aiResponse) {
       console.error("No content in OpenRouter response:", completion.choices[0]);
       return NextResponse.json({ success: false, message: "پاسخی از هوش مصنوعی دریافت نشد" }, { status: 500 });
     }
 
+    // Suggest meditation if mood is low (fetch from recent mood)
+    // const recentMood = await db.collection("mood-history").findOne({ userId }, { sort: { updatedAt: -1 } });
+    // let meditationSuggestion = null;
+
+    // if (recentMood) {
+    //   if (recentMood?.mood !== null && recentMood.mood <= 5) {
+    //     meditationSuggestion = await suggestMeditation(db, recentMood.mood);
+    //     if (meditationSuggestion) {
+    //       aiResponse += `\n\nبا توجه به حس امروزت ییشنهاد می‌کنم مدیتیشن ${meditationSuggestion.title}  رو امتحان کنی.`;
+    //     }
+    //   }
+    // }
     // Store new conversation in chat-history collection
     const newConversation = {
-      userId: userId,
+      userId,
       user: message,
       ai: aiResponse,
       timestamp: new Date(),

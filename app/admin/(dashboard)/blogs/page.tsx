@@ -103,7 +103,7 @@ const BlogsPage: React.FC = () => {
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("content", data.content);
-    formData.append("authorId", data.authorId);
+    formData.append("authorId", 1);
     if (data.image?.[0]) formData.append("image", data.image[0]);
 
     try {
