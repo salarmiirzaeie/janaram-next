@@ -42,6 +42,7 @@ export const GET = withAuth(async function (req: NextRequest, { params }: { para
           duration: meditation.duration,
           exhaleDuration: meditation.exhaleDuration,
           inhaleDuration: meditation.inhaleDuration,
+          holdDuration: meditation.holdDuration,
         },
       },
       { status: 200 }
