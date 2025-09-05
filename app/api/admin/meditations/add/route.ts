@@ -60,6 +60,7 @@ export const PUT = withAdminAuth(async function (req: NextRequest, { params }: {
         Bucket: process.env.LIARA_BUCKET_NAME,
         Key: `meditations/${uniqueFileName}`,
         Body: fileBuffer,
+        ContentType: file.type || "audio/mpeg", // ✅ FIX
       });
       await s3.send(command);
       update.fileUrl = `/meditations/${uniqueFileName}`;
@@ -75,6 +76,7 @@ export const PUT = withAdminAuth(async function (req: NextRequest, { params }: {
         Bucket: process.env.LIARA_BUCKET_NAME,
         Key: `images/${uniqueImageName}`,
         Body: imageBuffer,
+        ContentType: image.type || "image/jpeg", // ✅ FIX
       });
       await s3.send(command);
       update.imageUrl = `/images/${uniqueImageName}`;

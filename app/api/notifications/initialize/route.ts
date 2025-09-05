@@ -3,7 +3,6 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
-import { Expo } from "expo-server-sdk";
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {

@@ -1,32 +1,112 @@
+// pages/api/mood.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
-import moment from "moment-timezone"; // For Gregorian date handling with time zone
-import { sendNotification } from "@/lib/notifications";
-import { moods } from "@/lib/mood";
-import { User } from "@/lib/types/user";
+import moment from "moment-timezone";
+import { getBreathingTypesForMood, getMeditationTypesForMood, moods, trains } from "@/lib/mood";
 
 interface IMood {
   mood: number | null;
   note?: string;
 }
 
-// Helper function to get today's Gregorian date in Asia/Tehran time zone
-const getTodayGregorianDate = (): string => {
-  return moment.tz("Asia/Tehran").format("YYYY-MM-DD"); // e.g., 2025-08-27
-};
-const getTommorrowGregorianDate = (): string => {
-  return moment.tz("Asia/Tehran").add(1, "day").format("YYYY-MM-DD"); // e.g., 2025-08-28
+// Helper for today's date
+const getTodayGregorianDate = (): string => moment.tz("Asia/Tehran").format("YYYY-MM-DD");
+
+// Create exercises for user dynamically
+const createUserExercisesForMood = async (userId: ObjectId, moodKey: string, db: any) => {
+  const exercisesCollection = db.collection("user-exercises");
+  const meditationCollection = db.collection("meditations");
+  const breathingCollection = db.collection("breathing");
+
+  const exercises = trains[moodKey as keyof typeof trains] || [];
+
+  for (const exercise of exercises) {
+    // Meditation
+    if (exercise.includes("meditation")) {
+      const meditationTypes = getMeditationTypesForMood(moodKey);
+      const meditation = await meditationCollection
+        .aggregate([{ $match: { type: { $in: meditationTypes } } }, { $sample: { size: 1 } }])
+        .toArray();
+
+      if (meditation.length > 0) {
+        await exercisesCollection.insertOne({
+          userId,
+          date: getTodayGregorianDate(),
+          exerciseId: meditation[0]._id.toString(),
+          type: "meditation",
+          done: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    }
+    // Breathing
+    else if (exercise.includes("breathing")) {
+      const breathingTypes = getBreathingTypesForMood(moodKey);
+      const breathing = await breathingCollection
+        .aggregate([{ $match: { type: { $in: breathingTypes } } }, { $sample: { size: 1 } }])
+        .toArray();
+
+      if (breathing.length > 0) {
+        await exercisesCollection.insertOne({
+          userId,
+          date: getTodayGregorianDate(),
+          exerciseId: breathing[0]._id.toString(),
+          type: "breathing",
+          done: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    }
+    // Step activities (mindful_activity, grounding_activity, body_scan)
+    else if (["mindful_activity", "grounding_activity", "body_scan"].includes(exercise)) {
+      await exercisesCollection.insertOne({
+        userId,
+        date: getTodayGregorianDate(),
+        exerciseId: exercise,
+        type: "step-activity",
+        done: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+    // Text activities (journaling, gratitude_exercise, daily_tip)
+    else if (["journaling", "gratitude_exercise", "daily_tip"].includes(exercise)) {
+      await exercisesCollection.insertOne({
+        userId,
+        date: getTodayGregorianDate(),
+        exerciseId: exercise,
+        type: "text-activity",
+        done: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+    // Chatbot
+    else if (exercise.includes("chatbot")) {
+      await exercisesCollection.insertOne({
+        userId,
+        date: getTodayGregorianDate(),
+        exerciseId: exercise,
+        type: "chatbot",
+        done: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    } else {
+      console.warn("Unknown exercise type:", exercise);
+    }
+  }
 };
 
-// POST handler to set or edit today's mood
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
-    const body = await req.json();
+    const body: IMood = await req.json();
     const { mood, note } = body;
 
-    // Validate mood
     if (mood !== null && (typeof mood !== "number" || mood < 0 || mood > 10)) {
       return NextResponse.json(
         { success: false, message: "مقدار mood باید بین 0 تا 10 یا null باشد" },
@@ -34,176 +114,97 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       );
     }
 
-    // Validate userId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
-    } catch (err) {
-      console.error("Invalid user.sub format:", user.sub, err);
+    } catch {
       return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
     }
 
-    // Sanitize note
     const sanitizedNote = note;
-
-    // Connect to MongoDB
     const db = (await clientPromise).db("janaram-db");
     const moodHistory = db.collection("mood-history");
-    const users = db.collection<User>("users");
-    const userDoc = await users.findOne({ _id: userId });
-    // Get today's date
-    const today = getTodayGregorianDate();
 
-    // Check if mood entry exists for today
+    const today = getTodayGregorianDate();
     const existingMood = await moodHistory.findOne({ userId, date: today });
 
+    let isTodayFirstMood = false;
+
     if (existingMood) {
-      // Update existing mood
-      const result = await moodHistory.updateOne(
+      await moodHistory.updateOne(
         { userId, date: today },
-        {
-          $set: {
-            mood,
-            note: sanitizedNote,
-            updatedAt: new Date(),
-          },
-        }
+        { $set: { mood, note: sanitizedNote, updatedAt: new Date() } }
       );
-
-      if (result.modifiedCount === 0) {
-        return NextResponse.json({ success: false, message: "به‌روزرسانی انجام نشد" }, { status: 400 });
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: "حالت امروز به‌روزرسانی شد",
-        data: {
-          _id: existingMood._id,
-          date: today,
-          mood,
-          note: sanitizedNote,
-          updatedAt: new Date(),
-          isTodayFirstMood: false,
-        },
-      });
     } else {
-      // Create new mood entry
-      const moodEntry = {
+      await moodHistory.insertOne({
         userId,
         date: today,
         mood,
         note: sanitizedNote,
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
-
-      const result = await moodHistory.insertOne(moodEntry);
-      // if (mood <= 5) {
-      //   setTimeout(async () => {
-      //     try {
-      //       sendNotification({
-      //         userId: user.sub,
-      //         title: "من همیشه کنارتم",
-      //         body: `${userDoc?.name} جان! می‌دونم امروز  ${
-      //           moods.find((mood) => mood.value === moodEntry.mood)?.label
-      //         } هستی، بیا باهم حرف بزنیم تا حالت رو بهتر کنیم`,
-      //         action: "OPEN_CHATBOT",
-      //       });
-      //     } catch (error) {
-      //       console.error("Error sending notification:", error);
-      //     }
-      //   }, 60000);
-      // }
-
-      return NextResponse.json({
-        success: true,
-        message: "حالت امروز ثبت شد",
-        data: {
-          _id: result.insertedId,
-          date: today,
-          mood,
-          note: sanitizedNote,
-          createdAt: moodEntry.createdAt,
-          updatedAt: moodEntry.updatedAt,
-          isTodayFirstMood: true,
-        },
       });
+      isTodayFirstMood = true;
+
+      const moodObj = moods.find((m) => m.value === mood);
+      if (moodObj) {
+        await createUserExercisesForMood(userId, moodObj.key, db);
+      }
     }
-  } catch (err: any) {
-    console.error("Error processing mood:", {
-      error: err.message,
-      stack: err.stack,
+
+    return NextResponse.json({
+      success: true,
+      message: existingMood ? "حالت امروز به‌روزرسانی شد" : "حالت امروز ثبت شد",
+      data: { date: today, mood, note: sanitizedNote, isTodayFirstMood },
     });
+  } catch (err: any) {
+    console.error("Error processing mood:", err);
     return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
   }
 });
 
-// GET handler to retrieve user's mood history with pagination
 export const GET = withAuth(async (req: NextRequest, user: any) => {
   try {
-    // Validate userId
-    let userId: ObjectId;
-    try {
-      userId = new ObjectId(user.sub);
-    } catch (err) {
-      console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
-    }
-
-    // Get query parameters for pagination
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
-
-    // Validate pagination parameters
-    if (isNaN(page) || page < 1) {
-      return NextResponse.json({ success: false, message: "شماره صفحه باید یک عدد مثبت باشد" }, { status: 400 });
-    }
-    if (isNaN(limit) || limit < 1) {
-      return NextResponse.json({ success: false, message: "حداکثر تعداد باید یک عدد مثبت باشد" }, { status: 400 });
-    }
-
-    // Connect to MongoDB
     const db = (await clientPromise).db("janaram-db");
+    const today = getTodayGregorianDate();
+    const userId = new ObjectId(user.sub);
     const moodHistory = db.collection("mood-history");
+    const exercisesCollection = db.collection("user-exercises");
 
-    // Build query
-    const query = { userId };
+    const moodEntry = await moodHistory.findOne({ userId, date: today });
+    const totalMoodDays = await moodHistory.countDocuments({ userId });
 
-    // Get total count for pagination
-    const totalRecords = await moodHistory.countDocuments(query);
+    if (!moodEntry) {
+      return NextResponse.json({
+        success: true,
+        data: { date: today, moodRegistered: false, exercisesRegistered: false, status: "no-mood", totalMoodDays },
+      });
+    }
 
-    // Calculate pagination
-    const totalPages = Math.ceil(totalRecords / limit);
-    const skip = (page - 1) * limit;
+    const exercises = await exercisesCollection.find({ userId, date: today }).toArray();
+    const totalExercises = exercises.length;
+    const completedExercises = exercises.filter((e) => e.done).length;
+    const progressPercent = totalExercises ? Math.round((completedExercises / totalExercises) * 100) : 0;
 
-    // Fetch paginated mood records, sorted by date descending
-    const moods = await moodHistory.find(query).sort({ date: -1 }).skip(skip).limit(limit).toArray();
-
-    // Sanitize notes in response
-    const sanitizedMoods = moods.map((mood) => ({
-      _id: mood._id,
-      date: mood.date,
-      mood: mood.mood,
-      note: mood.note,
-    }));
+    let status: "no-mood" | "not-started" | "in-progress" | "completed" = "not-started";
+    if (progressPercent === 100 && totalExercises > 0) status = "completed";
+    else if (progressPercent > 0) status = "in-progress";
 
     return NextResponse.json({
       success: true,
-      message: "سوابق حالت با موفقیت دریافت شد",
-      data: sanitizedMoods,
-      pagination: {
-        totalRecords,
-        currentPage: page,
-        totalPages,
-        limit,
+      data: {
+        date: today,
+        moodRegistered: true,
+        exercisesRegistered: totalExercises > 0,
+        totalExercises,
+        completedExercises,
+        progressPercent,
+        status,
+        totalMoodDays,
       },
     });
-  } catch (err: any) {
-    console.error("Error retrieving moods:", {
-      error: err.message,
-      stack: err.stack,
-    });
+  } catch (err) {
+    console.error(err);
     return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
   }
 });
