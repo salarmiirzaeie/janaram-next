@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
 import moment from "moment-timezone";
 import { getBreathingTypesForMood, getMeditationTypesForMood, moods, trains } from "@/lib/mood";
+import { sendNotification } from "@/lib/notifications";
 
 interface IMood {
   mood: number | null;
@@ -124,6 +125,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     const sanitizedNote = note;
     const db = (await clientPromise).db("janaram-db");
     const moodHistory = db.collection("mood-history");
+    const userDoc = await db.collection("users").findOne({ _id: userId });
+    if (!userDoc) {
+      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+    }
 
     const today = getTodayGregorianDate();
     const existingMood = await moodHistory.findOne({ userId, date: today });
@@ -145,6 +150,20 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         updatedAt: new Date(),
       });
       isTodayFirstMood = true;
+      if (mood !== null && mood < 5) {
+        const userName = userDoc.name || "دوست عزیزم";
+        const moodObj = moods.find((m) => m.value === mood);
+
+        const moodLabel = moodObj?.label || "خسته"; // پیش‌فرض خسته اگه پیدا نشد
+
+        setTimeout(() => {
+          sendNotification({
+            userId,
+            title: "جانارام همیشه همراهته",
+            body: `${userName} جان، متاسفم که امروز ${moodLabel} هستی 💙 یادت باشه من همیشه پیشتم`,
+          });
+        }, 1 * 60 * 1000); // ۳ دقیقه بعد
+      }
 
       const moodObj = moods.find((m) => m.value === mood);
       if (moodObj) {

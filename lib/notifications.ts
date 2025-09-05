@@ -16,7 +16,7 @@ if (!global.firebaseInitialized) {
 }
 
 interface NotificationData {
-  userId: string;
+  userId: ObjectId;
   title: string;
   body: string;
   data?: Record<string, string>;

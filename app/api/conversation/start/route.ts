@@ -24,7 +24,7 @@ const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: OPENROUTER_API_KEY,
   defaultHeaders: {
-    "X-OpenRouter-Provider": "openai,deepseek", // Specify allowed providers
+    "X-OpenRouter-Provider": "microsoft,deepseek", // Specify allowed providers
   },
 });
 
@@ -114,8 +114,8 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
 
     const systemPrompt =
       userDoc.plan === "free"
-        ? `شما یک روانشناس حرفه‌ای هستید، در دو جمله به کاربر پاسخ دهید`
-        : `شما یک روانشناس حرفه‌ای هستید، در دو جمله به کاربر پاسخ دهید. نام مخاطب شما ${userDoc.name} است`;
+        ? `شما یک روانشناس حرفه‌ای هستید، در دو جمله کوتاه به کاربر پاسخ دهید`
+        : `شما یک روانشناس حرفه‌ای هستید، در دو جمله کوتاه به کاربر پاسخ دهید. نام مخاطب شما ${userDoc.name} است`;
 
     const recentMessages = await chatHistory.find({ userId: userId }).sort({ timestamp: -1 }).limit(2).toArray();
 
@@ -131,7 +131,11 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "user", content: message });
     messages.push({ role: "system", content: systemPrompt });
 
-    const models = ["deepseek/deepseek-r1-0528:free", "deepseek/deepseek-chat-v3-0324:free"];
+    const models = [
+      "microsoft/mai-ds-r1:free",
+      "deepseek/deepseek-r1-0528:free",
+      "deepseek/deepseek-chat-v3-0324:free",
+    ];
     let completion;
     for (const model of models) {
       try {
