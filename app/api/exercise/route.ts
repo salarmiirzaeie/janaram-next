@@ -4,6 +4,7 @@ import clientPromise from "@/lib/mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
 import { ObjectId } from "mongodb";
 import { Meditation } from "@/lib/types/meditation";
+import moment from "moment-timezone";
 
 type UserExerciseType = "meditation" | "breathing" | "text-activity" | "step-activity" | "chatbot";
 
@@ -22,7 +23,8 @@ interface UserExercise {
 export const GET = withAuth(async (req: NextRequest, user: any) => {
   try {
     const db = (await clientPromise).db("janaram-db");
-    const today = new Date().toISOString().slice(0, 10);
+
+    const today = moment.tz("Asia/Tehran").format("YYYY-MM-DD");
     const userId = new ObjectId(user.sub);
 
     const exercisesCollection = db.collection("user-exercises");
