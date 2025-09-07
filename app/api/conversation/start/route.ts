@@ -28,25 +28,6 @@ const client = new OpenAI({
   },
 });
 
-// Function to suggest a meditation from the meditations collection
-const suggestMeditation = async (
-  db: any,
-  mood: number | null
-): Promise<{ title: string; description: string; _id: string; type: string } | null> => {
-  if (mood === null || mood > 5) return null;
-
-  const meditationsCollection = db.collection("meditations");
-  const validTypes = ["calm", "sleep", "nature"]; // Types suitable for low mood (customize as needed)
-  const suitableMeditations = await meditationsCollection
-    .find({ type: { $in: validTypes } }) // Filter by valid types for low mood
-    .toArray();
-
-  if (suitableMeditations.length === 0) return null;
-  return suitableMeditations[Math.floor(Math.random() * suitableMeditations.length)];
-};
-
-// Migration function to transform chat_history to chat-history (unchanged)
-
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const db = (await clientPromise).db("janaram-db");

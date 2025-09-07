@@ -13,6 +13,7 @@ export interface Plan {
   price: number;
   id: string;
   duration?: number; // Duration in months for unlimited plans
+  oldPrice?: number;
 }
 
 export const GET = withAuth(async (req: NextRequest, user: any) => {
@@ -66,7 +67,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         name: "unlimited",
         description: "طرح نامحدود برای ۱ ماه",
         features: [
-          "دسترسی به تمرینات پیشرفته آگاه سازی و آرام سازی",
+          " پیشنهاد تمرینات پیشرفته آگاه سازی و آرام سازی",
           "دسترسی به مدیتیشن های نامحدود و حرفه ای",
           "گفت وکوی نامحدود روزانه با روانشناس من",
           "دسترسی به تاریخچه کامل گفت‌وگوها",
@@ -76,6 +77,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         id: "123456",
         price: 79,
         duration: 1,
+        oldPrice: 89,
       },
       // {
       //   name: "premium",

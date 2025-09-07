@@ -161,8 +161,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
             userId,
             title: "جانارام همیشه همراهته",
             body: `${userName} جان، متاسفم که امروز ${moodLabel} هستی 💙 یادت باشه من همیشه پیشتم`,
+            action: "mood",
           });
-        }, 1 * 60 * 1000); // ۳ دقیقه بعد
+        }, 1 * 60 * 1000); // 1 دقیقه بعد
       }
 
       const moodObj = moods.find((m) => m.value === mood);
