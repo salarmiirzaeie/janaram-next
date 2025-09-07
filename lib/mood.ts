@@ -3,7 +3,7 @@ export const moods: { key: string; label: string; value: number; color: string }
   { key: "happy", label: "خوشحال", value: 8, color: "#FFD54F" },
   { key: "normal", label: "معمولی", value: 7, color: "#90A4AE" },
   { key: "relaxed", label: "ریلکس", value: 6, color: "#80CBC4" },
-  { key: "tired", label: "خسته", value: 5, color: "#B39DDB" },
+  { key: "tired", label: "بی خواب", value: 5, color: "#B39DDB" },
   { key: "sad", label: "ناراحت", value: 4, color: "#7986CB" },
   { key: "angry", label: "عصبانی", value: 3, color: "#E57373" },
   { key: "crying", label: "غمگین", value: 2, color: "#64B5F6" },
