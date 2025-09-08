@@ -13,6 +13,7 @@ const page = () => {
       <Hero />
 
       <About />
+
       <DownloadSection />
       <BlogSection />
       <FAQSection />
