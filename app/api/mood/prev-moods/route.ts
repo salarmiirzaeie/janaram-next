@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
+import moment from "moment-jalaali";
 
 interface IMood {
   date: string; // YYYY-MM-DD
@@ -36,9 +37,14 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     let insertedCount = 0;
     let updatedCount = 0;
 
+    // today's date (UTC normalized to YYYY-MM-DD)
+    const today = moment.tz("Asia/Tehran").startOf("day");
+
     for (const item of moodArray) {
       const { date, mood, note } = item;
 
+      // ⛔ skip today’s mood
+      if (date === today.format("YYYY-MM-DD")) continue;
       // validation
       if (!date || typeof date !== "string") continue;
       if (mood !== null && (typeof mood !== "number" || mood < 0 || mood > 10)) continue;
@@ -63,7 +69,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
 
     return NextResponse.json({
       success: true,
-      message: "محرک‌های کاربر با موفقیت ذخیره شدند",
+      message: "محرک‌های کاربر با موفقیت ذخیره شدند (به جز امروز)",
       data: { insertedCount, updatedCount },
     });
   } catch (err: any) {
