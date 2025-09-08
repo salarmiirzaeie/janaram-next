@@ -24,7 +24,7 @@ const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: OPENROUTER_API_KEY,
   defaultHeaders: {
-    "X-OpenRouter-Provider": "microsoft,deepseek", // Specify allowed providers
+    "X-OpenRouter-Provider": "openai,microsoft,deepseek", // Specify allowed providers
   },
 });
 
@@ -113,6 +113,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "system", content: systemPrompt });
 
     const models = [
+      "openai/gpt-oss-20b:free",
       "microsoft/mai-ds-r1:free",
       "deepseek/deepseek-r1-0528:free",
       "deepseek/deepseek-chat-v3-0324:free",
