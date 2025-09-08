@@ -11,8 +11,8 @@ interface IMood {
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
-    const body: { moods: IMood[] } = await req.json();
-    const { moods: moodArray } = body;
+    const body: IMood[] = await req.json();
+    const moodArray = body;
 
     if (!Array.isArray(moodArray) || moodArray.length === 0) {
       return NextResponse.json({ success: false, message: "آرایه moods الزامی است" }, { status: 400 });
