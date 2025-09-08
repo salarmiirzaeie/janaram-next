@@ -1,16 +1,19 @@
 import { getMessaging } from "firebase-admin/messaging";
+import { initializeApp, cert } from "firebase-admin/app";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 
-// Initialize Firebase Admin SDK (ensure it's initialized in your app)
-import { initializeApp, applicationDefault } from "firebase-admin/app";
 declare global {
   var firebaseInitialized: boolean;
 }
+
+// Initialize Firebase Admin SDK
 if (!global.firebaseInitialized) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!);
+
   initializeApp({
-    credential: applicationDefault(),
+    credential: cert(serviceAccount),
   });
   global.firebaseInitialized = true;
 }
@@ -25,84 +28,46 @@ interface NotificationData {
 
 export async function sendNotification({ userId, title, body, data, action }: NotificationData) {
   try {
-    // Validate userId
-    let objectId: ObjectId;
-    try {
-      objectId = new ObjectId(userId);
-    } catch (err) {
-      console.error("Invalid userId format:", userId, err);
-      throw new Error("شناسه کاربر نامعتبر است");
-    }
+    const objectId = new ObjectId(userId);
 
-    // Connect to MongoDB
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
 
-    // Fetch user with FCM token and name
     const user = await users.findOne({ _id: objectId });
     if (!user || !user.pushToken) {
-      console.error("User or FCM token not found for userId:", userId);
       throw new Error("کاربر یا توکن اعلان یافت نشد");
     }
 
-    // Personalize body with user's name
     const personalizedBody = body.replace("{name}", user.name || "دوست عزیز");
 
-    // Prepare notification message with action for chatbot
     const message = {
       token: user.pushToken,
-      notification: {
-        title,
-        body: personalizedBody,
-      },
-      data: {
-        ...data,
-        action: action || "OPEN_CHATBOT", // Default to OPEN_CHATBOT if not specified
-      },
+      notification: { title, body: personalizedBody },
+      data: { ...data, action: action || "OPEN_CHATBOT" },
     };
 
-    // Send notification via Firebase
-    try {
-      const response = await getMessaging().send(message);
-      console.log("Successfully sent notification:", response);
-      return {
-        success: true,
-        message: "اعلان با موفقیت ارسال شد",
-      };
-    } catch (error: any) {
-      console.error("Error sending FCM notification:", error);
-      throw new Error(`خطا در ارسال اعلان: ${error.message}`);
-    }
+    const response = await getMessaging().send(message);
+    console.log("Successfully sent notification:", response);
+    return { success: true, message: "اعلان با موفقیت ارسال شد" };
   } catch (error: any) {
     console.error("Error in sendNotification:", error);
-    return {
-      success: false,
-      message: error.message || "خطای سرور در ارسال اعلان",
-    };
+    return { success: false, message: error.message || "خطای سرور در ارسال اعلان" };
   }
 }
+
 export async function sendToAll({ title, body, data }: { title: string; body: string; data?: Record<string, string> }) {
   try {
     const message = {
       topic: "new-content",
-      notification: {
-        title,
-        body,
-      },
+      notification: { title, body },
       data: data || {},
     };
 
     const response = await getMessaging().send(message);
     console.log("Sent notification to all on new-content topic:", response);
-    return {
-      success: true,
-      message: "اعلان با موفقیت به همه کاربران ارسال شد",
-    };
+    return { success: true, message: "اعلان با موفقیت به همه کاربران ارسال شد" };
   } catch (error: any) {
     console.error("Error sending topic notification:", error);
-    return {
-      success: false,
-      message: `خطا در ارسال اعلان: ${error.message || "خطای سرور"}`,
-    };
+    return { success: false, message: error.message || "خطای سرور در ارسال اعلان" };
   }
 }
