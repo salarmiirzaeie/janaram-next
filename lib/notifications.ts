@@ -2,15 +2,15 @@ import { getMessaging } from "firebase-admin/messaging";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
-import { initializeApp, cert } from "firebase-admin/app";
 
-// Initialize Firebase Admin SDK once
+// Initialize Firebase Admin SDK (ensure it's initialized in your app)
+import { initializeApp, applicationDefault } from "firebase-admin/app";
 declare global {
   var firebaseInitialized: boolean;
 }
 if (!global.firebaseInitialized) {
   initializeApp({
-    credential: cert(JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS as string)),
+    credential: applicationDefault(),
   });
   global.firebaseInitialized = true;
 }
@@ -23,9 +23,6 @@ interface NotificationData {
   action?: string;
 }
 
-/**
- * Send notification to a specific user
- */
 export async function sendNotification({ userId, title, body, data, action }: NotificationData) {
   try {
     // Validate userId
@@ -51,7 +48,7 @@ export async function sendNotification({ userId, title, body, data, action }: No
     // Personalize body with user's name
     const personalizedBody = body.replace("{name}", user.name || "دوست عزیز");
 
-    // Prepare notification message
+    // Prepare notification message with action for chatbot
     const message = {
       token: user.pushToken,
       notification: {
@@ -60,18 +57,22 @@ export async function sendNotification({ userId, title, body, data, action }: No
       },
       data: {
         ...data,
-        action: action || "OPEN_CHATBOT",
+        action: action || "OPEN_CHATBOT", // Default to OPEN_CHATBOT if not specified
       },
     };
 
     // Send notification via Firebase
-    const response = await getMessaging().send(message);
-    console.log("Successfully sent notification:", response);
-
-    return {
-      success: true,
-      message: "اعلان با موفقیت ارسال شد",
-    };
+    try {
+      const response = await getMessaging().send(message);
+      console.log("Successfully sent notification:", response);
+      return {
+        success: true,
+        message: "اعلان با موفقیت ارسال شد",
+      };
+    } catch (error: any) {
+      console.error("Error sending FCM notification:", error);
+      throw new Error(`خطا در ارسال اعلان: ${error.message}`);
+    }
   } catch (error: any) {
     console.error("Error in sendNotification:", error);
     return {
@@ -80,21 +81,19 @@ export async function sendNotification({ userId, title, body, data, action }: No
     };
   }
 }
-
-/**
- * Send notification to all users subscribed to a topic
- */
 export async function sendToAll({ title, body, data }: { title: string; body: string; data?: Record<string, string> }) {
   try {
     const message = {
       topic: "new-content",
-      notification: { title, body },
+      notification: {
+        title,
+        body,
+      },
       data: data || {},
     };
 
     const response = await getMessaging().send(message);
     console.log("Sent notification to all on new-content topic:", response);
-
     return {
       success: true,
       message: "اعلان با موفقیت به همه کاربران ارسال شد",
