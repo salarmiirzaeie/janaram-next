@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       smsParameters.push({ name: "Hash", value: appHash });
     }
     const username = "9381811680";
-    const password = "9315dhf";
+    const password = "d0ce98e6-2bbd-429f-95ea-09ae10ff02a7";
     const api = new MelipayamakApi(username, password);
     const sms = api.sms();
     const to = phoneNumber;
