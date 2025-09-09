@@ -65,36 +65,19 @@ export async function POST(req: Request) {
     if (appHash) {
       smsParameters.push({ name: "Hash", value: appHash });
     }
-    const username = "9381811680";
-    const password = "33a39ff9-078e-44b2-858d-25f486e57c94";
-    const api = new MelipayamakApi(username, password);
-    const sms = api.sms();
-    const to = phoneNumber;
-    const from = "";
-    const text = `کد تایید شما: ${otp}
 
-    تیم جانارام ${appHash ? appHash : ""}`;
     // console.log(otp);
     try {
-      // sms
-      //   .send(to, from, text)
-      //   .then((res: any) => {
-      //     console.log(res, "red");
-      //   })
-      //   .catch((err: any) => {
-      //     console.log(err, "err");
-      //   });
-
       const data = JSON.stringify({
         bodyId: 359521,
-        to,
+        to: phoneNumber,
         args: [otp, appHash],
       });
 
       const options = {
         hostname: "console.melipayamak.com",
         port: 443,
-        path: "/api/send/shared/33a39ff9-078e-44b2-858d-25f486e57c94",
+        path: "/api/send/shared/6be212aadaea410b97e5ba4e98171dca",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
