@@ -126,7 +126,6 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
             model,
             messages,
             max_tokens: 70,
-            top_p: 1,
           })
         );
         break;
