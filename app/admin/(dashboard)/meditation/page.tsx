@@ -15,11 +15,24 @@ type Meditation = {
   isSuggested: boolean;
 };
 
+type MeditationForm = {
+  id?: string;
+  title: string;
+  type: string;
+  file?: FileList;
+  image?: FileList;
+  description: string;
+  duration: string;
+  isSuggested: boolean;
+};
+
 const MeditationPage: React.FC = () => {
   const [meditations, setMeditations] = useState<Meditation[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [editingMeditation, setEditingMeditation] = useState<Meditation | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
 
   const {
     register,
@@ -27,7 +40,15 @@ const MeditationPage: React.FC = () => {
     reset,
     setValue,
     formState: { errors },
-  } = useForm<Meditation>();
+  } = useForm<MeditationForm>({
+    defaultValues: {
+      title: "",
+      type: "",
+      description: "",
+      duration: "",
+      isSuggested: false,
+    },
+  });
 
   const fetchMeditations = async () => {
     try {
@@ -65,6 +86,7 @@ const MeditationPage: React.FC = () => {
     if (!confirm("Are you sure you want to delete this meditation?")) return;
 
     try {
+      setDeleteLoadingId(id);
       const response = await fetch(`/api/admin/meditations/${id}`, {
         method: "DELETE",
         headers: {
@@ -76,20 +98,23 @@ const MeditationPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error deleting meditation:", error);
+    } finally {
+      setDeleteLoadingId(null);
     }
   };
 
-  const onSubmit: SubmitHandler<Meditation> = async (data) => {
+  const onSubmit: SubmitHandler<MeditationForm> = async (data) => {
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("type", data.type);
-    if (data.file && data.file[0]) formData.append("file", data.file[0]);
-    if (data.image && data.image[0]) formData.append("image", data.image[0]);
+    if (data.file && data.file.length > 0) formData.append("file", data.file[0]);
+    if (data.image && data.image.length > 0) formData.append("image", data.image[0]);
     formData.append("description", data.description);
     formData.append("duration", data.duration.toString());
     formData.append("isSuggested", data.isSuggested.toString());
 
     try {
+      setLoading(true);
       const url = mode === "add" ? "/api/admin/meditations/add" : `/api/admin/meditations/${data.id}`;
       const method = mode === "add" ? "POST" : "PUT";
       const response = await fetch(url, {
@@ -99,6 +124,7 @@ const MeditationPage: React.FC = () => {
         },
         body: formData,
       });
+
       if (response.ok) {
         await fetchMeditations();
         reset();
@@ -108,6 +134,8 @@ const MeditationPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -117,14 +145,14 @@ const MeditationPage: React.FC = () => {
         <h2 className="text-xl md:text-2xl font-bold text-gray-800">Manage Meditations</h2>
         <button
           onClick={() => {
-            setShowForm(!showForm);
+            setShowForm(true);
             setMode("add");
             setEditingMeditation(null);
             reset();
           }}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition w-full sm:w-auto"
         >
-          {showForm ? "Cancel" : "Add Meditation"}
+          Add Meditation
         </button>
       </div>
 
@@ -137,17 +165,17 @@ const MeditationPage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700">Meditation Title</label>
             <input
               type="text"
-              {...register("title", { required: "Title is required" })}
+              {...register("title", { required: true })}
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
+            {errors.title && <p className="text-red-500 text-sm mt-1">Title is required</p>}
           </div>
 
           {/* Type */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700">Meditation Type</label>
             <select
-              {...register("type", { required: "Type is required" })}
+              {...register("type", { required: true })}
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             >
               <option value="">Select a type</option>
@@ -159,7 +187,7 @@ const MeditationPage: React.FC = () => {
               <option value="story">قصه</option>
               <option value="sleep-music">موسیقی خواب</option>
             </select>
-            {errors.type && <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>}
+            {errors.type && <p className="text-red-500 text-sm mt-1">Type is required</p>}
           </div>
 
           {/* Duration */}
@@ -167,47 +195,44 @@ const MeditationPage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700">Duration</label>
             <input
               type="text"
-              {...register("duration", { required: "Duration is required" })}
+              {...register("duration", { required: true })}
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
-            {errors.duration && <p className="text-red-500 text-sm mt-1">{errors.duration.message}</p>}
+            {errors.duration && <p className="text-red-500 text-sm mt-1">Duration is required</p>}
           </div>
 
-          {/* File Upload */}
+          {/* File */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700">
               Upload File {mode === "edit" && "(optional)"}
             </label>
             <input
               type="file"
-              {...register("file", { required: mode === "add" ? "File is required" : false })}
+              {...register("file", { required: mode === "add" })}
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
-            {errors.file && <p className="text-red-500 text-sm mt-1">{errors.file.message}</p>}
           </div>
 
-          {/* Image Upload */}
+          {/* Image */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700">
               Upload Image {mode === "edit" && "(optional)"}
             </label>
             <input
               type="file"
-              {...register("image", { required: mode === "add" ? "Image is required" : false })}
+              {...register("image", { required: mode === "add" })}
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
-            {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image.message}</p>}
           </div>
 
           {/* Description */}
           <div className="col-span-1 md:col-span-2">
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
-              {...register("description", { required: "Description is required" })}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              {...register("description", { required: true })}
               rows={3}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
-            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
           </div>
 
           {/* Suggested */}
@@ -217,10 +242,8 @@ const MeditationPage: React.FC = () => {
               <label className="inline-flex items-center">
                 <input
                   type="radio"
-                  {...register("isSuggested", {
-                    required: "Please select if meditation is suggested",
-                  })}
                   value="true"
+                  {...register("isSuggested", { required: true })}
                   className="form-radio text-blue-500"
                 />
                 <span className="ml-2">Yes</span>
@@ -228,24 +251,24 @@ const MeditationPage: React.FC = () => {
               <label className="inline-flex items-center">
                 <input
                   type="radio"
-                  {...register("isSuggested", {
-                    required: "Please select if meditation is suggested",
-                  })}
                   value="false"
+                  {...register("isSuggested", { required: true })}
                   className="form-radio text-blue-500"
                 />
                 <span className="ml-2">No</span>
               </label>
             </div>
-            {errors.isSuggested && <p className="text-red-500 text-sm mt-1">{errors.isSuggested.message}</p>}
           </div>
 
           <div className="col-span-1 md:col-span-2">
             <button
               type="submit"
-              className="w-full md:w-auto bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition"
+              disabled={loading}
+              className={`w-full md:w-auto bg-green-500 text-white px-6 py-2 rounded transition ${
+                loading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
+              }`}
             >
-              {mode === "add" ? "Submit" : "Update"}
+              {loading ? (mode === "add" ? "Adding..." : "Updating...") : mode === "add" ? "Submit" : "Update"}
             </button>
           </div>
         </form>
@@ -301,15 +324,21 @@ const MeditationPage: React.FC = () => {
                   <td className="py-2 px-4 border-b flex flex-col sm:flex-row gap-2">
                     <button
                       onClick={() => handleEdit(meditation)}
-                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition"
+                      disabled={deleteLoadingId === meditation.id}
+                      className={`bg-yellow-500 text-white px-3 py-1 rounded transition ${
+                        deleteLoadingId === meditation.id ? "opacity-50 cursor-not-allowed" : "hover:bg-yellow-600"
+                      }`}
                     >
-                      Edit
+                      {deleteLoadingId === meditation.id ? "Processing..." : "Edit"}
                     </button>
                     <button
                       onClick={() => handleDelete(meditation.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+                      disabled={deleteLoadingId === meditation.id}
+                      className={`bg-red-500 text-white px-3 py-1 rounded transition ${
+                        deleteLoadingId === meditation.id ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600"
+                      }`}
                     >
-                      Delete
+                      {deleteLoadingId === meditation.id ? "Deleting..." : "Delete"}
                     </button>
                   </td>
                 </tr>
