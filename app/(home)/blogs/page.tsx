@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { BASE_URL_IMAGES } from "@/lib/constants";
+import { formatDate } from "@/lib/time";
 
 interface Blog {
   _id: string;
@@ -80,21 +81,20 @@ const BlogPage: React.FC = () => {
                 className="w-full h-48 object-cover"
               />
               <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">{blog.title}</h3>
-                {/* <p className="text-gray-600 text-sm mb-4">
-                  {blog.content.length > 150 ? blog.content.slice(0, 150) + "..." : blog.content}
-                </p> */}
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <span>
-                    {new Date(blog.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
+                <Link href={`/blog/${blog.slug}`}>
+                  <h2 className="text-xl text-right font-bold mb-2 hover:text-primary">{blog.title}</h2>
+                </Link>
+                <div className="flex flex-row items-end justify-end text-sm mb-4 text-gray-500">
+                  <p className="text-right ">نوشته شده بوسیله جانارام</p>
+
+                  <span className="mx-2">|</span>
+                  <span>{formatDate(blog.createdAt)}</span>
                 </div>
-                <Link href={`/blogs/${blog.slug}`} className="mt-4 inline-block text-blue-500 hover:underline">
-                  Read More
+
+                <Link href={`/blogs/${blog.slug}`}>
+                  <p className="text-primary text-primary hover:text-primary text-left text-sm mt-4 sm:text-base font-semibold">
+                    بیشتر
+                  </p>
                 </Link>
               </div>
             </div>

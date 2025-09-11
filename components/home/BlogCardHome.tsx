@@ -1,4 +1,5 @@
 "use client";
+import { BASE_URL_IMAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/time";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,28 +21,26 @@ export default function BlogCardHome({ imageSrc, title, summary, date, post_name
           <Image
             width={500}
             height={300}
-            src={imageSrc} // Replace with optimized image URL
+            src={BASE_URL_IMAGES + imageSrc} // Replace with optimized image URL
             alt={title}
             loading={index === 0 ? "eager" : "lazy"}
             className="w-full h-60 object-cover"
           />
           <div className="p-4">
             <Link href={`/blog/${post_name}`}>
-              <h2 className="text-xl font-bold mb-2 hover:text-primary">{title}</h2>
+              <h2 className="text-xl text-right font-bold mb-2 hover:text-primary">{title}</h2>
             </Link>
-            <div className="flex flex-row items-center text-sm mb-4 text-gray-500">
-              <p className="text-right">نوشته شده بوسیله </p>
-
-              <Link href={"/"} className="hover:underline ml-1 text-primary">
-                جانارام
-              </Link>
+            <div className="flex flex-row items-end justify-end text-sm mb-4 text-gray-500">
+              <p className="text-right ">نوشته شده بوسیله جانارام</p>
 
               <span className="mx-2">|</span>
               <span>{formatDate(date)}</span>
             </div>
 
             <Link href={`/blogs/${post_name}`}>
-              <p className="text-primary text-left text-sm mt-4 sm:text-base font-semibold">بیشتر</p>
+              <p className="text-primary text-primary hover:text-primary text-left text-sm mt-4 sm:text-base font-semibold">
+                بیشتر
+              </p>
             </Link>
           </div>
         </div>
