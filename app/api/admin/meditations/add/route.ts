@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/s3"; // your S3 client instance
+import { sendToAll } from "@/lib/notifications";
 
 export const POST = withAdminAuth(async function (req: NextRequest) {
   try {
@@ -58,7 +59,6 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       })
     );
 
-    const endpoint = process.env.LIARA_ENDPOINT?.replace(/\/$/, "");
     const fileUrl = `/${uniqueFileName}`;
     const imageUrl = `/${uniqueImageName}`;
 
@@ -77,7 +77,14 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       isSuggested,
       createdAt: new Date(),
     });
-
+    await sendToAll({
+      title: "مدیتیشن جدید اضافه شد 🧘‍♂️",
+      body: type === "story" ? `قصه جدید ${title} اضافه شد` : `مدیتیشن جدید ${title} اضافه شد`,
+      data: {
+        meditationId: result.insertedId.toString(),
+        type,
+      },
+    });
     return NextResponse.json(
       {
         success: true,

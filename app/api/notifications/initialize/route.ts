@@ -3,16 +3,15 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
+import { getMessaging } from "firebase-admin/messaging";
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const { pushToken } = await req.json();
-    // Validate request body
     if (!pushToken) {
       return NextResponse.json({ success: false, message: "توکن اعلان الزامی است" }, { status: 400 });
     }
 
-    // Convert user.sub to ObjectId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
@@ -24,7 +23,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
 
-    // Update user with push token
+    // Save the push token in DB
     const result = await users.updateOne({ _id: userId }, { $set: { pushToken, updatedAt: new Date() } });
 
     if (result.matchedCount === 0) {
@@ -32,9 +31,12 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
     }
 
+    // 🔑 Subscribe the token to "new-content" topic
+    await getMessaging().subscribeToTopic([pushToken], "new-content");
+
     return NextResponse.json({
       success: true,
-      message: "توکن اعلان با موفقیت ذخیره شد",
+      message: "توکن اعلان ذخیره و در موضوع new-content عضو شد",
     });
   } catch (err: any) {
     console.error("Error saving push token:", err);
