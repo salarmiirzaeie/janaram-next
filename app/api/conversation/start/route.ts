@@ -108,9 +108,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         ])
       );
     }
+    messages.push({ role: "system", content: systemPrompt });
 
     messages.push({ role: "user", content: message });
-    messages.push({ role: "system", content: systemPrompt });
 
     const models = [
       "openai/gpt-oss-20b:free",
@@ -125,7 +125,6 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           client.chat.completions.create({
             model,
             messages,
-            max_tokens: 70,
           })
         );
         break;
