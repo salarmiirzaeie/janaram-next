@@ -95,7 +95,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
 
     const systemPrompt =
       userDoc.plan === "free"
-        ? `شما یک روانشناس حرفه‌ای هستید، در دو جمله کوتاه به کاربر پاسخ دهید`
+        ? `شما یک روانشناس حرفه‌ای هستید، در یک جمله کوتاه به کاربر پاسخ دهید`
         : `شما یک روانشناس حرفه‌ای هستید، در دو جمله کوتاه به کاربر پاسخ دهید. نام مخاطب شما ${userDoc.name} است`;
 
     const recentMessages = await chatHistory.find({ userId: userId }).sort({ timestamp: -1 }).limit(2).toArray();
