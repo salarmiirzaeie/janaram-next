@@ -3,7 +3,6 @@ import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { ObjectId, Sort } from "mongodb";
-import { generateUniqueSlug } from "@/lib/slugify";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/s3";
 
@@ -24,9 +23,6 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid authorId" }, { status: 400 });
     }
 
-    // Generate unique slug
-    const slug = await generateUniqueSlug(title);
-
     // Generate unique filename for image
     const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";
     const uniqueImageName = `${randomUUID()}.${imageExtension}`;
@@ -40,7 +36,6 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     });
     await s3.send(command);
 
-    // Generate public URL for the image
     const imageUrl = `/images/${uniqueImageName}`;
 
     // Connect to MongoDB
@@ -48,10 +43,9 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    // Insert blog into MongoDB
+    // Insert blog
     const result = await collection.insertOne({
       title,
-      slug,
       content,
       authorId: new ObjectId(authorId),
       imageUrl,
@@ -66,7 +60,6 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
         blog: {
           _id: result.insertedId.toString(),
           title,
-          slug,
           content,
           authorId,
           imageUrl,
@@ -81,7 +74,6 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }
 });
-
 export const GET = withAdminAuth(async function (req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -111,7 +103,7 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
     const formattedBlogs = blogs.map((blog) => ({
       _id: blog._id.toString(),
       title: blog.title,
-      slug: blog.slug,
+
       content: blog.content,
       authorId: blog.authorId.toString(),
       imageUrl: blog.imageUrl,

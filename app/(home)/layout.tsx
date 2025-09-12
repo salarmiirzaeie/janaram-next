@@ -46,8 +46,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${iranSans.variable} ${vazir.variable}  antialiased`}>
         <Header />
-
         {children}
+
         <Footer />
       </body>
     </html>

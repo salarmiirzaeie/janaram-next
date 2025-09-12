@@ -64,7 +64,7 @@ const BlogPage: React.FC = () => {
     );
   }
   return (
-    <div className="max-w-6xl mt-28 mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-6xl min-h-screen mt-28 mx-auto py-16 px-4 sm:px-6 lg:px-8">
       <h2 className="text-2xl font-bold text-blue-500 text-center mb-8">وبلاگ</h2>
       {blogs.length === 0 ? (
         <p className="text-center text-gray-500">No blogs available.</p>

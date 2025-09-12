@@ -38,18 +38,18 @@ export async function POST(req: Request) {
     const db = (await clientPromise).db("janaram-db");
 
     // Check for existing unexpired OTP
-    const existingOtp = await db.collection("otp_codes").findOne({
-      phoneNumber,
-      expiresAt: { $gt: Date.now() },
-      verified: false,
-    });
+    // const existingOtp = await db.collection("otp_codes").findOne({
+    //   phoneNumber,
+    //   expiresAt: { $gt: Date.now() },
+    //   verified: false,
+    // });
 
-    if (existingOtp) {
-      return NextResponse.json(
-        { success: false, message: "لطفاً از کد قبلی استفاده کنید یا صبر کنید" },
-        { status: 429 }
-      );
-    }
+    // if (existingOtp) {
+    //   return NextResponse.json(
+    //     { success: true, message: "لطفاً از کد قبلی استفاده کنید یا صبر کنید" },
+    //     { status: 429 }
+    //   );
+    // }
 
     // Store OTP
     await db.collection("otp_codes").insertOne({
