@@ -18,7 +18,7 @@ export default function BlogCardHome({ imageSrc, title, summary, date, post_name
     <div>
       <div className={`mx-auto bg-white overflow-hidden border   border-gray-200  shadow-xl rounded-2xl`}>
         <div className=" flex flex-col ">
-          <Image
+          <img
             width={500}
             height={300}
             src={BASE_URL_IMAGES + imageSrc} // Replace with optimized image URL
