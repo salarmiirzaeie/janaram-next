@@ -69,13 +69,17 @@ const BlogDetailPage: React.FC = () => {
   return (
     <div className="max-w-6xl bg-white mt-28 mx-auto py-16 px-4 rounded-2xl sm:px-6 lg:px-8">
       <h1 className="text-3xl text-right font-bold text-gray-800 mb-4">{blog.title}</h1>
-      <div className="flex space-x-4 justify-between items-center text-sm text-gray-500 mb-6">
-        <img
-          src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
-          alt={blog.title}
-          className=" h-64 rounded-2xl object-contain   mb-6"
-        />
-        <h3 className="text-xl text-right font-bold  mb-8">{blog.description}</h3>
+      <div className="mb-6">
+        <div className="flex flex-col lg:flex-row lg:space-x-6 items-center">
+          {/* Image */}
+          <img
+            src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
+            alt={blog.title}
+            className="w-full lg:w-1/2 h-64 rounded-2xl object-cover mb-4 lg:mb-0"
+          />
+          {/* Description */}
+          <p className="w-full lg:w-1/2 text-right text-xl font-bold text-gray-700">{blog.description}</p>
+        </div>
       </div>
       <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
         <span>{formatDate(blog.createdAt)}</span>
