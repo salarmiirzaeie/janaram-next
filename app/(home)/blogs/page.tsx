@@ -8,7 +8,6 @@ import { formatDate } from "@/lib/time";
 interface Blog {
   _id: string;
   title: string;
-  slug: string;
   content: string;
   authorId: string;
   imageUrl: string;
@@ -81,7 +80,7 @@ const BlogPage: React.FC = () => {
                 className="w-full h-48 object-cover"
               />
               <div className="p-4">
-                <Link href={`/blog/${blog.slug}`}>
+                <Link href={`/blogs/${blog._id}`}>
                   <h2 className="text-xl text-right font-bold mb-2 hover:text-primary">{blog.title}</h2>
                 </Link>
                 <div className="flex flex-row items-end justify-end text-sm mb-4 text-gray-500">
@@ -91,7 +90,7 @@ const BlogPage: React.FC = () => {
                   <span>{formatDate(blog.createdAt)}</span>
                 </div>
 
-                <Link href={`/blogs/${blog.slug}`}>
+                <Link href={`/blogs/${blog._id}`}>
                   <p className="text-primary text-primary hover:text-primary text-left text-sm mt-4 sm:text-base font-semibold">
                     بیشتر
                   </p>

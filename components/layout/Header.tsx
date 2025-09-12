@@ -39,8 +39,7 @@ const Header: React.FC = () => {
     ],
   };
 
-  const currentNavs = navItems[pathname] || [];
-
+  const currentNavs = pathname === "/" ? navItems["/"] : pathname.startsWith("/blogs") ? navItems["/blogs"] : [];
   return (
     <div className="absolute top-0 left-0 w-full">
       <div className="px-4 pt-4 lg:pt-8">

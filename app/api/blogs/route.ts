@@ -36,7 +36,6 @@ export const GET = async (req: NextRequest) => {
       imageUrl: blog.imageUrl,
       createdAt: blog.createdAt.toISOString(),
       updatedAt: blog.updatedAt.toISOString(),
-      slug: blog.slug,
     }));
 
     return NextResponse.json({ success: true, blogs: formattedBlogs }, { status: 200 });

@@ -18,14 +18,13 @@ const HeroSection: React.FC = () => {
           <div className="relative z-10 flex flex-col space-y-4 items-center justify-center text-center px-4   max-w-7xl mx-auto">
             {/* Main Heading */}
             <h1 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl  font-extrabold leading-tight  text-gray-900">
-              آرامش و تمرکز را با جانارام تجربه کنید
+              با جانارام آرامشت رو پیدا کن
             </h1>
 
             {/* Sub-text */}
             <p className="text-sm sm:text-md md:text-lg lg:text-xl text-gray-700 max-w-2xl  md:mb-8">
-              {
-                "اپلیکیشن جانارام با مدیتیشن‌های هدایت‌شده، موسیقی آرام‌بخش و تکنیک‌های تنفس، به شما کمک می‌کند استرس را کاهش  دهید و ذهنی آرام داشته باشید "
-              }
+              جانارام، همراهی هوشمند برای حال خوب تو! با مدیتیشن روزانه و شخصی سازی شده با هوش مصنوعی، موسیقی ها وقصه
+              های خواب و چت بات روانشناسی هوشمند
             </p>
 
             {/* Call to Action Button */}
@@ -55,7 +54,8 @@ const HeroSection: React.FC = () => {
             <Users />
           </div>
           <div className="absolute hidden md:block text-right w-[300px]  border-gray-400 border-r-4 p-4  bottom-1/9 right-1/5  ">
-            <p className="text-sm">راهی آسان برای مراقبت از خود. مراقبه‌های کوتاه برای هر لحظه از روز</p>
+            <p className="text-sm">مدیتیشن هوشمند</p>
+            <p className="text-sm">مخصوص حال روحی تو</p>
           </div>
         </div>
       </div>

@@ -31,6 +31,7 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
           imageUrl: blog.imageUrl,
           createdAt: blog.createdAt.toISOString(),
           updatedAt: blog.updatedAt.toISOString(),
+          description: blog.description,
         },
       },
       { status: 200 }
@@ -51,17 +52,20 @@ export const PUT = withAdminAuth(async function (req: NextRequest) {
     const formData = await req.formData();
     const title = formData.get("title")?.toString();
     const content = formData.get("content")?.toString();
+    const description = formData.get("description")?.toString();
     const image = formData.get("image") as File | null;
 
     if (!title && !content && !image) {
       return NextResponse.json({ success: false, message: "At least one field is required" }, { status: 400 });
     }
 
-    const updateFields: { title?: string; content?: string; imageUrl?: string; updatedAt: Date } = {
-      updatedAt: new Date(),
-    };
+    const updateFields: { title?: string; content?: string; imageUrl?: string; updatedAt: Date; description?: string } =
+      {
+        updatedAt: new Date(),
+      };
     if (title) updateFields.title = title;
     if (content) updateFields.content = content;
+    if (description) updateFields.description = description;
 
     if (image) {
       const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";

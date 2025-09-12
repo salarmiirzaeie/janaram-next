@@ -2,14 +2,20 @@ import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const resolvedParams = await params;
-    const { slug } = resolvedParams;
+    const { id } = resolvedParams;
 
-    if (!slug) {
-      console.error("Missing slug");
-      return NextResponse.json({ success: false, message: "Missing slug" }, { status: 400 });
+    if (!id) {
+      console.error("Missing id");
+      return NextResponse.json({ success: false, message: "Missing id" }, { status: 400 });
+    }
+
+    // Validate ObjectId
+    if (!ObjectId.isValid(id)) {
+      console.error("Invalid ObjectId:", id);
+      return NextResponse.json({ success: false, message: "Invalid id format" }, { status: 400 });
     }
 
     // Connect to MongoDB
@@ -17,10 +23,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    // Fetch single blog by slug
-    const blog = await collection.findOne({ slug });
+    // Fetch single blog by _id
+    const blog = await collection.findOne({ _id: new ObjectId(id) });
     if (!blog) {
-      console.error("Blog not found for slug:", slug);
+      console.error("Blog not found for id:", id);
       return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
     }
 
@@ -30,12 +36,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
         blog: {
           _id: blog._id.toString(),
           title: blog.title,
-          slug: blog.slug,
+          description: blog.description,
+
           content: blog.content,
-          authorId: blog.authorId.toString(),
+          authorId: blog.authorId?.toString(),
           imageUrl: blog.imageUrl,
-          createdAt: blog.createdAt.toISOString(),
-          updatedAt: blog.updatedAt.toISOString(),
+          createdAt: blog.createdAt?.toISOString(),
+          updatedAt: blog.updatedAt?.toISOString(),
         },
       },
       { status: 200 }

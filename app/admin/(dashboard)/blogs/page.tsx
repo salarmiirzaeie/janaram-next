@@ -1,8 +1,25 @@
 "use client";
-
-import { BASE_URL_IMAGES } from "@/lib/constants";
 import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { BASE_URL_IMAGES } from "@/lib/constants";
+import {
+  RichTextEditorComponent,
+  Toolbar,
+  Image,
+  Link,
+  HtmlEditor,
+  QuickToolbar,
+  Inject,
+} from "@syncfusion/ej2-react-richtexteditor";
+import "@syncfusion/ej2-base/styles/tailwind3.css";
+import "@syncfusion/ej2-icons/styles/tailwind3.css";
+import "@syncfusion/ej2-buttons/styles/tailwind3.css";
+import "@syncfusion/ej2-splitbuttons/styles/tailwind3.css";
+import "@syncfusion/ej2-inputs/styles/tailwind3.css";
+import "@syncfusion/ej2-lists/styles/tailwind3.css";
+import "@syncfusion/ej2-navigations/styles/tailwind3.css";
+import "@syncfusion/ej2-popups/styles/tailwind3.css";
+import "@syncfusion/ej2-richtexteditor/styles/tailwind3.css";
 
 interface Blog {
   _id: string;
@@ -12,6 +29,7 @@ interface Blog {
   imageUrl: string;
   createdAt: string;
   updatedAt: string;
+  description: string;
 }
 
 interface BlogForm {
@@ -20,11 +38,12 @@ interface BlogForm {
   content: string;
   authorId: string;
   image?: FileList;
+  description: string;
 }
 
 const BlogsPage: React.FC = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [showForm, setShowForm] = useState<boolean>(false);
+  const [showForm, setShowForm] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
 
@@ -33,28 +52,23 @@ const BlogsPage: React.FC = () => {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<BlogForm>({
-    defaultValues: {
-      authorId: "6898d5e1bd209f8e85e72877", // Replace with authenticated user ID
-    },
+    defaultValues: { authorId: "6898d5e1bd209f8e85e72877", content: "" },
   });
 
-  const fetchBlogs = async (): Promise<void> => {
+  const fetchBlogs = async () => {
     try {
-      const response = await fetch("/api/admin/blogs", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
+      const res = await fetch("/api/admin/blogs", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
       });
-      if (response.ok) {
-        const data = await response.json();
+      if (res.ok) {
+        const data = await res.json();
         setBlogs(data.blogs || []);
-      } else {
-        console.error("Failed to fetch blogs");
       }
-    } catch (error) {
-      console.error("Error fetching blogs:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -62,11 +76,7 @@ const BlogsPage: React.FC = () => {
     fetchBlogs();
   }, []);
 
-  const handleEdit = (blog: Blog): void => {
-    if (!blog._id || !/^[0-9a-f]{24}$/.test(blog._id)) {
-      console.error("Invalid blog ID:", blog._id);
-      return;
-    }
+  const handleEdit = (blog: Blog) => {
     setMode("edit");
     setEditingBlog(blog);
     setShowForm(true);
@@ -74,57 +84,49 @@ const BlogsPage: React.FC = () => {
     setValue("title", blog.title);
     setValue("content", blog.content);
     setValue("authorId", blog.authorId);
+    setValue("description", blog.description);
   };
 
-  const handleDelete = async (id: string): Promise<void> => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this blog?")) return;
-
     try {
-      const response = await fetch(`/api/admin/blogs/${id}`, {
+      const res = await fetch(`/api/admin/blogs/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
       });
-      if (response.ok) {
-        await fetchBlogs();
-      }
-    } catch (error) {
-      console.error("Error deleting blog:", error);
+      if (res.ok) fetchBlogs();
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const onSubmit: SubmitHandler<BlogForm> = async (data) => {
-    if (mode === "add" && !data.image?.[0]) {
-      console.error("Image is required for new blogs");
-      return;
-    }
+    if (mode === "add" && !data.image?.[0]) return;
 
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("content", data.content);
     formData.append("authorId", data.authorId);
+    formData.append("description", data.description);
     if (data.image?.[0]) formData.append("image", data.image[0]);
 
     try {
       const url = mode === "add" ? "/api/admin/blogs" : `/api/admin/blogs/${data._id}`;
       const method = mode === "add" ? "POST" : "PUT";
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
         body: formData,
       });
-      if (response.ok) {
+      if (res.ok) {
         await fetchBlogs();
         reset({ title: "", content: "", authorId: "6898d5e1bd209f8e85e72877" });
         setShowForm(false);
         setMode("add");
         setEditingBlog(null);
       }
-    } catch (error) {
-      console.error("Error submitting blog:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -151,13 +153,9 @@ const BlogsPage: React.FC = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="mb-8 space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           {mode === "edit" && <input type="hidden" {...register("_id")} />}
 
-          {/* Title */}
           <div className="col-span-1">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-              Blog Title
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Title</label>
             <input
-              id="title"
               type="text"
               {...register("title", { required: "Title is required" })}
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
@@ -165,36 +163,34 @@ const BlogsPage: React.FC = () => {
             {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
           </div>
 
-          {/* Image */}
           <div className="col-span-1">
-            <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-              Image {mode === "edit" && "(optional)"}
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <textarea
+              {...register("description", { required: "Description is required" })}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            />
+            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
+          </div>
+
+          <div className="col-span-1">
+            <label className="block text-sm font-medium text-gray-700">Image {mode === "edit" && "(optional)"}</label>
             <input
-              id="image"
               type="file"
               accept="image/*"
-              {...register("image", { required: mode === "add" ? "Image is required" : false })}
+              {...register("image", { required: mode === "add" })}
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
             {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image.message}</p>}
           </div>
 
-          {/* Content */}
           <div className="col-span-1 md:col-span-2">
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-              Content
-            </label>
-            <textarea
-              id="content"
-              {...register("content", { required: "Content is required" })}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              rows={4}
-            />
+            <label className="block text-sm font-medium text-gray-700">Content</label>
+            <RichTextEditorComponent value={watch("content") || ""} change={(e) => setValue("content", e.value)}>
+              <Inject services={[Toolbar, Image, Link, HtmlEditor, QuickToolbar]} />
+            </RichTextEditorComponent>
             {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>}
           </div>
 
-          {/* Submit */}
           <div className="col-span-1 md:col-span-2">
             <button
               type="submit"
@@ -206,10 +202,9 @@ const BlogsPage: React.FC = () => {
         </form>
       )}
 
-      {/* Table / Mobile Cards */}
+      {/* Blogs Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm md:text-base bg-white border border-gray-200">
-          {/* Desktop header */}
           <thead className="hidden sm:table-header-group bg-gray-50">
             <tr>
               <th className="py-2 px-4 border-b text-left text-gray-600">Title</th>
@@ -218,8 +213,6 @@ const BlogsPage: React.FC = () => {
               <th className="py-2 px-4 border-b text-left text-gray-600">Actions</th>
             </tr>
           </thead>
-
-          {/* Hybrid body */}
           <tbody>
             {blogs.length === 0 ? (
               <tr>
@@ -233,21 +226,11 @@ const BlogsPage: React.FC = () => {
                   key={blog._id}
                   className="block sm:table-row border sm:border-0 rounded-md sm:rounded-none mb-4 sm:mb-0 shadow sm:shadow-none"
                 >
-                  {/* Title */}
+                  <td className="block sm:table-cell py-2 px-4 sm:border-b">{blog.title}</td>
                   <td className="block sm:table-cell py-2 px-4 sm:border-b">
-                    <span className="sm:hidden font-bold text-gray-600">Title: </span>
-                    {blog.title}
-                  </td>
-
-                  {/* Content */}
-                  <td className="block sm:table-cell py-2 px-4 sm:border-b">
-                    <span className="sm:hidden font-bold text-gray-600">Content: </span>
                     {blog.content.length > 50 ? blog.content.substring(0, 50) + "..." : blog.content}
                   </td>
-
-                  {/* Image */}
                   <td className="block sm:table-cell py-2 px-4 sm:border-b">
-                    <span className="sm:hidden font-bold text-gray-600">Image: </span>
                     {blog.imageUrl ? (
                       <img
                         src={BASE_URL_IMAGES + blog.imageUrl}
@@ -258,10 +241,7 @@ const BlogsPage: React.FC = () => {
                       "No image"
                     )}
                   </td>
-
-                  {/* Actions */}
                   <td className="block sm:table-cell py-2 px-4 sm:border-b flex flex-col sm:flex-row gap-2">
-                    <span className="sm:hidden font-bold text-gray-600">Actions: </span>
                     <button
                       onClick={() => handleEdit(blog)}
                       className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition w-full sm:w-auto"

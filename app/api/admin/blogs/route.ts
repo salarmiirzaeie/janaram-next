@@ -13,6 +13,7 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     const title = formData.get("title")?.toString();
     const content = formData.get("content")?.toString();
     const authorId = formData.get("authorId")?.toString();
+    const description = formData.get("description")?.toString();
     const image = formData.get("image") as File;
 
     // Validate input
@@ -49,6 +50,7 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       content,
       authorId: new ObjectId(authorId),
       imageUrl,
+      description,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -63,6 +65,7 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
           content,
           authorId,
           imageUrl,
+          description,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -109,6 +112,7 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
       imageUrl: blog.imageUrl,
       createdAt: blog.createdAt.toISOString(),
       updatedAt: blog.updatedAt.toISOString(),
+      description: blog.description,
     }));
 
     return NextResponse.json({ success: true, blogs: formattedBlogs }, { status: 200 });

@@ -12,7 +12,6 @@ interface Blog {
   imageUrl: string;
   createdAt: string;
   updatedAt: string;
-  slug: string;
 }
 
 const BlogSection: React.FC = () => {
@@ -76,7 +75,7 @@ const BlogSection: React.FC = () => {
           ) : (
             blogs.map((post) => (
               <BlogCardHome
-                post_name={post.slug} // Map _id to post_name
+                post_name={post._id} // Map _id to post_name
                 key={post._id}
                 imageSrc={post.imageUrl || "/hero-bg.webp"} // Fallback to default image
                 title={post.title}

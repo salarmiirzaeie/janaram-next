@@ -27,7 +27,7 @@ export default function BlogCardHome({ imageSrc, title, summary, date, post_name
             className="w-full h-60 object-cover"
           />
           <div className="p-4">
-            <Link href={`/blog/${post_name}`}>
+            <Link href={`/blogs/${post_name}`}>
               <h2 className="text-xl text-right font-bold mb-2 hover:text-primary">{title}</h2>
             </Link>
             <div className="flex flex-row items-end justify-end text-sm mb-4 text-gray-500">
