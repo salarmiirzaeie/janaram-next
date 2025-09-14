@@ -15,9 +15,9 @@ const validatePhoneNumber = (phone: string): boolean => {
 };
 
 // App hash validation (11 characters or null/undefined)
-const validateAppHash = (appHash: string | null | undefined): boolean => {
-  return appHash == null || (typeof appHash === "string" && appHash.length === 11);
-};
+// const validateAppHash = (appHash: string | null | undefined): boolean => {
+//   return appHash == null || (typeof appHash === "string" && appHash.length === 11);
+// };
 
 export async function POST(req: Request) {
   try {
@@ -27,9 +27,9 @@ export async function POST(req: Request) {
     if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
       return NextResponse.json({ success: false, message: "شماره تلفن نامعتبر است" }, { status: 400 });
     }
-    if (!validateAppHash(appHash)) {
-      return NextResponse.json({ success: false, message: "مقدار appHash نامعتبر است" }, { status: 400 });
-    }
+    // if (!validateAppHash(appHash)) {
+    //   return NextResponse.json({ success: false, message: "مقدار appHash نامعتبر است" }, { status: 400 });
+    // }
 
     // Generate 6-digit OTP using crypto
     const otp = (randomBytes(3).readUIntBE(0, 3) % 1000000).toString().padStart(6, "0");
@@ -61,17 +61,17 @@ export async function POST(req: Request) {
     });
 
     // Prepare SMS parameters
-    const smsParameters = [{ name: "Code", value: otp }];
-    if (appHash) {
-      smsParameters.push({ name: "Hash", value: appHash });
-    }
+    // const smsParameters = [{ name: "Code", value: otp }];
+    // if (appHash) {
+    //   smsParameters.push({ name: "Hash", value: appHash });
+    // }
 
     // console.log(otp);
     try {
       const data = JSON.stringify({
         bodyId: 359521,
         to: phoneNumber,
-        args: [otp, appHash],
+        args: [otp, "PyiTt2kL1yF"],
       });
 
       const options = {
