@@ -40,7 +40,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     const totalPages = Math.ceil(totalRecords / limit);
     const skip = (page - 1) * limit;
 
-    const moods = await moodHistoryCollection.find({ userId }).sort({ date: -1 }).skip(skip).limit(limit).toArray();
+    const moods = await moodHistoryCollection.find({ userId }).sort({ date: 1 }).skip(skip).limit(limit).toArray();
 
     const sanitizedMoods = moods.map((m) => ({
       _id: m._id.toString(),
