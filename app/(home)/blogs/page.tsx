@@ -1,6 +1,5 @@
 // app/blogs/page.tsx
 import Link from "next/link";
-import clientPromise from "@/lib/mongodb";
 import { BASE_URL_IMAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/time";
 import type { Metadata } from "next";
@@ -18,29 +17,23 @@ interface Blog {
   description: string;
 }
 
-// ✅ Server-side fetch directly from MongoDB
-async function getBlogs(): Promise<Blog[]> {
+// ✅ Server-side fetch via API
+async function getBlogs(): Promise<{ success: boolean; blogs: Blog[] }> {
   try {
-    await migrateBlogs();
+    migrateBlogs();
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs`, {
+      cache: "no-store", // ensures fresh data on each request
+    });
 
-    const client = await clientPromise;
-    const db = client.db("janaram-db");
-    const blogs = await db.collection("blogs").find({}).sort({ createdAt: -1 }).toArray();
+    if (!res.ok) {
+      console.error("Failed to fetch blogs from API:", res.statusText);
+      return { success: false, blogs: [] };
+    }
 
-    return blogs.map((b) => ({
-      _id: b._id.toString(),
-      slug: b.slug,
-      title: b.title,
-      content: b.content,
-      authorId: b.authorId?.toString() || "",
-      imageUrl: b.imageUrl || "/hero-bg.webp",
-      createdAt: b.createdAt?.toISOString() || new Date().toISOString(),
-      updatedAt: b.updatedAt?.toISOString() || new Date().toISOString(),
-      description: b.description || "",
-    }));
+    return await res.json();
   } catch (err) {
     console.error("Error fetching blogs:", err);
-    return [];
+    return { success: false, blogs: [] };
   }
 }
 
@@ -51,8 +44,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-  const blogs = await getBlogs();
-
+  const { blogs } = await getBlogs();
   return (
     <div className="max-w-6xl min-h-screen mt-28 mx-auto py-16 px-4 sm:px-6 lg:px-8">
       <h2 className="text-2xl font-bold text-blue-500 text-center mb-8">وبلاگ</h2>
