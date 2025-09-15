@@ -6,19 +6,21 @@ import type { Metadata } from "next";
 
 interface Blog {
   _id: string;
+  slug: string; // ✅ اضافه شد
   title: string;
   content: string;
   authorId: string;
   imageUrl: string;
   createdAt: string;
   updatedAt: string;
+  description: string;
 }
 
 // ✅ Server-side fetch
 async function getBlogs(): Promise<Blog[]> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs`, {
-      cache: "no-store", // SSR always fresh (or { next: { revalidate: 60 } } for ISR)
+      cache: "no-store", // SSR همیشه تازه
     });
 
     if (!res.ok) return [];
@@ -58,7 +60,7 @@ export default async function BlogPage() {
                 className="w-full h-48 object-cover"
               />
               <div className="p-4">
-                <Link href={`/blogs/${blog._id}`}>
+                <Link href={`/blogs/${blog.slug}`}>
                   <h2 className="text-xl text-right font-bold mb-2 hover:text-primary">{blog.title}</h2>
                 </Link>
 
@@ -68,7 +70,7 @@ export default async function BlogPage() {
                   <span>{formatDate(blog.createdAt)}</span>
                 </div>
 
-                <Link href={`/blogs/${blog._id}`}>
+                <Link href={`/blogs/${blog.slug}`}>
                   <p className="text-primary hover:text-primary text-left text-sm mt-4 sm:text-base font-semibold">
                     بیشتر
                   </p>

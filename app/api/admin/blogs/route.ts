@@ -5,10 +5,10 @@ import { randomUUID } from "crypto";
 import { ObjectId, Sort } from "mongodb";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/s3";
+import { createSlug } from "@/lib/createSlug";
 
 export const POST = withAdminAuth(async function (req: NextRequest) {
   try {
-    // Parse multipart/form-data
     const formData = await req.formData();
     const title = formData.get("title")?.toString();
     const content = formData.get("content")?.toString();
@@ -16,7 +16,6 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     const description = formData.get("description")?.toString();
     const image = formData.get("image") as File;
 
-    // Validate input
     if (!title || !content || !authorId || !image) {
       return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 });
     }
@@ -24,11 +23,11 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid authorId" }, { status: 400 });
     }
 
-    // Generate unique filename for image
+    // ✅ ساخت slug فارسی از عنوان
+    const slug = createSlug(title);
+
     const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";
     const uniqueImageName = `${randomUUID()}.${imageExtension}`;
-
-    // Upload image to S3
     const imageBuffer = Buffer.from(await image.arrayBuffer());
     const command = new PutObjectCommand({
       Bucket: process.env.LIARA_BUCKET_NAME,
@@ -39,14 +38,14 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
 
     const imageUrl = `/images/${uniqueImageName}`;
 
-    // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    // Insert blog
+    // ✅ ذخیره slug در دیتابیس
     const result = await collection.insertOne({
       title,
+      slug,
       content,
       authorId: new ObjectId(authorId),
       imageUrl,
@@ -62,6 +61,7 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
         blog: {
           _id: result.insertedId.toString(),
           title,
+          slug,
           content,
           authorId,
           imageUrl,

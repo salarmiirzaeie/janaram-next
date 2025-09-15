@@ -1,4 +1,4 @@
-// app/(home)/blogs/[id]/page.tsx
+// app/(home)/blogs/[slug]/page.tsx
 import DOMPurify from "isomorphic-dompurify";
 import { BASE_URL_IMAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/time";
@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 
 interface Blog {
   _id: string;
+  slug: string;
   title: string;
   content: string;
   authorId: string;
@@ -16,12 +17,11 @@ interface Blog {
   description: string;
 }
 
-// ✅ Fetch blog from API (server-side)
-// ✅ Use the correct base URL for server fetch
-async function getBlog(id: string): Promise<Blog | null> {
+// ✅ Fetch blog by slug (server-side)
+async function getBlog(slug: string): Promise<Blog | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"; // adjust for prod
-    const res = await fetch(`${baseUrl}/api/blogs/${id}`, {
+    const res = await fetch(`${baseUrl}/api/blogs/slug/${slug}`, {
       cache: "no-store", // SSR always fresh
     });
 
@@ -36,12 +36,12 @@ async function getBlog(id: string): Promise<Blog | null> {
 }
 
 // ✅ SEO metadata
-export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await props.params;
-  const blog = await getBlog(id);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const { slug } = params;
+  const blog = await getBlog(slug);
 
   if (!blog) {
-    return { title: "Blog Not Found" };
+    return { title: "وبلاگ پیدا نشد" };
   }
 
   return {
@@ -56,17 +56,17 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
 }
 
 // ✅ Blog detail page (server component)
-export default async function BlogDetailPage(props: { params: Promise<{ id: string }> }) {
-  const { id } = await props.params;
-  const blog = await getBlog(id);
+export default async function BlogDetailPage(props: { params: { slug: string } }) {
+  const { slug } = props.params;
+  const blog = await getBlog(slug);
 
   if (!blog) {
     return (
       <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-2xl font-bold text-blue-500 mb-8">وبلاگ</h2>
-        <p className="text-red-500">Blog not found</p>
+        <p className="text-red-500">مقاله پیدا نشد</p>
         <Link href="/blogs" className="text-blue-500 hover:underline mt-4 inline-block">
-          Back to Blogs
+          بازگشت به وبلاگ‌ها
         </Link>
       </div>
     );

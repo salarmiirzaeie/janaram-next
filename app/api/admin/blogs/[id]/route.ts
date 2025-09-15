@@ -1,23 +1,24 @@
+// app/api/blogs/[slug]/route.ts
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { ObjectId } from "mongodb";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/s3";
+import { createSlug } from "@/lib/createSlug";
 
 export const GET = withAdminAuth(async function (req: NextRequest) {
   try {
-    const id = req.nextUrl.pathname.split("/").pop();
-    if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid blog ID" }, { status: 400 });
+    const slug = req.nextUrl.pathname.split("/").pop();
+    if (!slug) {
+      return NextResponse.json({ success: false, message: "Invalid blog slug" }, { status: 400 });
     }
 
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    const blog = await collection.findOne({ _id: new ObjectId(id) });
+    const blog = await collection.findOne({ slug });
     if (!blog) return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
 
     return NextResponse.json(
@@ -25,6 +26,7 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
         success: true,
         blog: {
           _id: blog._id.toString(),
+          slug: blog.slug,
           title: blog.title,
           content: blog.content,
           authorId: blog.authorId.toString(),
@@ -44,9 +46,9 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
 
 export const PUT = withAdminAuth(async function (req: NextRequest) {
   try {
-    const id = req.nextUrl.pathname.split("/").pop();
-    if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid blog ID" }, { status: 400 });
+    const slug = req.nextUrl.pathname.split("/").pop();
+    if (!slug) {
+      return NextResponse.json({ success: false, message: "Invalid blog slug" }, { status: 400 });
     }
 
     const formData = await req.formData();
@@ -59,11 +61,20 @@ export const PUT = withAdminAuth(async function (req: NextRequest) {
       return NextResponse.json({ success: false, message: "At least one field is required" }, { status: 400 });
     }
 
-    const updateFields: { title?: string; content?: string; imageUrl?: string; updatedAt: Date; description?: string } =
-      {
-        updatedAt: new Date(),
-      };
-    if (title) updateFields.title = title;
+    const updateFields: {
+      title?: string;
+      content?: string;
+      imageUrl?: string;
+      updatedAt: Date;
+      description?: string;
+      slug?: string;
+    } = {
+      updatedAt: new Date(),
+    };
+    if (title) {
+      updateFields.title = title;
+      updateFields.slug = createSlug(title); // ✅ ایجاد slug جدید
+    }
     if (content) updateFields.content = content;
     if (description) updateFields.description = description;
 
@@ -85,7 +96,7 @@ export const PUT = withAdminAuth(async function (req: NextRequest) {
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    const result = await collection.updateOne({ _id: new ObjectId(id) }, { $set: updateFields });
+    const result = await collection.updateOne({ slug }, { $set: updateFields });
     if (result.matchedCount === 0)
       return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
 
@@ -98,26 +109,19 @@ export const PUT = withAdminAuth(async function (req: NextRequest) {
 
 export const DELETE = withAdminAuth(async function (req: NextRequest) {
   try {
-    const id = req.nextUrl.pathname.split("/").pop(); // Extract ID from URL
-
-    if (!id || !ObjectId.isValid(id)) {
-      console.error("Invalid blog ID:", id);
-      return NextResponse.json({ success: false, message: "Invalid blog ID" }, { status: 400 });
+    const slug = req.nextUrl.pathname.split("/").pop();
+    if (!slug) {
+      return NextResponse.json({ success: false, message: "Invalid blog slug" }, { status: 400 });
     }
 
-    // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    // Find the blog to get the image URL
-    const blog = await collection.findOne({ _id: new ObjectId(id) });
-    if (!blog) {
-      console.error("Blog not found for ID:", id);
-      return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
-    }
+    const blog = await collection.findOne({ slug });
+    if (!blog) return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
 
-    // Delete associated image from S3 if it exists
+    // حذف تصویر از S3
     if (blog.imageUrl) {
       const imageKey = blog.imageUrl.replace("/images/", "");
       try {
@@ -131,13 +135,9 @@ export const DELETE = withAdminAuth(async function (req: NextRequest) {
       }
     }
 
-    // Delete blog
-    const result = await collection.deleteOne({ _id: new ObjectId(id) });
-
-    if (result.deletedCount === 0) {
-      console.error("Blog not found for ID:", id);
+    const result = await collection.deleteOne({ slug });
+    if (result.deletedCount === 0)
       return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
-    }
 
     return NextResponse.json({ success: true, message: "Blog deleted successfully" }, { status: 200 });
   } catch (error) {

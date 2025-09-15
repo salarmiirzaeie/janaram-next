@@ -1,9 +1,11 @@
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId, Sort } from "mongodb";
+import { migrateBlogs } from "@/scripts/migrateBlogs";
 
 export const GET = async (req: NextRequest) => {
   try {
+    await migrateBlogs();
     const { searchParams } = new URL(req.url);
     const sort = searchParams.get("sort");
     const limit = parseInt(searchParams.get("limit") || "0", 10);
