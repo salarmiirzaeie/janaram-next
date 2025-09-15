@@ -1,6 +1,7 @@
 // app/components/BlogSection.tsx
 import Link from "next/link";
 import BlogCardHome from "./BlogCardHome";
+import clientPromise from "@/lib/mongodb";
 
 interface Blog {
   _id: string;
@@ -10,18 +11,26 @@ interface Blog {
   imageUrl: string;
   createdAt: string;
   updatedAt: string;
+  slug: string;
 }
 
-// ✅ Server-side fetch (last 3 blogs)
+// ✅ Server-side fetch directly from MongoDB
 async function getBlogs(): Promise<Blog[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs?sort=createdAt&limit=3`, {
-      cache: "no-store", // SSR always fresh
-    });
+    const client = await clientPromise;
+    const db = client.db("janaram-db");
+    const blogs = await db.collection("blogs").find({}).sort({ createdAt: -1 }).limit(3).toArray();
 
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.blogs || [];
+    return blogs.map((b) => ({
+      _id: b._id.toString(),
+      title: b.title,
+      content: b.content,
+      authorId: b.authorId?.toString() || "",
+      imageUrl: b.imageUrl || "/hero-bg.webp",
+      createdAt: b.createdAt?.toISOString() || new Date().toISOString(),
+      updatedAt: b.updatedAt?.toISOString() || new Date().toISOString(),
+      slug: b.slug,
+    }));
   } catch (error) {
     console.error("Error fetching blogs:", error);
     return [];
@@ -42,13 +51,13 @@ export default async function BlogSection() {
           ) : (
             blogs.map((post) => (
               <BlogCardHome
-                post_name={post._id}
+                post_name={post.slug}
                 key={post._id}
-                imageSrc={post.imageUrl || "/hero-bg.webp"}
+                imageSrc={post.imageUrl}
                 title={post.title}
                 summary={post.content.slice(0, 250)}
                 author="Unknown Author"
-                date={new Date(post.createdAt).toISOString().split("T")[0]}
+                date={post.createdAt.split("T")[0]}
               />
             ))
           )}

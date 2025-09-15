@@ -1,4 +1,5 @@
 // app/(home)/blogs/[id]/loading.tsx
+"use client";
 export default function LoadingBlog() {
   return (
     <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8 text-center">

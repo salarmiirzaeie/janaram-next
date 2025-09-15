@@ -2,8 +2,9 @@
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
-  const { slug } = params;
+// بدون تایپ مستقیم برای params
+export async function GET(req: NextRequest, context: any) {
+  const { slug } = context.params;
 
   if (!slug) {
     console.error("Missing slug");
@@ -15,7 +16,6 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    // جستجو بر اساس slug
     const blog = await collection.findOne({ slug });
     if (!blog) {
       console.error("Blog not found for slug:", slug);

@@ -6,6 +6,7 @@ import localFont from "next/font/local";
 import Script from "next/script";
 import { GA_TRACKING_ID } from "@/lib/gtag";
 import GAListener from "../GAListener";
+import { Suspense } from "react";
 
 const iranSans = localFont({
   src: [
@@ -64,7 +65,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </>
         )}
         <Header />
-        <GAListener />
+        <Suspense fallback={null}>
+          <GAListener />
+        </Suspense>
 
         {children}
         <Footer />

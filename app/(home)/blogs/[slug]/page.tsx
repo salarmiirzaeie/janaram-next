@@ -5,6 +5,7 @@ import { formatDate } from "@/lib/time";
 import Link from "next/link";
 import type { Metadata } from "next";
 
+// Define Blog interface
 interface Blog {
   _id: string;
   slug: string;
@@ -17,24 +18,24 @@ interface Blog {
   description: string;
 }
 
-// Server-side fetch by slug
+// Fetch blog
 async function getBlog(slug: string): Promise<Blog | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const res = await fetch(`${baseUrl}/api/blogs/${slug}`, { cache: "no-store" });
     if (!res.ok) return null;
-
     const data = await res.json();
     return data.success && data.blog ? data.blog : null;
-  } catch (error) {
-    console.error("Error fetching blog:", error);
+  } catch (err) {
+    console.error(err);
     return null;
   }
 }
 
 // SEO metadata
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const blog = await getBlog(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params; // Await params
+  const blog = await getBlog(slug);
   if (!blog) return { title: "Blog Not Found" };
 
   return {
@@ -43,14 +44,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     openGraph: {
       title: blog.title,
       description: blog.description,
-      images: blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp",
+      images: blog.imageUrl ? [BASE_URL_IMAGES + blog.imageUrl] : ["/hero-bg.webp"],
     },
   };
 }
 
 // Blog page
-export default async function BlogDetailPage({ params }: { params: { slug: string } }) {
-  const blog = await getBlog(params.slug);
+export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params; // Await params
+  const blog = await getBlog(slug);
 
   if (!blog) {
     return (
