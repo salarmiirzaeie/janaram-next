@@ -4,6 +4,7 @@ import clientPromise from "@/lib/mongodb";
 import { BASE_URL_IMAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/time";
 import type { Metadata } from "next";
+import { migrateBlogs } from "@/scripts/migrateBlogs";
 
 interface Blog {
   _id: string;
@@ -20,6 +21,8 @@ interface Blog {
 // ✅ Server-side fetch directly from MongoDB
 async function getBlogs(): Promise<Blog[]> {
   try {
+    await migrateBlogs();
+
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const blogs = await db.collection("blogs").find({}).sort({ createdAt: -1 }).toArray();

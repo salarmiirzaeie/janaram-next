@@ -5,7 +5,6 @@ import { migrateBlogs } from "@/scripts/migrateBlogs";
 
 export const GET = async (req: NextRequest) => {
   try {
-    await migrateBlogs();
     const { searchParams } = new URL(req.url);
     const sort = searchParams.get("sort");
     const limit = parseInt(searchParams.get("limit") || "0", 10);

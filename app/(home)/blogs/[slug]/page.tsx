@@ -1,11 +1,11 @@
-// app/(home)/blogs/[slug]/page.tsx
 import DOMPurify from "isomorphic-dompurify";
 import { BASE_URL_IMAGES } from "@/lib/constants";
 import { formatDate } from "@/lib/time";
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 
-// Define Blog interface
+// Blog interface
 interface Blog {
   _id: string;
   slug: string;
@@ -18,7 +18,7 @@ interface Blog {
   description: string;
 }
 
-// Fetch blog
+// Fetch blog (server-side)
 async function getBlog(slug: string): Promise<Blog | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -34,9 +34,11 @@ async function getBlog(slug: string): Promise<Blog | null> {
 
 // SEO metadata
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params; // Await params
+  const { slug } = await params;
   const blog = await getBlog(slug);
   if (!blog) return { title: "Blog Not Found" };
+
+  const url = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/blogs/${slug}`;
 
   return {
     title: blog.title,
@@ -44,14 +46,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: blog.title,
       description: blog.description,
+      url,
+      type: "article",
       images: blog.imageUrl ? [BASE_URL_IMAGES + blog.imageUrl] : ["/hero-bg.webp"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: blog.title,
+      description: blog.description,
+      images: blog.imageUrl ? [BASE_URL_IMAGES + blog.imageUrl] : ["/hero-bg.webp"],
+    },
+    alternates: {
+      canonical: url,
     },
   };
 }
 
-// Blog page
+// Blog page (SSR)
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params; // Await params
+  const { slug } = await params;
   const blog = await getBlog(slug);
 
   if (!blog) {
@@ -69,23 +82,50 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
   const sanitizedContent = DOMPurify.sanitize(blog.content);
 
   return (
-    <div className="max-w-6xl bg-white mt-28 mx-auto py-16 px-4 rounded-2xl sm:px-6 lg:px-8">
-      <h1 className="text-3xl text-right font-bold text-gray-800 mb-4">{blog.title}</h1>
+    <article className="max-w-6xl bg-white mt-28 mx-auto py-16 px-4 rounded-2xl sm:px-6 lg:px-8">
+      <header>
+        <h1 className="text-3xl text-right font-bold text-gray-800 mb-4">{blog.title}</h1>
 
-      <div className="mb-6 flex flex-col lg:flex-row lg:space-x-6 items-center">
-        <img
-          src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
-          alt={blog.title}
-          className="w-full lg:w-1/2 h-64 rounded-2xl object-cover mb-4 lg:mb-0"
-        />
-        <p className="w-full lg:w-1/2 text-right text-xl font-bold text-gray-700">{blog.description}</p>
-      </div>
+        <div className="mb-6 flex flex-col lg:flex-row lg:space-x-6 items-center">
+          <div className="w-full lg:w-1/2 relative h-64 mb-4 lg:mb-0 rounded-2xl overflow-hidden">
+            <Image
+              src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
+              alt={blog.title}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+          <p className="w-full lg:w-1/2 text-right text-xl font-bold text-gray-700">{blog.description}</p>
+        </div>
 
-      <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
-        <span>{formatDate(blog.createdAt)}</span>
-      </div>
+        <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
+          <span>تاریخ انتشار: {formatDate(blog.createdAt)}</span>
+        </div>
+      </header>
 
-      <div className="prose prose-lg text-gray-700" dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-    </div>
+      <section className="prose prose-lg text-gray-700" dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: blog.title,
+            image: blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp",
+            author: { "@type": "Person", name: "جانارام" },
+            datePublished: blog.createdAt,
+            dateModified: blog.updatedAt,
+            description: blog.description,
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/blogs/${blog.slug}`,
+            },
+          }),
+        }}
+      />
+    </article>
   );
 }
