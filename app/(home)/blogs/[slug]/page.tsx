@@ -17,13 +17,13 @@ interface Blog {
   description: string;
 }
 
-// Server-side fetch
+// Server-side fetch by slug
 async function getBlog(slug: string): Promise<Blog | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const res = await fetch(`${baseUrl}/api/blogs/${slug}`, { cache: "no-store" });
-
     if (!res.ok) return null;
+
     const data = await res.json();
     return data.success && data.blog ? data.blog : null;
   } catch (error) {
@@ -56,7 +56,7 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
     return (
       <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-2xl font-bold text-blue-500 mb-8">وبلاگ</h2>
-        <p className="text-red-500">Blog not found</p>
+        <p className="text-red-500">مقاله پیدا نشد</p>
         <Link href="/blogs" className="text-blue-500 hover:underline mt-4 inline-block">
           بازگشت به وبلاگ
         </Link>
