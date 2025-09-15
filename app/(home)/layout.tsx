@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import Header from "@/components/layout/Header";
-
-import localFont from "next/font/local";
 import Footer from "@/components/layout/Footer";
+import localFont from "next/font/local";
+import Script from "next/script";
+import { GA_TRACKING_ID } from "@/lib/gtag";
+import GAListener from "../GAListener";
 
 const iranSans = localFont({
   src: [
@@ -37,17 +39,34 @@ export const metadata: Metadata = {
     "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است. همین حالا دانلود کنید و آرامش را تجربه کنید.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${iranSans.variable} ${vazir.variable}  antialiased`}>
+    <html lang="fa">
+      <body className={`${iranSans.variable} ${vazir.variable} antialiased`}>
+        {/* GA script */}
+        {GA_TRACKING_ID && (
+          <>
+            <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`} />
+            <Script
+              id="gtag-init"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${GA_TRACKING_ID}', {
+                    page_path: window.location.pathname,
+                  });
+                `,
+              }}
+            />
+          </>
+        )}
         <Header />
-        {children}
+        <GAListener />
 
+        {children}
         <Footer />
       </body>
     </html>
