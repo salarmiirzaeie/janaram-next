@@ -17,16 +17,13 @@ interface Blog {
   description: string;
 }
 
-// ✅ Fetch blog by slug (server-side)
+// Server-side fetch
 async function getBlog(slug: string): Promise<Blog | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"; // adjust for prod
-    const res = await fetch(`${baseUrl}/api/blogs/slug/${slug}`, {
-      cache: "no-store", // SSR always fresh
-    });
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/blogs/${slug}`, { cache: "no-store" });
 
     if (!res.ok) return null;
-
     const data = await res.json();
     return data.success && data.blog ? data.blog : null;
   } catch (error) {
@@ -35,14 +32,10 @@ async function getBlog(slug: string): Promise<Blog | null> {
   }
 }
 
-// ✅ SEO metadata
+// SEO metadata
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const { slug } = params;
-  const blog = await getBlog(slug);
-
-  if (!blog) {
-    return { title: "وبلاگ پیدا نشد" };
-  }
+  const blog = await getBlog(params.slug);
+  if (!blog) return { title: "Blog Not Found" };
 
   return {
     title: blog.title,
@@ -55,39 +48,35 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-// ✅ Blog detail page (server component)
-export default async function BlogDetailPage(props: { params: { slug: string } }) {
-  const { slug } = props.params;
-  const blog = await getBlog(slug);
+// Blog page
+export default async function BlogDetailPage({ params }: { params: { slug: string } }) {
+  const blog = await getBlog(params.slug);
 
   if (!blog) {
     return (
       <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-2xl font-bold text-blue-500 mb-8">وبلاگ</h2>
-        <p className="text-red-500">مقاله پیدا نشد</p>
+        <p className="text-red-500">Blog not found</p>
         <Link href="/blogs" className="text-blue-500 hover:underline mt-4 inline-block">
-          بازگشت به وبلاگ‌ها
+          بازگشت به وبلاگ
         </Link>
       </div>
     );
   }
 
-  // Sanitize HTML content
   const sanitizedContent = DOMPurify.sanitize(blog.content);
 
   return (
     <div className="max-w-6xl bg-white mt-28 mx-auto py-16 px-4 rounded-2xl sm:px-6 lg:px-8">
       <h1 className="text-3xl text-right font-bold text-gray-800 mb-4">{blog.title}</h1>
 
-      <div className="mb-6">
-        <div className="flex flex-col lg:flex-row lg:space-x-6 items-center">
-          <img
-            src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
-            alt={blog.title}
-            className="w-full lg:w-1/2 h-64 rounded-2xl object-cover mb-4 lg:mb-0"
-          />
-          <p className="w-full lg:w-1/2 text-right text-xl font-bold text-gray-700">{blog.description}</p>
-        </div>
+      <div className="mb-6 flex flex-col lg:flex-row lg:space-x-6 items-center">
+        <img
+          src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
+          alt={blog.title}
+          className="w-full lg:w-1/2 h-64 rounded-2xl object-cover mb-4 lg:mb-0"
+        />
+        <p className="w-full lg:w-1/2 text-right text-xl font-bold text-gray-700">{blog.description}</p>
       </div>
 
       <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
