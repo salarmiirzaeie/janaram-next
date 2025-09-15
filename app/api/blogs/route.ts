@@ -35,6 +35,7 @@ export const GET = async (req: NextRequest) => {
       content: blog.content,
       authorId: blog.authorId.toString(),
       imageUrl: blog.imageUrl,
+      slug: blog.slug,
       createdAt: blog.createdAt.toISOString(),
       updatedAt: blog.updatedAt.toISOString(),
     }));

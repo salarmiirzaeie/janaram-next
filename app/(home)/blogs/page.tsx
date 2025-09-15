@@ -20,7 +20,6 @@ interface Blog {
 // ✅ Server-side fetch via API
 async function getBlogs(): Promise<{ success: boolean; blogs: Blog[] }> {
   try {
-    migrateBlogs();
     const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs`, {
       cache: "no-store", // ensures fresh data on each request
     });
