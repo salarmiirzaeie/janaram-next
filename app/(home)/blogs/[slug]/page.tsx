@@ -82,18 +82,16 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
   const sanitizedContent = DOMPurify.sanitize(blog.content);
 
   return (
-    <article className="max-w-6xl bg-white mt-28 mx-auto py-16 px-4 rounded-2xl sm:px-6 lg:px-8">
+    <article className="max-w-6xl min-h-screen bg-white mt-28 mx-auto py-16 px-4 rounded-2xl sm:px-6 lg:px-8">
       <header>
         <h1 className="text-3xl text-right font-bold text-gray-800 mb-4">{blog.title}</h1>
 
         <div className="mb-6 flex flex-col lg:flex-row lg:space-x-6 items-center">
           <div className="w-full lg:w-1/2 relative h-64 mb-4 lg:mb-0 rounded-2xl overflow-hidden">
-            <Image
+            <img
               src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
               alt={blog.title}
-              fill
               className="object-cover"
-              priority
             />
           </div>
           <p className="w-full lg:w-1/2 text-right text-xl font-bold text-gray-700">{blog.description}</p>
