@@ -6,11 +6,12 @@ import { randomUUID } from "crypto";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/s3";
 import { createSlug } from "@/lib/createSlug";
+import { ObjectId } from "mongodb";
 
 export const GET = withAdminAuth(async function (req: NextRequest) {
   try {
-    const slug = req.nextUrl.pathname.split("/").pop();
-    if (!slug) {
+    const id = req.nextUrl.pathname.split("/").pop();
+    if (!id) {
       return NextResponse.json({ success: false, message: "Invalid blog slug" }, { status: 400 });
     }
 
@@ -18,7 +19,7 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    const blog = await collection.findOne({ slug });
+    const blog = await collection.findOne({ _id: new ObjectId(id) });
     if (!blog) return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
 
     return NextResponse.json(
@@ -46,8 +47,8 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
 
 export const PUT = withAdminAuth(async function (req: NextRequest) {
   try {
-    const slug = req.nextUrl.pathname.split("/").pop();
-    if (!slug) {
+    const id = req.nextUrl.pathname.split("/").pop();
+    if (!id) {
       return NextResponse.json({ success: false, message: "Invalid blog slug" }, { status: 400 });
     }
 
@@ -91,12 +92,12 @@ export const PUT = withAdminAuth(async function (req: NextRequest) {
       );
       updateFields.imageUrl = `/images/${uniqueImageName}`;
     }
-
+    console.log("object");
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    const result = await collection.updateOne({ slug }, { $set: updateFields });
+    const result = await collection.updateOne({ _id: new ObjectId(id) }, { $set: updateFields });
     if (result.matchedCount === 0)
       return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
 
@@ -109,8 +110,8 @@ export const PUT = withAdminAuth(async function (req: NextRequest) {
 
 export const DELETE = withAdminAuth(async function (req: NextRequest) {
   try {
-    const slug = req.nextUrl.pathname.split("/").pop();
-    if (!slug) {
+    const id = req.nextUrl.pathname.split("/").pop();
+    if (!id) {
       return NextResponse.json({ success: false, message: "Invalid blog slug" }, { status: 400 });
     }
 
@@ -118,7 +119,7 @@ export const DELETE = withAdminAuth(async function (req: NextRequest) {
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    const blog = await collection.findOne({ slug });
+    const blog = await collection.findOne({ _id: new ObjectId(id) });
     if (!blog) return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
 
     // حذف تصویر از S3
@@ -135,7 +136,7 @@ export const DELETE = withAdminAuth(async function (req: NextRequest) {
       }
     }
 
-    const result = await collection.deleteOne({ slug });
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
     if (result.deletedCount === 0)
       return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
 
