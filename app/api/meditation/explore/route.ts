@@ -15,7 +15,7 @@ export const GET = withAuth(async function (req: NextRequest) {
       // Sort by _id descending (or createdAt if you have it) to get last 5
       const meditations = await collection
         .find({ type })
-        .sort({ _id: -1 }) // -1 for descending, 1 for ascending
+        .sort({ createdAt: -1 }) // -1 for descending, 1 for ascending
         .limit(5)
         .toArray();
 
