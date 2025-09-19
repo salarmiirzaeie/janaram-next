@@ -91,13 +91,25 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       );
     }
 
-    let messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
-
     const systemPrompt =
       userDoc.plan === "free"
-        ? `شما یک روانشناس حرفه‌ای هستید، در دو جمله کوتاه به کاربر پاسخ دهید`
-        : `شما یک روانشناس حرفه‌ای هستید، در دو جمله کوتاه به کاربر پاسخ دهید. نام مخاطب شما ${userDoc.name} است`;
-
+        ? `
+  شما یک روانشناس هوش مصنوعی هستید. 
+  - پاسخ شما باید کوتاه و در حد دو جمله باشد.
+  - هدف اصلی: آرام‌سازی سریع کاربر و ایجاد حس مثبت لحظه‌ای.
+  - از کلمات ساده و عمومی استفاده کنید.
+  - از ورود به جزئیات درمانی یا مشاوره تخصصی خودداری کنید.
+  `
+        : `
+  شما یک روانشناس هوش مصنوعی حرفه‌ای و همراه کاربر هستید. 
+  - نام مخاطب شما ${userDoc.name} است، از او با نامش یاد کنید تا رابطه صمیمانه‌تر شود. 
+  - پاسخ‌ها باید در حد دو جمله کوتاه و مفید باشند. 
+  - هدف: ارائه راهکار عملی کوچک برای بهبود حال روحی، تمرکز بر آرامش، مدیتیشن و خودشناسی. 
+  - لحن شما دوستانه، حمایتگر و امیدوارکننده باشد.
+  `;
+    let messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      { role: "system", content: systemPrompt },
+    ];
     const recentMessages = await chatHistory.find({ userId: userId }).sort({ timestamp: -1 }).limit(2).toArray();
 
     if (recentMessages.length > 0) {
@@ -108,15 +120,15 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         ])
       );
     }
-    messages.push({ role: "system", content: systemPrompt });
 
     messages.push({ role: "user", content: message });
 
     const models = [
-      "openai/gpt-oss-20b:free",
-      "microsoft/mai-ds-r1:free",
-      "deepseek/deepseek-r1-0528:free",
       "deepseek/deepseek-chat-v3-0324:free",
+      "deepseek/deepseek-r1-0528:free",
+      "microsoft/mai-ds-r1:free",
+
+      "openai/gpt-oss-20b:free",
     ];
     let completion;
     for (const model of models) {
