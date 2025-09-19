@@ -98,7 +98,6 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
   - پاسخ شما باید کوتاه و در حد دو جمله باشد.
   - هدف اصلی: آرام‌سازی سریع کاربر و ایجاد حس مثبت لحظه‌ای.
   - از کلمات ساده و عمومی استفاده کنید.
-  - از ورود به جزئیات درمانی یا مشاوره تخصصی خودداری کنید.
   `
         : `
   شما یک روانشناس هوش مصنوعی حرفه‌ای و همراه کاربر هستید. 
@@ -124,10 +123,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "user", content: message });
 
     const models = [
-      "openai/gpt-oss-20b:free",
-      "microsoft/mai-ds-r1:free",
-      "deepseek/deepseek-r1-0528:free",
-      "deepseek/deepseek-chat-v3-0324:free",
+      "meta-llama/llama-3.3-70b-instruct:free",
+      "meta-llama/llama-3.2-3b-instruct:free",
+      "qwen/qwen-2.5-72b-instruct:free",
+      "google/gemma-2-9b-it:free",
     ];
     let completion;
     for (const model of models) {
