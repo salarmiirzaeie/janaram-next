@@ -32,7 +32,7 @@ const DownloadSection = () => {
             <p className="text-center">اپلیکیشن آیفون جانارام را می‌توانید از مسیر‌های‌ زیر دریافت نمایید</p>
             <div className="flex flex-col md:flex-row mx-auto mb-8 items-center justify-center gap-2 mt-8">
               <a onClick={handleIosClick} className="cursor-pointer">
-                <Image src="/SibAppDownload.png" className=" ml-48" alt="SibApp Download" width={300} height={140} />
+                <Image src="/SibAppDownload.png" alt="SibApp Download" width={300} height={100} />
               </a>
               <a onClick={handleIosClick} className="cursor-pointer">
                 <Image src="/anardoni-badge-black-persian.png" alt="Anardoni Download" width={200} height={100} />
