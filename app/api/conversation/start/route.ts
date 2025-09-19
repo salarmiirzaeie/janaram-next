@@ -124,11 +124,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "user", content: message });
 
     const models = [
-      "deepseek/deepseek-chat-v3-0324:free",
-      "deepseek/deepseek-r1-0528:free",
-      "microsoft/mai-ds-r1:free",
-
       "openai/gpt-oss-20b:free",
+      "microsoft/mai-ds-r1:free",
+      "deepseek/deepseek-r1-0528:free",
+      "deepseek/deepseek-chat-v3-0324:free",
     ];
     let completion;
     for (const model of models) {
