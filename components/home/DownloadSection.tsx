@@ -32,13 +32,13 @@ const DownloadSection = () => {
             <p className="text-center">اپلیکیشن آیفون جانارام را می‌توانید از مسیر‌های‌ زیر دریافت نمایید</p>
             <div className="flex flex-col md:flex-row mx-auto mb-8 items-center justify-center gap-2 mt-8">
               <a onClick={handleIosClick} className="cursor-pointer">
-                <Image
-                  src="/SibAppDownload.png"
-                  className="w-full h-full"
-                  alt="SibApp Download"
-                  width={200}
-                  height={100}
-                />
+                <Image src="/SibAppDownload.png" className=" ml-48" alt="SibApp Download" width={300} height={140} />
+              </a>
+              <a onClick={handleIosClick} className="cursor-pointer">
+                <Image src="/anardoni-badge-black-persian.png" alt="Anardoni Download" width={200} height={100} />
+              </a>
+              <a href="https://iapps.ir/app/جانارام-مدیتیشن-و-روانشناس-AI/845783883" className="cursor-pointer">
+                <Image src="/Iapps-Badge-Black-.png" alt="Iapps Download" width={240} height={240} />
               </a>
             </div>
           </div>
@@ -58,6 +58,9 @@ const DownloadSection = () => {
               <Link href="https://cafebazaar.ir/app/com.salarmiirzapour.Janaram">
                 <Image src="/bazarDownload.png" alt="Bazar Download" width={200} height={100} />
               </Link>
+              <a href="https://janaram.storage.c2.liara.space/apk/1.0.9.apk" download>
+                <Image src="/myketDownload.png" alt="Direct Install" width={200} height={100} />
+              </a>
               <a href="https://janaram.storage.c2.liara.space/apk/1.0.9.apk" download>
                 <Image src="/directInstall.png" alt="Direct Install" width={200} height={100} />
               </a>
