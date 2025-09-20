@@ -50,7 +50,7 @@ const DownloadSection = () => {
         <Link href="https://cafebazaar.ir/app/com.salarmiirzapour.Janaram">
           <Image src="/bazarDownload.png" alt="Bazar Download" width={200} height={70} />
         </Link>
-        <a href="https://janaram.storage.c2.liara.space/apk/1.0.9.apk" download>
+        <a href="https://myket.ir/app/com.salarmiirzapour.Janaram" download>
           <Image src="/myketDownload.png" alt="Myket Download" width={200} height={70} />
         </a>
         <a href="https://janaram.storage.c2.liara.space/apk/1.0.9.apk" download>
