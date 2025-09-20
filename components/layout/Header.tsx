@@ -35,7 +35,7 @@ const Header: React.FC = () => {
     ],
     "/blogs": [
       { type: "link", href: "/", label: "خانه" },
-      { type: "scroll", to: "downloadSection", label: "دانلود", button: true },
+      { type: "link", href: "/#downloadSection", label: "دانلود", button: true }, // ⬅️ changed
     ],
   };
 
@@ -61,25 +61,29 @@ const Header: React.FC = () => {
                   spy={true}
                   smooth={true}
                   duration={500}
-                  className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                  className="transition-colors duration-200"
                 >
                   <button
                     className={
                       item.button
                         ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
-                        : ""
+                        : "text-gray-700 hover:text-blue-600"
                     }
                   >
                     {item.label}
                   </button>
                 </LinkScroll>
               ) : (
-                <Link
-                  key={idx}
-                  href={item.href!}
-                  className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                >
-                  <button>{item.label}</button>
+                <Link key={idx} href={item.href!} className="transition-colors duration-200">
+                  <button
+                    className={
+                      item.button
+                        ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
+                        : "text-gray-700 hover:text-blue-600"
+                    }
+                  >
+                    {item.label}
+                  </button>
                 </Link>
               )
             )}
@@ -118,27 +122,29 @@ const Header: React.FC = () => {
                     spy={true}
                     smooth={true}
                     duration={500}
-                    className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-                    onClick={toggleMobileMenu}
+                    className="transition-colors duration-200"
                   >
                     <button
                       className={
                         item.button
-                          ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg w-fit"
-                          : ""
+                          ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
+                          : "text-gray-700 hover:text-blue-600"
                       }
                     >
                       {item.label}
                     </button>
                   </LinkScroll>
                 ) : (
-                  <Link
-                    key={idx}
-                    href={item.href!}
-                    className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-                    onClick={toggleMobileMenu}
-                  >
-                    <button>{item.label}</button>
+                  <Link key={idx} href={item.href!} className="transition-colors duration-200">
+                    <button
+                      className={
+                        item.button
+                          ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
+                          : "text-gray-700 hover:text-blue-600"
+                      }
+                    >
+                      {item.label}
+                    </button>
                   </Link>
                 )
               )}

@@ -17,9 +17,19 @@ interface Blog {
 }
 
 // ✅ Server-side fetch via API
-async function getBlogs(): Promise<{ success: boolean; blogs: Blog[] }> {
+async function getBlogs({
+  sort,
+  limit,
+}: {
+  sort?: string;
+  limit?: number;
+} = {}): Promise<{ success: boolean; blogs: Blog[] }> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs`, {
+    const query = new URLSearchParams();
+    if (sort) query.set("sort", sort);
+    if (limit) query.set("limit", limit.toString());
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs${query.toString() ? `?${query}` : ""}`, {
       cache: "no-store", // ensures fresh data on each request
     });
 
@@ -42,7 +52,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-  const { blogs } = await getBlogs();
+  const { success, blogs } = await getBlogs({ sort: "createdAt", limit: 3 });
 
   return (
     <div className="max-w-6xl  mx-auto py-16 px-4 sm:px-6 lg:px-8">

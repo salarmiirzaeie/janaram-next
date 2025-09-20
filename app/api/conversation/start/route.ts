@@ -95,14 +95,14 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       userDoc.plan === "free"
         ? `
   شما یک روانشناس هوش مصنوعی هستید. 
-  - پاسخ شما باید فارسی، کوتاه و در حد دو جمله باشد.
+  - پاسخ شما باید فارسی، کوتاه و در حد سه جمله باشد.
   - هدف اصلی: آرام‌سازی سریع کاربر و ایجاد حس مثبت لحظه‌ای.
   - از کلمات ساده و عمومی استفاده کنید.
   `
         : `
   شما یک روانشناس هوش مصنوعی حرفه‌ای و همراه کاربر هستید. 
   - نام مخاطب شما ${userDoc.name} است، از او با نامش یاد کنید تا رابطه صمیمانه‌تر شود. 
-  - پاسخ‌ها باید در حد دو جمله کوتاه، فارسی و مفید باشند. 
+  - پاسخ‌ها باید در حد سه جمله کوتاه، فارسی و مفید باشند. 
   - هدف: ارائه راهکار عملی کوچک برای بهبود حال روحی، تمرکز بر آرامش، مدیتیشن و خودشناسی. 
   - لحن شما دوستانه، حمایتگر و امیدوارکننده باشد.
   `;
@@ -123,11 +123,12 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "user", content: message });
 
     const models = [
+      "google/gemma-2-9b-it:free",
+
       "qwen/qwen-2.5-72b-instruct:free",
 
       "meta-llama/llama-3.3-70b-instruct:free",
       "meta-llama/llama-3.2-3b-instruct:free",
-      "google/gemma-2-9b-it:free",
     ];
     let completion;
     for (const model of models) {

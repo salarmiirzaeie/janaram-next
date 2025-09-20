@@ -66,7 +66,6 @@ export async function POST(req: Request) {
     //   smsParameters.push({ name: "Hash", value: appHash });
     // }
 
-    // console.log(otp);
     try {
       const data = JSON.stringify({
         bodyId: 359521,

@@ -6,24 +6,25 @@ import Hero from "@/components/home/Hero";
 import React, { Suspense } from "react";
 import QuoteForm from "@/components/home/QuoteForm";
 import CustomerReviewsSection from "@/components/home/Reviews";
+import ScrollToHash from "@/components/home/ScrollToHash";
 
-const page = () => {
+const Page = () => {
   return (
     <div className="bg-white">
+      {/* runs only on client */}
+      <ScrollToHash />
+
       <Hero />
-
       <About />
-
       <DownloadSection />
       <Suspense fallback={<p>Loading...</p>}>
         <BlogSection />
       </Suspense>
       <FAQSection />
       <CustomerReviewsSection />
-
       <QuoteForm />
     </div>
   );
 };
 
-export default page;
+export default Page;
