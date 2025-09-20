@@ -38,6 +38,22 @@ export const metadata: Metadata = {
   title: "جانارام | اپلیکیشن مدیتیشن و آرامش ذهن",
   description:
     "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است. همین حالا دانلود کنید و آرامش را تجربه کنید.",
+  openGraph: {
+    title: "جانارام | اپلیکیشن مدیتیشن و آرامش ذهن",
+    description: "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
+    url: "https://janaram.ir",
+    siteName: "جانارام",
+    type: "website",
+  },
+  other: {
+    "application/ld+json": JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "جانارام",
+      url: "https://janaram.ir",
+      description: "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
+    }),
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
