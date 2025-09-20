@@ -66,7 +66,7 @@ const DownloadSection = () => {
         <a onClick={handleIosClick} className="cursor-pointer">
           <Image src="/SibAppDownload.png" alt="SibApp Download" width={200} height={70} />
         </a>
-        <a onClick={handleIosClick} className="cursor-pointer">
+        <a href="https://anardoni.com/ios/app/comsalarmiirzapourjanaram" className="cursor-pointer">
           <Image src="/anardoni-badge-black-persian.png" alt="Anardoni Download" width={200} height={70} />
         </a>
         <a href="https://iapps.ir/app/جانارام-مدیتیشن-و-روانشناس-AI/845783883" className="cursor-pointer">
