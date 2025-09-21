@@ -56,6 +56,7 @@ const HeroSection: React.FC = () => {
             width={407}
             height={763}
             priority
+            fetchPriority="high"
             className="absolute bottom-0 left-1/2 transform -translate-x-1/2 object-contain max-w-[95vw] sm:max-w-[60vw] md:max-w-[407px]"
             sizes="(max-width: 640px) 80vw, (max-width: 768px) 60vw, 407px"
           />
