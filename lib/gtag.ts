@@ -27,7 +27,7 @@ export const event = ({
   action: string;
   category: string;
   label: string;
-  value: number;
+  value?: number; // 👈 اختیاری بشه
 }) => {
   if (window.gtag) {
     window.gtag("event", action, {

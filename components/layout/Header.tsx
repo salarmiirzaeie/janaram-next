@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { Link as LinkScroll } from "react-scroll";
 import { usePathname } from "next/navigation";
+import { event } from "@/lib/gtag"; // 👈 اضافه شد
+
 type NavItem = {
   type: string;
   to?: string;
@@ -18,13 +20,12 @@ type NavItems = {
 
 const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const pathname = usePathname(); // ✅ current route
+  const pathname = usePathname();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  // Example: different navs for different routes
   const navItems: NavItems = {
     "/": [
       { type: "scroll", to: "quoteForm", label: "تماس با ما" },
@@ -35,11 +36,12 @@ const Header: React.FC = () => {
     ],
     "/blogs": [
       { type: "link", href: "/", label: "خانه" },
-      { type: "link", href: "/#downloadSection", label: "دانلود", button: true }, // ⬅️ changed
+      { type: "link", href: "/#downloadSection", label: "دانلود", button: true },
     ],
   };
 
   const currentNavs = pathname === "/" ? navItems["/"] : pathname.startsWith("/blogs") ? navItems["/blogs"] : [];
+
   return (
     <div className="absolute top-0 left-0 w-full">
       <div className="px-4 pt-4 lg:pt-8">
@@ -64,6 +66,14 @@ const Header: React.FC = () => {
                   className="transition-colors duration-200"
                 >
                   <button
+                    onClick={() =>
+                      item.button &&
+                      event({
+                        action: "download_click",
+                        category: "engagement",
+                        label: "header_download_button",
+                      })
+                    }
                     className={
                       item.button
                         ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
@@ -76,6 +86,14 @@ const Header: React.FC = () => {
               ) : (
                 <Link key={idx} href={item.href!} className="transition-colors duration-200">
                   <button
+                    onClick={() =>
+                      item.button &&
+                      event({
+                        action: "download_click",
+                        category: "engagement",
+                        label: "header_download_button",
+                      })
+                    }
                     className={
                       item.button
                         ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
@@ -125,6 +143,14 @@ const Header: React.FC = () => {
                     className="transition-colors duration-200"
                   >
                     <button
+                      onClick={() =>
+                        item.button &&
+                        event({
+                          action: "download_click",
+                          category: "engagement",
+                          label: "header_download_button_mobile",
+                        })
+                      }
                       className={
                         item.button
                           ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
@@ -137,6 +163,14 @@ const Header: React.FC = () => {
                 ) : (
                   <Link key={idx} href={item.href!} className="transition-colors duration-200">
                     <button
+                      onClick={() =>
+                        item.button &&
+                        event({
+                          action: "download_click",
+                          category: "engagement",
+                          label: "header_download_button_mobile",
+                        })
+                      }
                       className={
                         item.button
                           ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"

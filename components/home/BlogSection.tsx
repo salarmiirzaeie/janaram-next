@@ -30,7 +30,7 @@ async function getBlogs({
     if (limit) query.set("limit", limit.toString());
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs${query.toString() ? `?${query}` : ""}`, {
-      cache: "no-store", // ensures fresh data on each request
+      cache: "force-cache", // ensures fresh data on each request
     });
 
     if (!res.ok) {
@@ -44,12 +44,6 @@ async function getBlogs({
     return { success: false, blogs: [] };
   }
 }
-
-// ✅ SEO metadata
-export const metadata: Metadata = {
-  title: "وبلاگ | جانارام",
-  description: "آخرین مقالات و اخبار جانارام را در وبلاگ مطالعه کنید.",
-};
 
 export default async function BlogPage() {
   const { success, blogs } = await getBlogs({ sort: "createdAt", limit: 3 });
