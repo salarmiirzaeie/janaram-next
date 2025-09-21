@@ -75,7 +75,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         ],
         isActive: userDoc.plan === "unlimited" && (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
         id: "123456",
-        price: 79,
+        price: 69,
         duration: 1,
         oldPrice: 89,
       },
