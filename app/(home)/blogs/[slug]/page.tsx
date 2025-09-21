@@ -22,7 +22,7 @@ interface Blog {
 async function getBlog(slug: string): Promise<Blog | null> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/blogs/${slug}`, { cache: "no-store" });
+    const res = await fetch(`${baseUrl}/api/blogs/${slug}`, { cache: "force-cache" });
     if (!res.ok) return null;
     const data = await res.json();
     return data.success && data.blog ? data.blog : null;
