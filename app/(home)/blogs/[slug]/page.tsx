@@ -85,16 +85,34 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
     <article className="max-w-6xl min-h-screen bg-white mt-28 mx-auto py-16 px-4 rounded-2xl sm:px-6 lg:px-8">
       <header>
         <h1 className="text-3xl text-right font-bold text-gray-800 mb-4">{blog.title}</h1>
+        <p className="w-full mb-4 lg:w-full text-right text-xl font-bold text-gray-700">{blog.description}</p>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-6 md:p-10 mb-16 border rounded-3xl border-gray-200 shadow-md bg-gradient-to-r from-blue-50 to-blue-100">
+          <img
+            src="/downloadInvite.png"
+            alt="دانلود اپلیکیشن جانارام"
+            className="w-full md:w-2/5 rounded-xl object-cover"
+          />
+
+          <div className="w-full md:w-3/5 flex flex-col items-center text-center space-y-6">
+            <p className="text-2xl md:text-3xl font-extrabold text-gray-800">دانلود اپلیکیشن مدیتیشن</p>
+            <p className="text-lg md:text-xl text-gray-600">جانارام</p>
+            <Link href="/#downloadSection" className="w-full md:w-auto">
+              <button className="px-10 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-lg md:text-xl font-bold rounded-xl shadow-lg transition-all duration-300">
+                دانلود رایگان
+              </button>
+            </Link>
+          </div>
+        </div>
 
         <div className="mb-6 flex flex-col lg:flex-row lg:space-x-6 items-center">
-          <div className="w-full lg:w-1/2 relative h-64 mb-4 lg:mb-0 rounded-2xl overflow-hidden">
+          <div className="w-full lg:w-1/2 relative  mb-4 lg:mb-0 rounded-2xl overflow-hidden">
             <img
               src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
               alt={blog.title}
               className="object-cover"
             />
           </div>
-          <p className="w-full lg:w-1/2 text-right text-xl font-bold text-gray-700">{blog.description}</p>
         </div>
 
         <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
