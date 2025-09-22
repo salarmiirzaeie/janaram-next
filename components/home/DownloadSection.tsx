@@ -63,7 +63,7 @@ const DownloadSection = () => {
         subtitle="اپلیکیشن آیفون جانارام را می‌توانید از مسیر‌های زیر دریافت نمایید"
         qrcode="/qrcode.png"
       >
-        <a onClick={handleIosClick} className="cursor-pointer">
+        <a href="https://sibapp.com/applications/janaram" className="cursor-pointer">
           <Image src="/SibAppDownload.png" alt="SibApp Download" width={200} height={70} />
         </a>
         <a href="https://anardoni.com/ios/app/comsalarmiirzapourjanaram" className="cursor-pointer">
