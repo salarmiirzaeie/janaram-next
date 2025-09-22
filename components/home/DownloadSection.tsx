@@ -27,9 +27,9 @@ const DownloadSection = () => {
   }) => (
     <div className="bg-white rounded-2xl shadow-md border border-gray-200 w-full max-w-6xl mx-auto my-6 overflow-hidden">
       <div className="flex flex-col md:flex-row items-center justify-between p-6 md:p-10 gap-8">
-        <div className="flex-shrink-0">
+        {/* <div className="flex-shrink-0">
           <Image src={qrcode} alt="QR Code" className="rounded-lg shadow-sm" width={180} height={180} />
-        </div>
+        </div> */}
         <div className="flex-1 text-center md:text-right">
           <h2 className="font-bold text-blue-600 text-2xl md:text-3xl mb-3">{title}</h2>
           <p className="text-gray-600 mb-6">{subtitle}</p>
