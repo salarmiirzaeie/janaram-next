@@ -72,6 +72,9 @@ const DownloadSection = () => {
         <a href="https://iapps.ir/app/جانارام-مدیتیشن-و-روانشناس-AI/845783883" className="cursor-pointer">
           <Image src="/Iapps-Badge-Black-.png" alt="Iapps Download" width={220} height={70} />
         </a>
+        <a href="https://sibirani.com/apps/janaram/?utm_source=janaram&utm_medium=badge">
+          <Image src="https://fs.sibirani.com/badge.svg" width={180} height={70} alt="دانلود برنامه از سیب ایرانی" />
+        </a>
       </DownloadCard>
 
       <ToastContainer />
