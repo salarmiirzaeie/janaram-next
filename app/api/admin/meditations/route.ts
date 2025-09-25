@@ -20,6 +20,7 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
         description: med.description,
         duration: med.duration,
         isSuggested: med.isSuggested,
+        accessLevel: med.accessLevel,
       })),
     });
   } catch (error) {

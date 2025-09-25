@@ -13,6 +13,7 @@ type Meditation = {
   description: string;
   duration: string;
   isSuggested: boolean;
+  accessLevel: "free" | "unlimited"; // 👈 new
 };
 
 type MeditationForm = {
@@ -24,6 +25,7 @@ type MeditationForm = {
   description: string;
   duration: string;
   isSuggested: boolean;
+  accessLevel: "free" | "unlimited"; // 👈 new
 };
 
 const MeditationPage: React.FC = () => {
@@ -47,6 +49,7 @@ const MeditationPage: React.FC = () => {
       description: "",
       duration: "",
       isSuggested: false,
+      accessLevel: "free",
     },
   });
 
@@ -80,6 +83,7 @@ const MeditationPage: React.FC = () => {
     setValue("description", meditation.description);
     setValue("duration", meditation.duration);
     setValue("isSuggested", meditation.isSuggested);
+    setValue("accessLevel", meditation.accessLevel);
   };
 
   const handleDelete = async (id: string) => {
@@ -112,6 +116,7 @@ const MeditationPage: React.FC = () => {
     formData.append("description", data.description);
     formData.append("duration", data.duration.toString());
     formData.append("isSuggested", data.isSuggested.toString());
+    formData.append("accessLevel", data.accessLevel);
 
     try {
       setLoading(true);
@@ -235,6 +240,19 @@ const MeditationPage: React.FC = () => {
             />
           </div>
 
+          {/* Access Level */}
+          <div className="col-span-1">
+            <label className="block text-sm font-medium text-gray-700">Access Level</label>
+            <select
+              {...register("accessLevel", { required: true })}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            >
+              <option value="free">Free</option>
+              <option value="unlimited">Unlimited</option>
+            </select>
+            {errors.accessLevel && <p className="text-red-500 text-sm mt-1">Access Level is required</p>}
+          </div>
+
           {/* Suggested */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700">Suggested</label>
@@ -285,6 +303,7 @@ const MeditationPage: React.FC = () => {
               <th className="py-2 px-4 border-b text-left text-gray-600">Image</th>
               <th className="py-2 px-4 border-b text-left text-gray-600 hidden md:table-cell">Description</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Duration</th>
+              <th className="py-2 px-4 border-b text-left text-gray-600">Access</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Suggested</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Actions</th>
             </tr>
@@ -292,7 +311,7 @@ const MeditationPage: React.FC = () => {
           <tbody>
             {meditations.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-4 px-4 text-center text-gray-500">
+                <td colSpan={9} className="py-4 px-4 text-center text-gray-500">
                   No meditations added yet.
                 </td>
               </tr>
@@ -320,6 +339,7 @@ const MeditationPage: React.FC = () => {
                   </td>
                   <td className="py-2 px-4 border-b hidden md:table-cell">{meditation.description}</td>
                   <td className="py-2 px-4 border-b">{meditation.duration}</td>
+                  <td className="py-2 px-4 border-b">{meditation.accessLevel}</td>
                   <td className="py-2 px-4 border-b">{meditation.isSuggested ? "Yes" : "No"}</td>
                   <td className="py-2 px-4 border-b flex flex-col sm:flex-row gap-2">
                     <button

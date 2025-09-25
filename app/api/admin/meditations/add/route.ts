@@ -14,17 +14,23 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     const description = formData.get("description")?.toString();
     const duration = formData.get("duration")?.toString();
     const isSuggested = formData.get("isSuggested")?.toString() === "true";
+    const accessLevel = formData.get("accessLevel")?.toString() as "free" | "unlimited"; // 👈 new
     const file = formData.get("file") as File;
     const image = formData.get("image") as File;
 
     // Validate input
-    if (!title || !type || !file || !description || !duration || !image) {
+    if (!title || !type || !file || !description || !duration || !image || !accessLevel) {
       return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 });
     }
 
     const validTypes = ["instrumental", "nature", "love", "calm", "sleep", "sleep-music", "story"];
     if (!validTypes.includes(type)) {
       return NextResponse.json({ success: false, message: "Invalid meditation type" }, { status: 400 });
+    }
+
+    const validAccessLevels = ["free", "unlimited"];
+    if (!validAccessLevels.includes(accessLevel)) {
+      return NextResponse.json({ success: false, message: "Invalid access level" }, { status: 400 });
     }
 
     // Generate unique file names
@@ -71,20 +77,24 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       title,
       type,
       description,
-      duration: duration,
+      duration,
       fileUrl,
       imageUrl,
       isSuggested,
+      accessLevel, // 👈 store it
       createdAt: new Date(),
     });
+
     await sendToAll({
       title: "مدیتیشن جدید اضافه شد 🧘‍♂️",
       body: type === "story" ? `قصه جدید ${title} اضافه شد` : `مدیتیشن جدید ${title} اضافه شد`,
       data: {
         meditationId: result.insertedId.toString(),
         type,
+        accessLevel,
       },
     });
+
     return NextResponse.json(
       {
         success: true,
@@ -98,6 +108,7 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
           description,
           duration: parseInt(duration),
           isSuggested,
+          accessLevel,
         },
       },
       { status: 201 }
