@@ -6,10 +6,10 @@ import { event } from "@/lib/gtag";
 const BlogCtaBox: React.FC = () => {
   return (
     // کادر با رنگ پس زمینه متمایز و سایه
-    <div className="my-10 p-6 bg-pink-50 border-r-4 border-pink-600 rounded-lg shadow-xl text-center">
+    <div className="my-10 p-6 bg-pink-50 border-r-4 border-[#AB47BC] rounded-lg shadow-xl text-center">
       {/* عنوان ترغیب کننده */}
       <h3 className="text-xl md:text-2xl font-extrabold text-gray-800 mb-3">
-        تمرین کامل <span className="text-pink-600">شخصی‌سازی شده</span> خود را دریافت کنید!
+        تمرین کامل <span className="text-[#AB47BC]">شخصی‌سازی شده</span> خود را دریافت کنید!
       </h3>
 
       {/* توضیح ارزش پیشنهادی کلیدی */}
@@ -32,7 +32,7 @@ const BlogCtaBox: React.FC = () => {
       >
         <button
           // استفاده از کلاس‌های پررنگ و جذاب برند (مطابق با Header)
-          className="bg-pink-600 text-white text-lg font-bold px-8 py-3 rounded-full hover:bg-pink-700 transition-all duration-300 shadow-lg transform hover:scale-105"
+          className="bg-[#AB47BC] text-white text-lg font-bold px-8 py-3 rounded-full hover:bg-pink-700 transition-all duration-300 shadow-lg transform hover:scale-105"
         >
           دانلود رایگان و شروع آرامش
         </button>
