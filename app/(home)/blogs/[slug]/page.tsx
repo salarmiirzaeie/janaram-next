@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/time";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import BlogCtaBox from "@/components/home/BlogCtaBox";
 
 // Blog interface
 interface Blog {
@@ -32,7 +33,7 @@ async function getBlog(slug: string): Promise<Blog | null> {
   }
 }
 
-// SEO metadata
+// SEO metadata (بدون تغییر)
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const blog = await getBlog(slug);
@@ -70,9 +71,9 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
   if (!blog) {
     return (
       <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-2xl font-bold text-blue-500 mb-8">وبلاگ</h2>
+        <h2 className="text-2xl font-bold text-pink-600 mb-8">وبلاگ</h2>
         <p className="text-red-500">مقاله پیدا نشد</p>
-        <Link href="/blogs" className="text-blue-500 hover:underline mt-4 inline-block">
+        <Link href="/blogs" className="text-pink-600 hover:underline mt-4 inline-block">
           بازگشت به وبلاگ
         </Link>
       </div>
@@ -87,23 +88,12 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         <h1 className="text-3xl text-right font-bold text-gray-800 mb-4">{blog.title}</h1>
         <p className="w-full mb-4 lg:w-full text-right text-xl font-bold text-gray-700">{blog.description}</p>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-6 md:p-10 mb-16 border rounded-3xl border-gray-200 shadow-md bg-gradient-to-r from-blue-50 to-blue-100">
-          <img
-            src="/downloadInvite.png"
-            alt="دانلود اپلیکیشن جانارام"
-            className="w-full md:w-2/5 rounded-xl object-cover"
-          />
-
-          <div className="w-full md:w-3/5 flex flex-col items-center text-center space-y-6">
-            <p className="text-2xl md:text-3xl font-extrabold text-gray-800">دانلود اپلیکیشن مدیتیشن</p>
-            <p className="text-lg md:text-xl text-gray-600">جانارام</p>
-            <Link href="/#downloadSection" className="w-full md:w-auto">
-              <button className="px-10 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-lg md:text-xl font-bold rounded-xl shadow-lg transition-all duration-300">
-                دانلود رایگان
-              </button>
-            </Link>
-          </div>
+        {/* 1. CTA Box در ابتدای مقاله (بعد از توضیحات) */}
+        <div className="hidden lg:block">
+          <BlogCtaBox />
         </div>
+
+        {/* این بخش CTA قدیمی که کامنت کرده بودید، حذف شد */}
 
         <div className="mb-6 flex flex-col lg:flex-row lg:space-x-6 items-center">
           <div className="w-full lg:w-1/2 relative  mb-4 lg:mb-0 rounded-2xl overflow-hidden">
@@ -120,7 +110,13 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         </div>
       </header>
 
+      {/* محتوای مقاله */}
       <section className="prose prose-lg text-gray-700" dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+
+      {/* 2. CTA Box در انتهای مقاله (قبل از Structured Data) */}
+      <div className="mt-12">
+        <BlogCtaBox />
+      </div>
 
       {/* Structured Data */}
       <script

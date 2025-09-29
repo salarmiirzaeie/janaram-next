@@ -42,7 +42,7 @@ const HeroSection: React.FC = () => {
                 }
                 className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
               >
-                دانلود
+                دانلود رایگان جانارام و آغاز آرامش
               </button>
             </LinkScroll>
           </div>

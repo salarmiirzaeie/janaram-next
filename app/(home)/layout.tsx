@@ -7,6 +7,7 @@ import Script from "next/script";
 import { GA_TRACKING_ID } from "@/lib/gtag";
 import GAListener from "../GAListener";
 import { Suspense } from "react";
+import FixedDownloadBar from "@/components/layout/FixedDownloadBar";
 
 const iranSans = localFont({
   src: [
@@ -84,9 +85,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Suspense fallback={null}>
           <GAListener />
         </Suspense>
-
         {children}
         <Footer />
+        <FixedDownloadBar /> 👈 اضافه شدن به Layout
       </body>
     </html>
   );

@@ -32,16 +32,19 @@ const Header: React.FC = () => {
       { type: "link", href: "/blogs", label: "وبلاگ" },
       { type: "scroll", to: "faqSection", label: "سوالات متداول" },
       { type: "scroll", to: "reviewSection", label: "نظرات" },
-      { type: "scroll", to: "downloadSection", label: "دانلود", button: true },
+      { type: "scroll", to: "downloadSection", label: "دانلود رایگان", button: true },
     ],
     "/blogs": [
       { type: "link", href: "/", label: "خانه" },
-      { type: "link", href: "/#downloadSection", label: "دانلود", button: true },
+      { type: "link", href: "/#downloadSection", label: "دانلود رایگان", button: true },
     ],
   };
 
   const currentNavs = pathname === "/" ? navItems["/"] : pathname.startsWith("/blogs") ? navItems["/blogs"] : [];
+  const downloadButtonClasses =
+    "bg-[#AB47BC] text-white px-6 py-2 rounded-full hover:bg-[#AB47BC] transition-all duration-300 shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#AB47BC]";
 
+  const normalButtonClasses = "text-gray-700 hover:text-[#AB47BC]";
   return (
     <div className="absolute top-0 left-0 w-full">
       <div className="px-4 pt-4 lg:pt-8">
@@ -76,8 +79,8 @@ const Header: React.FC = () => {
                     }
                     className={
                       item.button
-                        ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
-                        : "text-gray-700 hover:text-blue-600"
+                        ? downloadButtonClasses // 👈 استفاده از کلاس‌های جدید
+                        : normalButtonClasses
                     }
                   >
                     {item.label}
@@ -96,8 +99,8 @@ const Header: React.FC = () => {
                     }
                     className={
                       item.button
-                        ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
-                        : "text-gray-700 hover:text-blue-600"
+                        ? downloadButtonClasses // 👈 استفاده از کلاس‌های جدید
+                        : normalButtonClasses
                     }
                   >
                     {item.label}
@@ -153,8 +156,8 @@ const Header: React.FC = () => {
                       }
                       className={
                         item.button
-                          ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
-                          : "text-gray-700 hover:text-blue-600"
+                          ? downloadButtonClasses // 👈 استفاده از کلاس‌های جدید
+                          : normalButtonClasses
                       }
                     >
                       {item.label}
@@ -173,8 +176,8 @@ const Header: React.FC = () => {
                       }
                       className={
                         item.button
-                          ? "bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg"
-                          : "text-gray-700 hover:text-blue-600"
+                          ? downloadButtonClasses // 👈 استفاده از کلاس‌های جدید
+                          : normalButtonClasses
                       }
                     >
                       {item.label}
