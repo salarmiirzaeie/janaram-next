@@ -71,13 +71,34 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       }
     }
 
+    let preLimitWarning: string | null = null;
+    let conversationCount = 0;
+
     if (userDoc.plan === "free") {
-      const conversationCount = userDoc.conversationCount?.date === today ? userDoc.conversationCount.count : 0;
+      conversationCount = userDoc.conversationCount?.date === today ? userDoc.conversationCount.count : 0;
+
+      // --- ۱. بهبود پیام مسدود شدن (429) ---
       if (conversationCount >= 10) {
         return NextResponse.json(
-          { success: false, message: "حداکثر تعداد گفت‌وگوهای روزانه برای طرح رایگان به پایان رسیده است" },
+          {
+            success: false,
+            // متن ارتقاء یافته که بر وقفه ۲۴ ساعته و دسترسی فوری تأکید دارد
+            message:
+              "گفت‌وگوی شما متوقف شد. محدودیت روزانه ۱۰ گفت‌وگوی شما به پایان رسید و تا ۲۴ ساعت دیگر قابل دسترسی نیست. برای ادامه فوری و نامحدود مکالمه، لطفاً به طرح Pro ارتقاء دهید.",
+          },
           { status: 429 }
         );
+      }
+
+      // --- ۲. تزریق اخطار پیش از محدودیت (مکالمه نهم و دهم) ---
+      if (conversationCount === 8) {
+        // این اخطار برای مکالمه نهم (یکی مانده به آخر) نمایش داده می‌شود.
+        preLimitWarning =
+          "\n\n(❗️ توجه: شما فقط یک مکالمه رایگان دیگر امروز فرصت دارید. با ارتقاء به Pro، نه تنها چت نامحدود می‌گیرید، بلکه به گزارش‌های تحلیلی حال روحی‌تان هم دسترسی پیدا می‌کنید!)";
+      } else if (conversationCount === 9) {
+        // این اخطار برای مکالمه دهم (آخرین مکالمه) نمایش داده می‌شود.
+        preLimitWarning =
+          "\n\n(⚠️ فرصت محدود! این آخرین پاسخ رایگان من برای امروز است. اگر نمی‌خواهید مکالمه‌تان قطع شود، فوراً ارتقاء دهید و ادامه گفت‌وگو را از دست ندهید.)";
       }
 
       await users.updateOne(
@@ -146,6 +167,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           details: apiError.response?.data,
         });
         if (apiError.response?.status === 429) {
+          // این خطا مربوط به محدودیت API است، نه محدودیت کاربر.
           return NextResponse.json(
             { success: false, message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است" },
             { status: 429 }
@@ -172,18 +194,11 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json({ success: false, message: "پاسخی از هوش مصنوعی دریافت نشد" }, { status: 500 });
     }
 
-    // Suggest meditation if mood is low (fetch from recent mood)
-    // const recentMood = await db.collection("mood-history").findOne({ userId }, { sort: { updatedAt: -1 } });
-    // let meditationSuggestion = null;
+    // --- افزودن اخطار پیش از محدودیت به پاسخ هوش مصنوعی ---
+    if (preLimitWarning) {
+      aiResponse += preLimitWarning;
+    }
 
-    // if (recentMood) {
-    //   if (recentMood?.mood !== null && recentMood.mood <= 5) {
-    //     meditationSuggestion = await suggestMeditation(db, recentMood.mood);
-    //     if (meditationSuggestion) {
-    //       aiResponse += `\n\nبا توجه به حس امروزت ییشنهاد می‌کنم مدیتیشن ${meditationSuggestion.title}  رو امتحان کنی.`;
-    //     }
-    //   }
-    // }
     // Store new conversation in chat-history collection
     const newConversation = {
       userId,
