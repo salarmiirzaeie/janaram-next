@@ -52,7 +52,7 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
             file: "/meditations/silent_1s.mp3",
             image: meditation.imageUrl,
             description:
-              "🌙 این مدیتیشن مخصوص کاربران پرو است. اشتراک پرو را فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش استفاده کن",
+              "🌙 این مدیتیشن مخصوص کاربران پرو است.  اشتراک پرو رو فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش و چت بات روانسناسی نامحدود و تخصصی استفاده کن",
             duration: meditation.duration,
             isSuggested: meditation.isSuggested || false,
           },
