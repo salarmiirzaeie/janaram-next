@@ -141,13 +141,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "user", content: message });
 
     const models = [
-      "x-ai/grok-4-fast:free",
-      "qwen/qwen-2.5-72b-instruct:free",
-
-      "google/gemma-2-9b-it:free",
       "meta-llama/llama-3.3-70b-instruct:free",
-
-      "meta-llama/llama-3.2-3b-instruct:free",
+      "qwen/qwen-2.5-72b-instruct:free",
+      "google/gemini-2.0-flash-exp:free",
+      "mistralai/mistral-nemo:free",
     ];
     let completion;
     for (const model of models) {
