@@ -19,7 +19,7 @@ export const GET = withAuth(async function (req: NextRequest) {
         .limit(5)
         .toArray();
 
-      result[type === "sleep-music" ? "sleepMusic" : type] = meditations.map((med) => ({
+      result[type === "sleep-music" ? "sleepMusic" : type] = meditations.reverse().map((med) => ({
         id: med._id.toString(),
         title: med.title,
         type: med.type,
