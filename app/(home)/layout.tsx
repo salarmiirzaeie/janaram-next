@@ -55,6 +55,9 @@ export const metadata: Metadata = {
       description: "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
     }),
   },
+  verification: {
+    google: "HFmM8X8uAAK3rM2f5GiE5861gjq1X7AW9zfgn17Yx2A",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
