@@ -4,8 +4,14 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
 import moment from "moment-timezone";
-import { getBreathingTypesForMood, getMeditationTypesForMood, moods, trains } from "@/lib/mood";
+import {
+  getBreathingTypesForMood,
+  getMeditationTypesForMood,
+  moods,
+  trains,
+} from "@/lib/mood";
 import { sendNotification } from "@/lib/notifications";
+import { generateMoodNotification } from "@/lib/aiNotification";
 
 interface IMood {
   mood: number | null;
@@ -13,10 +19,15 @@ interface IMood {
 }
 
 // Helper for today's date
-const getTodayGregorianDate = (): string => moment.tz("Asia/Tehran").format("YYYY-MM-DD");
+const getTodayGregorianDate = (): string =>
+  moment.tz("Asia/Tehran").format("YYYY-MM-DD");
 
 // Create exercises for user dynamically
-const createUserExercisesForMood = async (userId: ObjectId, moodKey: string, db: any) => {
+const createUserExercisesForMood = async (
+  userId: ObjectId,
+  moodKey: string,
+  db: any
+) => {
   const exercisesCollection = db.collection("user-exercises");
   const meditationCollection = db.collection("meditations");
   const breathingCollection = db.collection("breathing");
@@ -28,7 +39,10 @@ const createUserExercisesForMood = async (userId: ObjectId, moodKey: string, db:
     if (exercise.includes("meditation")) {
       const meditationTypes = getMeditationTypesForMood(moodKey);
       const meditation = await meditationCollection
-        .aggregate([{ $match: { type: { $in: meditationTypes } } }, { $sample: { size: 1 } }])
+        .aggregate([
+          { $match: { type: { $in: meditationTypes } } },
+          { $sample: { size: 1 } },
+        ])
         .toArray();
 
       if (meditation.length > 0) {
@@ -47,7 +61,10 @@ const createUserExercisesForMood = async (userId: ObjectId, moodKey: string, db:
     else if (exercise.includes("breathing")) {
       const breathingTypes = getBreathingTypesForMood(moodKey);
       const breathing = await breathingCollection
-        .aggregate([{ $match: { type: { $in: breathingTypes } } }, { $sample: { size: 1 } }])
+        .aggregate([
+          { $match: { type: { $in: breathingTypes } } },
+          { $sample: { size: 1 } },
+        ])
         .toArray();
 
       if (breathing.length > 0) {
@@ -63,7 +80,9 @@ const createUserExercisesForMood = async (userId: ObjectId, moodKey: string, db:
       }
     }
     // Step activities (mindful_activity, grounding_activity, body_scan)
-    else if (["mindful_activity", "grounding_activity", "body_scan"].includes(exercise)) {
+    else if (
+      ["mindful_activity", "grounding_activity", "body_scan"].includes(exercise)
+    ) {
       await exercisesCollection.insertOne({
         userId,
         date: getTodayGregorianDate(),
@@ -75,7 +94,9 @@ const createUserExercisesForMood = async (userId: ObjectId, moodKey: string, db:
       });
     }
     // Text activities (journaling, gratitude_exercise, daily_tip)
-    else if (["journaling", "gratitude_exercise", "daily_tip"].includes(exercise)) {
+    else if (
+      ["journaling", "gratitude_exercise", "daily_tip"].includes(exercise)
+    ) {
       await exercisesCollection.insertOne({
         userId,
         date: getTodayGregorianDate(),
@@ -119,7 +140,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     try {
       userId = new ObjectId(user.sub);
     } catch {
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
     }
 
     const sanitizedNote = note;
@@ -127,7 +151,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     const moodHistory = db.collection("mood-history");
     const userDoc = await db.collection("users").findOne({ _id: userId });
     if (!userDoc) {
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد" },
+        { status: 404 }
+      );
     }
 
     const today = getTodayGregorianDate();
@@ -153,17 +180,19 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       if (mood !== null && mood < 5) {
         const userName = userDoc.name || "دوست عزیزم";
         const moodObj = moods.find((m) => m.value === mood);
+        const moodLabel = moodObj?.label || "خسته";
 
-        const moodLabel = moodObj?.label || "خسته"; // پیش‌فرض خسته اگه پیدا نشد
+        // 👇 تولید متن با هوش مصنوعی
+        const aiMessage = await generateMoodNotification(userName, moodLabel);
 
         setTimeout(() => {
           sendNotification({
             userId,
-            title: "جانارام همیشه همراهته",
-            body: `${userName} جان، متاسفم که امروز ${moodLabel} هستی 💙 یادت باشه من همیشه پیشتم`,
+            title: "جانارام همیشه همراهته 💙",
+            body: aiMessage,
             action: "mood",
           });
-        }, 1 * 60 * 1000); // 1 دقیقه بعد
+        }, 1 * 60 * 1000); // یک دقیقه بعد
       }
 
       const moodObj = moods.find((m) => m.value === mood);
@@ -179,7 +208,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     });
   } catch (err: any) {
     console.error("Error processing mood:", err);
-    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور" },
+      { status: 500 }
+    );
   }
 });
 
@@ -197,16 +229,27 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     if (!moodEntry) {
       return NextResponse.json({
         success: true,
-        data: { date: today, moodRegistered: false, exercisesRegistered: false, status: "no-mood", totalMoodDays },
+        data: {
+          date: today,
+          moodRegistered: false,
+          exercisesRegistered: false,
+          status: "no-mood",
+          totalMoodDays,
+        },
       });
     }
 
-    const exercises = await exercisesCollection.find({ userId, date: today }).toArray();
+    const exercises = await exercisesCollection
+      .find({ userId, date: today })
+      .toArray();
     const totalExercises = exercises.length;
     const completedExercises = exercises.filter((e) => e.done).length;
-    const progressPercent = totalExercises ? Math.round((completedExercises / totalExercises) * 100) : 0;
+    const progressPercent = totalExercises
+      ? Math.round((completedExercises / totalExercises) * 100)
+      : 0;
 
-    let status: "no-mood" | "not-started" | "in-progress" | "completed" = "not-started";
+    let status: "no-mood" | "not-started" | "in-progress" | "completed" =
+      "not-started";
     if (progressPercent === 100 && totalExercises > 0) status = "completed";
     else if (progressPercent > 0) status = "in-progress";
 
@@ -225,6 +268,9 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور" },
+      { status: 500 }
+    );
   }
 });

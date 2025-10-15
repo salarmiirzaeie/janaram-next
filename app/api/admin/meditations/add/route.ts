@@ -14,23 +14,50 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     const description = formData.get("description")?.toString();
     const duration = formData.get("duration")?.toString();
     const isSuggested = formData.get("isSuggested")?.toString() === "true";
-    const accessLevel = formData.get("accessLevel")?.toString() as "free" | "unlimited"; // 👈 new
+    const accessLevel = formData.get("accessLevel")?.toString() as
+      | "free"
+      | "unlimited"; // 👈 new
     const file = formData.get("file") as File;
     const image = formData.get("image") as File;
 
     // Validate input
-    if (!title || !type || !file || !description || !duration || !image || !accessLevel) {
-      return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 });
+    if (
+      !title ||
+      !type ||
+      !file ||
+      !description ||
+      !duration ||
+      !image ||
+      !accessLevel
+    ) {
+      return NextResponse.json(
+        { success: false, message: "All fields are required" },
+        { status: 400 }
+      );
     }
 
-    const validTypes = ["instrumental", "nature", "love", "calm", "sleep", "sleep-music", "story"];
+    const validTypes = [
+      "instrumental",
+      "nature",
+      "love",
+      "calm",
+      "sleep",
+      "sleep-music",
+      "story",
+    ];
     if (!validTypes.includes(type)) {
-      return NextResponse.json({ success: false, message: "Invalid meditation type" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Invalid meditation type" },
+        { status: 400 }
+      );
     }
 
     const validAccessLevels = ["free", "unlimited"];
     if (!validAccessLevels.includes(accessLevel)) {
-      return NextResponse.json({ success: false, message: "Invalid access level" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Invalid access level" },
+        { status: 400 }
+      );
     }
 
     // Generate unique file names
@@ -86,8 +113,11 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     });
 
     await sendToAll({
-      title: "مدیتیشن جدید اضافه شد 🧘‍♂️",
-      body: type === "story" ? `قصه جدید ${title} اضافه شد` : `مدیتیشن جدید ${title} اضافه شد`,
+      title: "مدیتیشن جدید منتشر شد 🧘‍♂️",
+      body:
+        type === "story"
+          ? `قصه جدید ${title} منتشر شد`
+          : `مدیتیشن جدید ${title} اضافه شد`,
       data: {
         meditationId: result.insertedId.toString(),
         type,
@@ -115,6 +145,9 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     );
   } catch (error) {
     console.error("Error creating meditation:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
   }
 });
