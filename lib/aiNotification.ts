@@ -26,10 +26,14 @@ export async function generateMoodNotification(
   `;
 
   const models = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "google/gemini-2.0-flash-exp:free",
-  ];
+    "z-ai/glm-4.5-air",
+    "openai/gpt-oss-20b:free",
 
+    "z-ai/glm-4.5-air:free",
+    "google/gemini-2.0-flash-exp:free",
+
+    "meta-llama/llama-3.3-70b-instruct:free",
+  ];
   for (const model of models) {
     try {
       const completion = await client.chat.completions.create({
