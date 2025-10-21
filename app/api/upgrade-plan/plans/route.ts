@@ -24,7 +24,10 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
     }
 
     const db = (await clientPromise).db("janaram-db");
@@ -34,12 +37,19 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     let userDoc = await users.findOne({ _id: userId });
     if (!userDoc || !userDoc._id) {
       console.error("User not found or missing _id for user.sub:", user.sub);
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" },
+        { status: 404 }
+      );
     }
 
     // Check if unlimited plan has expired
     const now = new Date();
-    if (userDoc.plan === "unlimited" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
+    if (
+      userDoc.plan === "unlimited" &&
+      userDoc.subscriptionEndDate &&
+      userDoc.subscriptionEndDate < now
+    ) {
       await users.updateOne(
         { _id: userId },
         {
@@ -48,8 +58,14 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         }
       );
       if (!userDoc || !userDoc._id) {
-        console.error("User not found after update for _id:", userId.toString());
-        return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+        console.error(
+          "User not found after update for _id:",
+          userId.toString()
+        );
+        return NextResponse.json(
+          { success: false, message: "کاربر یافت نشد" },
+          { status: 404 }
+        );
       }
     }
 
@@ -74,11 +90,13 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
           "دسترسی به تاریخچه کامل گفت‌وگوها",
           "پاسخ‌های شخصی‌سازی‌شده با تحلیل عمیق",
         ],
-        isActive: userDoc.plan === "unlimited" && (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
+        isActive:
+          userDoc.plan === "unlimited" &&
+          (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
         id: "123456",
-        price: 79,
+        price: 189,
         duration: 1,
-        oldPrice: 89,
+        oldPrice: 210,
       },
       // {
       //   name: "premium",
@@ -111,6 +129,9 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     });
   } catch (err: any) {
     console.error("Error fetching plans:", err);
-    return NextResponse.json({ success: false, message: "خطای سرور در دریافت طرح‌ها" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور در دریافت طرح‌ها" },
+      { status: 500 }
+    );
   }
 });

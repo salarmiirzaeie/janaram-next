@@ -25,7 +25,7 @@ const plans: Plan[] = [
       "پاسخ‌های شخصی‌سازی‌شده با تحلیل عمیق",
     ],
     id: "123456",
-    price: 79,
+    price: 189,
     duration: 1,
   },
   // {
@@ -55,7 +55,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
     }
 
     const db = (await clientPromise).db("janaram-db");
@@ -65,12 +68,19 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     let userDoc = await users.findOne({ _id: userId });
     if (!userDoc || !userDoc._id) {
       console.error("User not found or missing _id for user.sub:", user.sub);
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" },
+        { status: 404 }
+      );
     }
 
     // Check if unlimited plan has expired
     const now = new Date();
-    if (userDoc.plan !== "free" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
+    if (
+      userDoc.plan !== "free" &&
+      userDoc.subscriptionEndDate &&
+      userDoc.subscriptionEndDate < now
+    ) {
       await users.updateOne(
         { _id: userId },
         {
@@ -79,15 +89,28 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         }
       );
       if (!userDoc || !userDoc._id) {
-        console.error("User not found after update for _id:", userId.toString());
-        return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+        console.error(
+          "User not found after update for _id:",
+          userId.toString()
+        );
+        return NextResponse.json(
+          { success: false, message: "کاربر یافت نشد" },
+          { status: 404 }
+        );
       }
     }
     let plan = plans.find((plan) => plan.id === id)?.name || "free";
 
     // Prevent upgrade if already on active unlimited plan
-    if (userDoc.plan === plan && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate > now) {
-      return NextResponse.json({ success: false, message: `شما از قبل در طرح ${plan} هستید` }, { status: 400 });
+    if (
+      userDoc.plan === plan &&
+      userDoc.subscriptionEndDate &&
+      userDoc.subscriptionEndDate > now
+    ) {
+      return NextResponse.json(
+        { success: false, message: `شما از قبل در طرح ${plan} هستید` },
+        { status: 400 }
+      );
     }
 
     let duration = plans.find((plan) => plan.id === id)?.duration || 1;
@@ -104,7 +127,10 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           subscriptionDuration: duration,
           subscriptionEndDate: endDate,
           updatedAt: new Date(),
-          conversationCount: { date: new Date().toISOString().split("T")[0], count: 0 },
+          conversationCount: {
+            date: new Date().toISOString().split("T")[0],
+            count: 0,
+          },
         },
       }
     );
@@ -115,6 +141,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     });
   } catch (err: any) {
     console.error("Error upgrading plan:", err);
-    return NextResponse.json({ success: false, message: "خطای سرور در ارتقای طرح" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور در ارتقای طرح" },
+      { status: 500 }
+    );
   }
 });
