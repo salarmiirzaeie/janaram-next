@@ -11,7 +11,7 @@ import ScrollToHash from "@/components/home/ScrollToHash";
 const Page = () => {
   return (
     <div className="bg-white">
-      {/* runs only on client */}
+      {/* runs only on clients */}
       <ScrollToHash />
 
       <Hero />
