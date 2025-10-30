@@ -182,17 +182,14 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         const moodObj = moods.find((m) => m.value === mood);
         const moodLabel = moodObj?.label || "خسته";
 
-        // 👇 تولید متن با هوش مصنوعی
-        const aiMessage = await generateMoodNotification(userName, moodLabel);
-
         setTimeout(() => {
           sendNotification({
             userId,
-            title: "جانارام همیشه همراهته 💙",
-            body: aiMessage,
+            title: "جانارام همیشه همراهته",
+            body: `${userName} جان، متاسفم که امروز ${moodLabel} هستی 💙 یادت باشه من همیشه پیشتم`,
             action: "mood",
           });
-        }, 1 * 60 * 1000); // یک دقیقه بعد
+        }, 1 * 60 * 1000); // 1 دقیقه بعد
       }
 
       const moodObj = moods.find((m) => m.value === mood);
