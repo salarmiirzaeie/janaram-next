@@ -18,6 +18,7 @@ export const GET = withAuth(async function (req: NextRequest) {
         "sleep",
         "sleep-music",
         "story",
+        "self",
       ].includes(type)
     ) {
       return NextResponse.json(
