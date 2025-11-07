@@ -8,8 +8,22 @@ export const GET = withAuth(async function (req: NextRequest) {
     const type = req.nextUrl.searchParams.get("category")?.toString();
 
     // Validate input
-    if (type && !["instrumental", "nature", "love", "calm", "sleep", "sleep-music", "story"].includes(type)) {
-      return NextResponse.json({ success: false, message: "Invalid meditation type" }, { status: 400 });
+    if (
+      type &&
+      ![
+        "instrumental",
+        "nature",
+        "love",
+        "calm",
+        "sleep",
+        "sleep-music",
+        "story",
+      ].includes(type)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Invalid meditation type" },
+        { status: 400 }
+      );
     }
 
     // Connect to MongoDB
@@ -21,7 +35,10 @@ export const GET = withAuth(async function (req: NextRequest) {
     const query = type ? { type } : {};
 
     // Fetch meditations
-    const meditations = await collection.find(query).toArray();
+    const meditations = await collection
+      .find(query)
+      .sort({ createdAt: -1 })
+      .toArray();
     // Return response
     return NextResponse.json(
       {
@@ -34,12 +51,17 @@ export const GET = withAuth(async function (req: NextRequest) {
           image: med.imageUrl,
           description: med.description,
           duration: med.duration,
+          isPro: med.accessLevel === "unlimited",
+          createdAt: med.createdAt,
         })),
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("Error fetching meditations:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
   }
 });

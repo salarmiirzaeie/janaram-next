@@ -9,14 +9,20 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
     const id = req.nextUrl.pathname.split("/").pop(); // Extract ID from URL
     // Validate ID
     if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid meditation ID" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Invalid meditation ID" },
+        { status: 400 }
+      );
     }
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
     }
     // Connect to MongoDB
     const client = await clientPromise;
@@ -28,7 +34,10 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
     const userDoc = await users.findOne({ _id: userId });
     if (!userDoc) {
       console.error("User not found for _id:", userId.toString());
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد" },
+        { status: 404 }
+      );
     }
 
     // Fetch meditation by ID
@@ -39,9 +48,16 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
     );
 
     if (!meditation) {
-      return NextResponse.json({ success: false, message: "Meditation not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "Meditation not found" },
+        { status: 404 }
+      );
     }
-    if (meditation?.accessLevel && meditation.accessLevel === "unlimited" && userDoc.plan !== "unlimited") {
+    if (
+      meditation?.accessLevel &&
+      meditation.accessLevel === "unlimited" &&
+      userDoc.plan !== "unlimited"
+    ) {
       return NextResponse.json(
         {
           success: true,
@@ -55,6 +71,7 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
               "🌙 این مدیتیشن مخصوص کاربران پرو است.  اشتراک پرو رو فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش و چت بات روانسناسی نامحدود و تخصصی استفاده کن",
             duration: meditation.duration,
             isSuggested: meditation.isSuggested || false,
+            isPro: meditation.accessLevel === "unlimited",
           },
         },
         { status: 200 }
@@ -73,12 +90,16 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
           description: meditation.description,
           duration: meditation.duration,
           isSuggested: meditation.isSuggested || false,
+          isPro: meditation.accessLevel === "unlimited",
         },
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("Error fetching meditation:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
   }
 });

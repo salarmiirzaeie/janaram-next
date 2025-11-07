@@ -25,14 +25,19 @@ export async function POST(req: Request) {
 
     // Input validation
     if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
-      return NextResponse.json({ success: false, message: "شماره تلفن نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شماره تلفن نامعتبر است" },
+        { status: 400 }
+      );
     }
     // if (!validateAppHash(appHash)) {
     //   return NextResponse.json({ success: false, message: "مقدار appHash نامعتبر است" }, { status: 400 });
     // }
 
     // Generate 6-digit OTP using crypto
-    const otp = (randomBytes(3).readUIntBE(0, 3) % 1000000).toString().padStart(6, "0");
+    const otp = (randomBytes(3).readUIntBE(0, 3) % 1000000)
+      .toString()
+      .padStart(6, "0");
     const expiresAt = Date.now() + 4 * 60 * 1000; // 4-minute expiry (increased from 2 for better UX)
 
     const db = (await clientPromise).db("janaram-db");
@@ -104,7 +109,10 @@ export async function POST(req: Request) {
         phoneNumber,
         error: smsError.response?.data || smsError.message,
       });
-      return NextResponse.json({ success: false, message: "خطا در ارسال پیامک" }, { status: 500 });
+      return NextResponse.json(
+        { success: false, message: "خطا در ارسال پیامک" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -116,6 +124,9 @@ export async function POST(req: Request) {
       error: err.message,
       stack: err.stack,
     });
-    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور" },
+      { status: 500 }
+    );
   }
 }

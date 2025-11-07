@@ -1,5 +1,7 @@
 import { withAuth } from "@/lib/middleware/withAuth";
 import clientPromise from "@/lib/mongodb";
+import { Meditation } from "@/lib/types/meditation";
+import { Filter } from "mongodb";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = withAuth(async function (req: NextRequest) {
@@ -29,12 +31,21 @@ export const GET = withAuth(async function (req: NextRequest) {
     // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("janaram-db");
-    const collection = db.collection("meditations");
+    const collection = db.collection<Meditation>("meditations");
 
     // Build query: empty for all meditations, or filter by type
-    const query = type ? { type } : {};
-
-    // Fetch meditations, sorted by createdAt in descending order (newer first)
+    const query:
+      | {
+          type?:
+            | "calm"
+            | "love"
+            | "instrumental"
+            | "sleep"
+            | "nature"
+            | "story"
+            | "sleep music";
+        }
+      | {} = type ? { type } : {}; // Fetch meditations, sorted by createdAt in descending order (newer first)
     const meditations = await collection
       .find(query)
       .sort({ createdAt: -1 })
@@ -44,7 +55,7 @@ export const GET = withAuth(async function (req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        meditations: meditations.reverse().map((med) => ({
+        meditations: meditations.map((med) => ({
           id: med._id.toString(),
           title: med.title,
           type: med.type,
@@ -53,6 +64,7 @@ export const GET = withAuth(async function (req: NextRequest) {
           description: med.description,
           duration: med.duration,
           isSuggested: med.isSuggested || false,
+          isPro: med.accessLevel === "unlimited",
         })),
       },
       { status: 200 }

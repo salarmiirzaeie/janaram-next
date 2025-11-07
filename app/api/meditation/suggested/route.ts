@@ -96,12 +96,16 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
           description: med.description,
           duration: med.duration,
           isSuggested: med.isSuggested || false,
+          isPro: med.accessLevel === "unlimited",
         })),
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("Error fetching suggested meditations:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
   }
 });

@@ -96,7 +96,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         id: "123456",
         price: 189,
         duration: 1,
-        oldPrice: 210,
+        oldPrice: 299,
       },
       // {
       //   name: "premium",
