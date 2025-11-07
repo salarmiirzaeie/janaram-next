@@ -7,16 +7,22 @@ import semver from "semver"; // For version comparison
 export const GET = async (req: NextRequest) => {
   try {
     const version = req.nextUrl.pathname.split("/").pop(); // Extract version from URL
-    const currentVersion = "1.0.9";
+    const currentVersion = "1.1.0";
 
     // Check if version is provided and valid
     if (!version || version.trim() === "") {
-      return NextResponse.json({ success: false, message: "نسخه کلاینت الزامی است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "نسخه کلاینت الزامی است" },
+        { status: 400 }
+      );
     }
 
     // Validate semver format
     if (!semver.valid(version)) {
-      return NextResponse.json({ success: false, message: "نسخه کلاینت نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "نسخه کلاینت نامعتبر است" },
+        { status: 400 }
+      );
     }
 
     // Check if a newer version is available (server version > client version)
@@ -30,6 +36,9 @@ export const GET = async (req: NextRequest) => {
     });
   } catch (err: any) {
     console.error("خطا در بررسی نسخه:", err.message);
-    return NextResponse.json({ success: false, message: `خطای سرور: ${err.message}` }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: `خطای سرور: ${err.message}` },
+      { status: 500 }
+    );
   }
 };
