@@ -33,6 +33,7 @@ const createUserExercisesForMood = async (
   const breathingCollection = db.collection("breathing");
 
   const exercises = trains[moodKey as keyof typeof trains] || [];
+  const excludedMeditationId = new ObjectId("690df6fbe98f4f19c3e30398");
 
   for (const exercise of exercises) {
     // Meditation
@@ -40,7 +41,12 @@ const createUserExercisesForMood = async (
       const meditationTypes = getMeditationTypesForMood(moodKey);
       const meditation = await meditationCollection
         .aggregate([
-          { $match: { type: { $in: meditationTypes } } },
+          {
+            $match: {
+              type: { $in: meditationTypes },
+              _id: { $ne: excludedMeditationId }, // ← فیلتر درست در همین‌جا
+            },
+          },
           { $sample: { size: 1 } },
         ])
         .toArray();

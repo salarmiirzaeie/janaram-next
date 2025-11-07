@@ -1,4 +1,9 @@
-export const moods: { key: string; label: string; value: number; color: string }[] = [
+export const moods: {
+  key: string;
+  label: string;
+  value: number;
+  color: string;
+}[] = [
   { key: "excited", label: "ذوق زده", value: 9, color: "#F48FB1" },
   { key: "happy", label: "خوشحال", value: 8, color: "#FFD54F" },
   { key: "normal", label: "معمولی", value: 7, color: "#90A4AE" },
@@ -17,7 +22,12 @@ export const trains = {
   tired: ["restorative_meditation", "478_breathing"],
   relaxed: ["visualization_meditation", "gratitude_exercise"],
   anxious: ["box_breathing", "anxiety_meditation", "chatbot_support"],
-  crying: ["soft_meditation", "calm_breathing", "chatbot_support", "journaling"],
+  crying: [
+    "soft_meditation",
+    "calm_breathing",
+    "chatbot_support",
+    "journaling",
+  ],
   angry: ["anger_release_meditation", "deep_breathing", "chatbot_support"],
 };
 
@@ -27,10 +37,29 @@ export const originalTrains = {
   excited: ["grounding_meditation", "calm_breathing", "mindful_activity"],
   sad: ["calm_meditation", "chatbot_support", "journaling"],
   tired: ["restorative_meditation", "478_breathing", "sleep_music"],
-  relaxed: ["visualization_meditation", "mindfulness_practice", "gratitude_short"],
-  anxious: ["box_breathing", "anxiety_meditation", "chatbot_support", "grounding_activity"],
-  crying: ["soft_meditation", "calm_breathing", "chatbot_support", "journaling_release"],
-  angry: ["anger_release_meditation", "deep_breathing", "body_scan", "chatbot_support"],
+  relaxed: [
+    "visualization_meditation",
+    "mindfulness_practice",
+    "gratitude_short",
+  ],
+  anxious: [
+    "box_breathing",
+    "anxiety_meditation",
+    "chatbot_support",
+    "grounding_activity",
+  ],
+  crying: [
+    "soft_meditation",
+    "calm_breathing",
+    "chatbot_support",
+    "journaling_release",
+  ],
+  angry: [
+    "anger_release_meditation",
+    "deep_breathing",
+    "body_scan",
+    "chatbot_support",
+  ],
 };
 
 // مشخص کردن نوع مدیتیشن برای مود
@@ -40,11 +69,11 @@ export const getMeditationTypesForMood = (moodKey: string): string[] => {
     happy: ["love", "instrumental"],
     normal: ["calm", "instrumental"],
     relaxed: ["nature", "calm"],
-    tired: ["sleep", "sleep music"],
-    sad: ["calm", "love", "healing"],
-    angry: ["calm", "nature", "anger release"],
-    crying: ["calm", "love"],
-    anxious: ["calm", "anxiety"],
+    tired: ["sleep", "sleep music", "self"],
+    sad: ["calm", "love", "self"],
+    angry: ["calm", "nature", "self"],
+    crying: ["calm", "love", "self"],
+    anxious: ["calm", "anxiety", "self"],
   };
   return map[moodKey] || ["calm"];
 };
