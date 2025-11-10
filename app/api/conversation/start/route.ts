@@ -97,7 +97,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       }
     }
 
-    // let preLimitWarning: string | null = null;
+    let preLimitWarning: string | null = null;
     let conversationCount = 0;
 
     if (userDoc.plan === "free") {
@@ -122,11 +122,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       // if (conversationCount === 8) {
       //   preLimitWarning =
       //     "\n\n(❗️ توجه: شما فقط یک مکالمه رایگان دیگر امروز فرصت دارید. با ارتقاء به Pro، نه تنها چت نامحدود می‌گیرید، بلکه به گزارش‌های تحلیلی حال روحی‌تان هم دسترسی پیدا می‌کنید!)";
-      // } else if (conversationCount === 9) {
-      //   // این اخطار برای مکالمه دهم (آخرین مکالمه) نمایش داده می‌شود.
-      //   preLimitWarning =
-      //     "\n\n(⚠️ فرصت محدود! این آخرین پاسخ رایگان من برای امروز است. اگر نمی‌خواهید مکالمه‌تان قطع شود، فوراً به Pro جانارام ارتقاء دهید و ادامه گفت‌وگو را از دست ندهید.)";
-      // }
+      // } else
 
       await users.updateOne(
         { _id: userId },
@@ -140,7 +136,11 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     }
     // شمارش پیام‌ها برای کنترل اینکه یکی‌در‌میان سؤال بپرسد
     const messageCount = (await chatHistory.countDocuments({ userId })) + 1;
-
+    if (messageCount % 3 === 0 && messageCount > 8) {
+      // این اخطار برای مکالمه دهم (آخرین مکالمه) نمایش داده می‌شود.
+      preLimitWarning =
+        "\n\nبا زدن دکمه ⚡ در پایین صفحه میتونی تحلیل شخصیتی خودت رو ببینی.";
+    }
     // اگر شماره فرد است (۱، ۳، ۵، ...) سؤال بپرس، وگرنه نه
     const shouldAskQuestion = messageCount % 2 === 1;
 
@@ -258,9 +258,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     }
 
     // --- افزودن اخطار پیش از محدودیت به پاسخ هوش مصنوعی ---
-    // if (preLimitWarning) {
-    //   aiResponse += preLimitWarning;
-    // }
+    if (preLimitWarning) {
+      aiResponse += preLimitWarning;
+    }
 
     // Store new conversation in chat-history collection
     const newConversation = {
