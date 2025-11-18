@@ -28,6 +28,7 @@ const plans: Plan[] = [
     price: 199,
     duration: 1,
   },
+
   // {
   //   name: "premium",
   //   description: "طرح نامحدود با امکانات پیشرفته برای ۳ ماه",
