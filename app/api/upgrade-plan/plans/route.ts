@@ -94,9 +94,9 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
           userDoc.plan === "unlimited" &&
           (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
         id: "123456",
-        price: 99,
+        price: 199,
         duration: 1,
-        oldPrice: 189,
+        oldPrice: 299,
       },
       // {
       //   name: "premium",
