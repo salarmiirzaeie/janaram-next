@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
+import "../../globals.css";
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -24,7 +25,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
       </head>
       <body className="antialiased bg-gray-100 min-h-screen flex flex-col md:flex-row-reverse">
         <Head>
@@ -32,7 +32,10 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           <meta name="description" content="Admin Panel for My App" />
         </Head>
         {/* Hamburger Menu Button for Mobile */}
-        <button className="md:hidden p-4 bg-gray-800 text-white fixed top-0 left-0 z-50" onClick={toggleSidebar}>
+        <button
+          className="md:hidden p-4 bg-gray-800 text-white fixed top-0 left-0 z-50"
+          onClick={toggleSidebar}
+        >
           <svg
             className="w-6 h-6"
             fill="none"
@@ -40,7 +43,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16m-7 6h7"
+            ></path>
           </svg>
         </button>
         {/* Sidebar */}
@@ -59,21 +67,38 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
               </svg>
             </button>
           </div>
           <nav className="mt-4">
-            <a href="/admin" className="block py-2 text-right px-4 hover:bg-gray-700">
+            <a
+              href="/admin"
+              className="block py-2 text-right px-4 hover:bg-gray-700"
+            >
               داشبورد
             </a>
-            <a href="/admin/meditation" className="block text-right py-2 px-4 hover:bg-gray-700">
+            <a
+              href="/admin/meditation"
+              className="block text-right py-2 px-4 hover:bg-gray-700"
+            >
               مدیتیشن
             </a>
-            <a href="/admin/blogs" className="block text-right py-2 px-4 hover:bg-gray-700">
+            <a
+              href="/admin/blogs"
+              className="block text-right py-2 px-4 hover:bg-gray-700"
+            >
               بلاگ ها
             </a>
-            <a href="/admin/notifications" className="block text-right py-2 px-4 hover:bg-gray-700">
+            <a
+              href="/admin/notifications"
+              className="block text-right py-2 px-4 hover:bg-gray-700"
+            >
               نوتیفیکیشن
             </a>
             <button
@@ -89,9 +114,14 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         </aside>
         {/* Overlay for mobile when sidebar is open */}
         {isSidebarOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden" onClick={toggleSidebar}></div>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+            onClick={toggleSidebar}
+          ></div>
         )}
-        <main className="flex-1 p-6 max-w-7xl mx-auto mt-16 md:mt-0">{children}</main>
+        <main className="flex-1 p-6 max-w-7xl mx-auto mt-16 md:mt-0">
+          {children}
+        </main>
       </body>
     </html>
   );
