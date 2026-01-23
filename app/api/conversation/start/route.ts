@@ -22,7 +22,7 @@ const retryRequest = async (
     }
   }
 };
-
+const isDisableConversation = true;
 // Environment variable validation
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_CHATBOT_KEY_NEW || "";
 if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not defined");
@@ -37,6 +37,16 @@ const client = new OpenAI({
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
+    if (isDisableConversation) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          response:
+            "جانارامی عزیز، سرویس روان‌شناس هوش مصنوعی ما به‌دلیل محدودیت‌های موقتی اینترنت کشور، فعلاً در دسترس نیست. در حال پیگیری هستیم و امیدواریم به‌زودی دوباره کنار شما باشیم. ممنون از صبوری و همراهی‌تون 🌱",
+        },
+      });
+    }
+
     const db = (await clientPromise).db("janaram-db");
 
     const { message } = await req.json();
