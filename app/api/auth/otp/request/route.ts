@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
     // if (!validateAppHash(appHash)) {
     //   return NextResponse.json({ success: false, message: "مقدار appHash نامعتبر است" }, { status: 400 });
-    // }
+    // }j
 
     // Generate 6-digit OTP using crypto
     const otp = (randomBytes(3).readUIntBE(0, 3) % 1000000)
