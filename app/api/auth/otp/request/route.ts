@@ -72,9 +72,9 @@ export async function POST(req: Request) {
 
     try {
       const data = JSON.stringify({
-        bodyId: 359521,
+        bodyId: 420054,
         to: phoneNumber,
-        args: [otp, "PyiTt2kL1yF"],
+        args: [otp],
       });
 
       const options = {
