@@ -1,8 +1,9 @@
-// app/api/admin/analytics/paid-users/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import { addDays, format } from "date-fns";
+
+const PRICE_PER_SUBSCRIPTION = 99000; // تومان
 
 export const GET = withAdminAuth(async (req: NextRequest) => {
   try {
@@ -16,21 +17,23 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
     const today = new Date();
     const startDate = addDays(today, -days + 1);
 
-    // Aggregate paid users per day
     const pipeline = [
       {
         $match: {
           plan: "unlimited",
-          subscriptionDate: { $gte: startDate },
+          updatedAt: { $gte: startDate },
         },
       },
       {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$subscriptionDate" },
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$updatedAt",
+            },
           },
           count: { $sum: 1 },
-          revenue: { $sum: "$subscriptionPrice" }, // فرض: subscriptionPrice در سند کاربر
+          revenue: { $sum: PRICE_PER_SUBSCRIPTION },
         },
       },
       { $sort: { _id: 1 } },
@@ -38,11 +41,12 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
 
     const results = await users.aggregate(pipeline).toArray();
 
-    // Fill missing dates with 0
     const data: { date: string; count: number; revenue: number }[] = [];
+
     for (let i = 0; i < days; i++) {
       const date = format(addDays(startDate, i), "yyyy-MM-dd");
       const record = results.find((r) => r._id === date);
+
       data.push({
         date,
         count: record?.count || 0,
@@ -50,7 +54,7 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
       });
     }
 
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    return NextResponse.json({ success: true, data });
   } catch (err) {
     console.error("Error fetching paid users:", err);
     return NextResponse.json(
