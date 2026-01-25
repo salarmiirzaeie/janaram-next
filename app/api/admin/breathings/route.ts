@@ -15,7 +15,7 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
         id: med._id.toString(),
         title: med.title,
         type: med.type,
-        file: med.fileUrl,
+        file: med.url,
         image: med.imageUrl,
         description: med.description,
         duration: med.duration,
