@@ -78,7 +78,7 @@ const DashboardPage = () => {
 
         setOverview(await fetchJSON("/api/admin/analytics/overview"));
         setUserGrowth(
-          await fetchJSON("/api/admin/analytics/user-growth?days=7")
+          await fetchJSON("/api/admin/analytics/user-growth?days=30")
         );
         setPaidUsersData(
           await fetchJSON("/api/admin/analytics/paid-users?days=30")
@@ -140,7 +140,7 @@ const DashboardPage = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <ChartCard
-          title="User Growth (Last 7 Days)"
+          title="User Growth (Last 30 Days)"
           data={userGrowth}
           dataKey="count"
           stroke="#4f46e5"

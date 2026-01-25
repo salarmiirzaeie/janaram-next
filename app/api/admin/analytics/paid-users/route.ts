@@ -20,7 +20,7 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
     const pipeline = [
       {
         $match: {
-          isPremium: true,
+          plan: "unlimited",
           subscriptionDate: { $gte: startDate },
         },
       },

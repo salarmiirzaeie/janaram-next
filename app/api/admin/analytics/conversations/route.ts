@@ -12,7 +12,7 @@ export const GET = withAdminAuth(async (req: Request) => {
 
     const client = await clientPromise;
     const db = client.db("janaram-db");
-    const conversationsCollection = db.collection("conversations");
+    const conversationsCollection = db.collection("chat-history");
 
     const data: { date: string; conversations: number }[] = [];
 
