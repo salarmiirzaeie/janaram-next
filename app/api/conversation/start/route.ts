@@ -22,7 +22,7 @@ const retryRequest = async (
     }
   }
 };
-const isDisableConversation = true;
+const isDisableConversation = false;
 // Environment variable validation
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_CHATBOT_KEY_NEW || "";
 if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not defined");
