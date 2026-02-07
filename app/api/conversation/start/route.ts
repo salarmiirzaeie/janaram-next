@@ -116,33 +116,32 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           ? userDoc.conversationCount.count
           : 0;
 
-      // --- ۱. بهبود پیام مسدود شدن (429) ---
-      if (conversationCount >= 10) {
-        return NextResponse.json(
-          {
-            success: false,
-            // متن ارتقاء یافته که بر وقفه ۲۴ ساعته و دسترسی فوری تأکید دارد
-            message:
-              "گفت‌وگوی شما متوقف شد. محدودیت روزانه ۱۰ گفت‌وگوی شما به پایان رسید و تا ۲۴ ساعت دیگر قابل دسترسی نیست. برای ادامه فوری و نامحدود مکالمه، لطفاً به طرح Pro ارتقاء دهید.",
-          },
-          { status: 429 }
-        );
-      }
+      // if (conversationCount >= 10) {
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "سرویس روانشناس من فقط مخصوص کاربران Pro می باشد. 🌱",
+        },
+        { status: 429 }
+      );
+
+      // }
 
       // if (conversationCount === 8) {
       //   preLimitWarning =
       //     "\n\n(❗️ توجه: شما فقط یک مکالمه رایگان دیگر امروز فرصت دارید. با ارتقاء به Pro، نه تنها چت نامحدود می‌گیرید، بلکه به گزارش‌های تحلیلی حال روحی‌تان هم دسترسی پیدا می‌کنید!)";
       // } else
 
-      await users.updateOne(
-        { _id: userId },
-        {
-          $set: {
-            conversationCount: { date: today, count: conversationCount + 1 },
-            updatedAt: new Date(),
-          },
-        }
-      );
+      // await users.updateOne(
+      //   { _id: userId },
+      //   {
+      //     $set: {
+      //       conversationCount: { date: today, count: conversationCount + 1 },
+      //       updatedAt: new Date(),
+      //     },
+      //   }
+      // );
     }
     // شمارش پیام‌ها برای کنترل اینکه یکی‌در‌میان سؤال بپرسد
     const messageCount = (await chatHistory.countDocuments({ userId })) + 1;
@@ -158,15 +157,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       ? "- در پایان پاسخ خود **یک سؤال ساده و انگیزشی** بپرس تا گفتگو ادامه پیدا کند."
       : "";
 
-    const systemPrompt =
-      userDoc.plan === "free"
-        ? `شما یک روانشناس  فارسی زبان هوش مصنوعی هستید. 
-  - پاسخ شما صرفاً باید به زبان فارسی روان باشد و از به کار بردن هرگونه کلمه انگلیسی یا فینگلیش جداً خودداری کنید.
-  - پاسخ شما باید کوتاه و در حد چهار جمله باشد.
-  - از کلمات ساده و عمومی و واضح برای کاربر فارسی زبان استفاده کنید.
-  ${questionInstruction}
-  `
-        : `شما یک روانشناس فارسی زبان هوش مصنوعی حرفه‌ای و همراه کاربر هستید. 
+    const systemPrompt = `شما یک روانشناس فارسی زبان هوش مصنوعی حرفه‌ای و همراه کاربر هستید. 
   - پاسخ شما صرفاً باید به زبان فارسی روان باشد و از به کار بردن هرگونه کلمه انگلیسی یا فینگلیش جداً خودداری کنید.
   - نام مخاطب شما ${userDoc.name} است، از او با نامش یاد کنید تا رابطه صمیمانه‌تر شود. 
   - پاسخ‌ها باید در حد چهار جمله جمله کوتاه و مفید و واضح برای کاربر فارسی زبان باشند. 
