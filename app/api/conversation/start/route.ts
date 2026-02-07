@@ -184,6 +184,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     messages.push({ role: "user", content: message });
 
     const models = [
+      "arcee-ai/trinity-large-preview:free",
       "z-ai/glm-4.5-air",
       "openai/gpt-oss-20b:free",
 
