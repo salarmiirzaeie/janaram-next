@@ -28,21 +28,6 @@ type OverviewData = {
 type UserGrowthData = { date: string; count: number };
 type PaidUserData = { date: string; count: number; revenue: number };
 type ConversationData = { date: string; conversations: number };
-type ChurnData = { date: string; inactiveUsers: number };
-type RetentionData = {
-  date: string;
-  retainedUsers: number;
-  totalUsers: number;
-};
-type ARPUData = { date: string; arpu: number };
-type FunnelData = { stage: string; count: number };
-type DAUMAUData = {
-  date: string;
-  dau: number;
-  mau: number;
-  stickiness: number;
-};
-type FeatureUsageData = { feature: string; count: number };
 
 const DashboardPage = () => {
   const [overview, setOverview] = useState<OverviewData | null>(null);
@@ -51,14 +36,6 @@ const DashboardPage = () => {
   const [conversationsData, setConversationsData] = useState<
     ConversationData[]
   >([]);
-  const [churnData, setChurnData] = useState<ChurnData[]>([]);
-  const [retentionData, setRetentionData] = useState<RetentionData[]>([]);
-  const [arpuData, setArpuData] = useState<ARPUData[]>([]);
-  const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
-  const [dauMauData, setDauMauData] = useState<DAUMAUData[]>([]);
-  const [featureUsageData, setFeatureUsageData] = useState<FeatureUsageData[]>(
-    []
-  );
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -85,16 +62,6 @@ const DashboardPage = () => {
         );
         setConversationsData(
           await fetchJSON("/api/admin/analytics/conversations?days=30")
-        );
-        setChurnData(await fetchJSON("/api/admin/analytics/churn?days=30"));
-        setRetentionData(
-          await fetchJSON("/api/admin/analytics/retention?days=30")
-        );
-        setArpuData(await fetchJSON("/api/admin/analytics/arpu?days=30"));
-        setFunnelData(await fetchJSON("/api/admin/analytics/funnel"));
-        setDauMauData(await fetchJSON("/api/admin/analytics/dau-mau"));
-        setFeatureUsageData(
-          await fetchJSON("/api/admin/analytics/feature-usage")
         );
       } catch {
         setError(true);
@@ -159,38 +126,6 @@ const DashboardPage = () => {
           dataKey="conversations"
           stroke="#ff7300"
         />
-        <ChartCard
-          title="Churn / Inactive Users (Last 30 Days)"
-          data={churnData}
-          dataKey="inactiveUsers"
-          stroke="#e11d48"
-        />
-        <ChartCard
-          title="Retention (Last 30 Days)"
-          data={retentionData}
-          dataKey="retainedUsers"
-          stroke="#3b82f6"
-        />
-        <ChartCard
-          title="ARPU (Last 30 Days)"
-          data={arpuData}
-          dataKey="arpu"
-          stroke="#10b981"
-        />
-        <ChartCard
-          title="DAU/MAU (Last 30 Days)"
-          data={dauMauData}
-          dataKey="dau"
-          stroke="#f59e0b"
-          secondLineKey="mau"
-          secondStroke="#8b5cf6"
-        />
-        <BarChartCard
-          title="Feature Usage"
-          data={featureUsageData}
-          dataKey="count"
-        />
-        <PieChartCard title="Funnel Stages" data={funnelData} dataKey="count" />
       </div>
     </div>
   );
