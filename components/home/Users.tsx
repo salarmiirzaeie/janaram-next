@@ -25,7 +25,7 @@ const Users = () => {
 
       {/* Text Content */}
       <div className="flex flex-col items-start justify-center">
-        <span className="text-xl font-semibold text-gray-800">1K +</span>
+        <span className="text-xl font-semibold text-gray-800">5K +</span>
         <span className="text-sm text-gray-600">کاربر فعال</span>
       </div>
     </div>

@@ -26,7 +26,6 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
     // 3️⃣ paid users (valid subscription)
     const paidUsers = await usersCol.countDocuments({
       plan: { $ne: "free" },
-      subscriptionEndDate: { $gt: new Date() },
     });
 
     // 4️⃣ conversations today
