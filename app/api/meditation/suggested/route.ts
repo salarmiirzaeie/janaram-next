@@ -81,7 +81,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     const meditations = await collection
       .find({ isSuggested: true })
       .sort({ createdAt: -1 }) // جدیدترین‌ها اول
-      .limit(5)
+      .limit(10)
 
       .toArray();
     return NextResponse.json(
