@@ -78,11 +78,11 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     const collection = db.collection("meditations");
 
     // گرفتن ۵ مدیتیشن جدید پیشنهادی
-    const meditations = await collection
-      .find({ isSuggested: true })
-      .sort({ createdAt: -1 }) // جدیدترین‌ها اول
 
+    const meditations = await collection
+      .aggregate([{ $match: { isSuggested: true } }])
       .toArray();
+
     return NextResponse.json(
       {
         success: true,
