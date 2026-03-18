@@ -80,7 +80,8 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     // گرفتن ۵ مدیتیشن جدید پیشنهادی
 
     const meditations = await collection
-      .aggregate([{ $match: { isSuggested: true } }])
+      .aggregate([{ $match: { isSuggested: true } }, { $sample: { size: 20 } }])
+      // .aggregate([{ $match: { isSuggested: true },{$sample: { size: 5 }} }])
       .toArray();
 
     return NextResponse.json(
