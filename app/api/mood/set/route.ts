@@ -60,6 +60,7 @@ const createUserExercisesForMood = async (
           done: false,
           createdAt: new Date(),
           updatedAt: new Date(),
+          isPro: meditation[0].accessLevel === "unlimited",
         });
       }
     }
@@ -82,6 +83,7 @@ const createUserExercisesForMood = async (
           done: false,
           createdAt: new Date(),
           updatedAt: new Date(),
+          isPro: breathing[0].isPremium,
         });
       }
     }

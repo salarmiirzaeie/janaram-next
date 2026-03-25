@@ -24,7 +24,7 @@ export const GET = withAuth(async function (req: NextRequest) {
       const meditations = await collection
         .find({ type })
         .sort({ createdAt: -1 }) // -1 for descending, 1 for ascending
-        .limit(type === "sleep" || "sleep-music" ? 20 : 5)
+        .limit(type === "sleep" ? 20 : 5)
         .toArray();
 
       result[type === "sleep-music" ? "sleepMusic" : type] = meditations
