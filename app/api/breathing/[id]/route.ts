@@ -10,14 +10,20 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
 
     // Validate ID
     if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid breathing ID" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Invalid breathing ID" },
+        { status: 400 }
+      );
     }
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
     }
     // Connect to MongoDB
     const client = await clientPromise;
@@ -29,7 +35,10 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
     const userDoc = await users.findOne({ _id: userId });
     if (!userDoc) {
       console.error("User not found for _id:", userId.toString());
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد" },
+        { status: 404 }
+      );
     }
     // Fetch meditation by ID
     const meditation = await collection.findOneAndUpdate(
@@ -39,7 +48,10 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
     );
 
     if (!meditation) {
-      return NextResponse.json({ success: false, message: "Meditation not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "Meditation not found" },
+        { status: 404 }
+      );
     }
     if (meditation?.isPremium && userDoc.plan !== "unlimited") {
       return NextResponse.json(
@@ -52,7 +64,7 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
             file: "/meditations/silent_1s.mp3",
             image: meditation.imageUrl,
             description:
-              "🌙 این تنفس مخصوص کاربران پرو است. اشتراک پرو رو فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش و چت بات روانسناسی نامحدود و تخصصی استفاده کن",
+              "🌙 این تنفس مخصوص کاربران پرو است. اشتراک پرو رو فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش و چت بات روانشناسی نامحدود و تخصصی استفاده کن",
             duration: meditation.duration,
             exhaleDuration: 5000,
             inhaleDuration: 5000,
@@ -83,6 +95,9 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
     );
   } catch (error) {
     console.error("Error fetching meditation:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
   }
 });

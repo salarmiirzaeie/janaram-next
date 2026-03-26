@@ -38,11 +38,11 @@ export const getMeditationTypesForMood = (moodKey: string): string[] => {
     happy: ["love", "instrumental"],
     normal: ["calm", "instrumental"],
     relaxed: ["nature", "calm"],
-    tired: ["sleep", "sleep music", "self"],
-    sad: ["calm", "love", "self"],
-    angry: ["calm", "nature", "self"],
-    crying: ["calm", "love", "self"],
-    anxious: ["calm", "anxiety", "self"],
+    tired: ["sleep", "sleep music", "self", "instrumental"],
+    sad: ["calm", "love", "self", "instrumental"],
+    angry: ["calm", "nature", "self", "instrumental"],
+    crying: ["calm", "love", "self", "instrumental"],
+    anxious: ["calm", "anxiety", "self", "instrumental"],
   };
   return map[moodKey] || ["calm"];
 };
