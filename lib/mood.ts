@@ -55,7 +55,7 @@ export const getBreathingTypesForMood = (moodKey: string): string[] => {
     normal: ["light_breathing", "mindful_breathing"],
     relaxed: ["calm_breathing", "light_breathing", "yogic_breathing"],
     tired: ["478_breathing", "deep_breathing", "yogic_breathing"],
-    sad: ["calm_breathing", "mindful_breathing"],
+    sad: ["calm_breathing", "mindful_breathing", "478_breathing"],
     angry: ["deep_breathing", "box_breathing", "fire_breathing"],
     crying: ["calm_breathing", "mindful_breathing"],
     anxious: ["box_breathing", "calm_breathing", "mindful_breathing"],
@@ -82,9 +82,9 @@ export const breathingDetails: Record<
   }
 > = {
   light_breathing: {
-    inhaleDuration: 0,
+    inhaleDuration: 2000,
     holdDuration: 0,
-    exhaleDuration: 0,
+    exhaleDuration: 2000,
     description:
       "معرفی: تنفس سبک به شما کمک می‌کند به سرعت ذهن و بدن خود را آرام کنید و تنش‌های روزانه را کاهش دهید.\n\n" +
       "راهنمای استفاده:\n" +
