@@ -1,6 +1,7 @@
 "use client";
 
 import { BASE_URL_IMAGES } from "@/lib/constants";
+import { Icon, PlayIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
@@ -14,6 +15,7 @@ type Meditation = {
   duration: string;
   isSuggested: boolean;
   accessLevel: "free" | "unlimited";
+  listenCount: number;
 };
 
 type MeditationForm = {
@@ -290,10 +292,10 @@ const MeditationPage: React.FC = () => {
                 "Type",
                 "File",
                 "Image",
-                "Description",
                 "Duration",
                 "Access",
                 "Suggested",
+                "listenCount",
                 "Actions",
               ].map((h) => (
                 <th key={h} className="px-4 py-2 text-left text-gray-600">
@@ -321,7 +323,7 @@ const MeditationPage: React.FC = () => {
                       rel="noopener noreferrer"
                       className="text-blue-500 hover:underline"
                     >
-                      View
+                      <PlayIcon />
                     </a>
                   </td>
                   <td className="px-4 py-2">
@@ -331,14 +333,13 @@ const MeditationPage: React.FC = () => {
                       className="w-12 h-12 md:w-16 md:h-16 object-cover rounded"
                     />
                   </td>
-                  <td className="px-4 py-2 hidden md:table-cell">
-                    {med.description}
-                  </td>
+
                   <td className="px-4 py-2">{med.duration}</td>
                   <td className="px-4 py-2">{med.accessLevel}</td>
                   <td className="px-4 py-2">
                     {med.isSuggested ? "Yes" : "No"}
                   </td>
+                  <td className="px-4 py-2">{med.listenCount}</td>
                   <td className="px-4 py-2 flex flex-col sm:flex-row gap-2">
                     <button
                       onClick={() => handleEdit(med)}

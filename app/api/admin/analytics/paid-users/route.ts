@@ -3,7 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import { addDays, format } from "date-fns";
 
-const PRICE_PER_SUBSCRIPTION = 99000; // تومان
+const PRICE_PER_SUBSCRIPTION = 153670; // تومان
 
 export const GET = withAdminAuth(async (req: NextRequest) => {
   try {

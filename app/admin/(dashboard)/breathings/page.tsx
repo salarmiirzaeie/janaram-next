@@ -2,6 +2,7 @@
 
 import { BASE_URL_IMAGES } from "@/lib/constants";
 import { breathingTypes } from "@/lib/mood";
+import { PlayIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
@@ -14,6 +15,7 @@ type Breathing = {
   duration: string;
   isSuggested: boolean;
   isPremium: boolean;
+  listenCount: number;
 };
 
 type MeditationForm = {
@@ -245,6 +247,7 @@ const BreathingsPage: React.FC = () => {
                 "Image",
                 "Duration",
                 "is Pro",
+                "listen Count",
                 "Actions",
               ].map((h) => (
                 <th key={h} className="px-4 py-2 text-left text-gray-600">
@@ -272,7 +275,7 @@ const BreathingsPage: React.FC = () => {
                       rel="noopener noreferrer"
                       className="text-blue-500 hover:underline"
                     >
-                      View
+                      <PlayIcon />
                     </a>
                   </td>
                   <td className="px-4 py-2">
@@ -286,6 +289,7 @@ const BreathingsPage: React.FC = () => {
                   <td className="px-4 py-2">
                     {b.isPremium ? "true" : "false"}
                   </td>
+                  <td className="px-4 py-2">{b.listenCount}</td>
                   <td className="px-4 py-2 flex flex-col sm:flex-row gap-2">
                     <button
                       onClick={() => handleEdit(b)}

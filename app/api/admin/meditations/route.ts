@@ -21,10 +21,14 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
         duration: med.duration,
         isSuggested: med.isSuggested,
         accessLevel: med.accessLevel,
+        listenCount: med.listenCount,
       })),
     });
   } catch (error) {
     console.error("Error fetching meditations:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
   }
 });

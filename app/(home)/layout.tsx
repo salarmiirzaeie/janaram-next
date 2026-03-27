@@ -41,7 +41,8 @@ export const metadata: Metadata = {
     "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است. همین حالا دانلود کنید و آرامش را تجربه کنید.",
   openGraph: {
     title: "جانارام | اپلیکیشن مدیتیشن و آرامش ذهن",
-    description: "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
+    description:
+      "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
     url: "https://janaram.ir",
     siteName: "جانارام",
     type: "website",
@@ -52,7 +53,8 @@ export const metadata: Metadata = {
       "@type": "WebSite",
       name: "جانارام",
       url: "https://janaram.ir",
-      description: "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
+      description:
+        "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
     }),
   },
   verification: {
@@ -60,14 +62,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="fa">
       <body className={`${iranSans.variable} ${vazir.variable} antialiased`}>
         {/* GA script */}
         {GA_TRACKING_ID && (
           <>
-            <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`} />
+            <Script
+              strategy="afterInteractive"
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+            />
             <Script
               id="gtag-init"
               strategy="afterInteractive"
@@ -90,7 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         {children}
         <Footer />
-        <FixedDownloadBar /> 👈 اضافه شدن به Layout
+        <FixedDownloadBar />
       </body>
     </html>
   );

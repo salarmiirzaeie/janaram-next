@@ -24,6 +24,7 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
         inhaleDuration: med.inhaleDuration,
         holdDuration: med.holdDuration,
         exhaleDuration: med.exhaleDuration,
+        listenCount: med.listenCount,
       })),
     });
   } catch (error) {
