@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import {
   LineChart,
@@ -31,8 +30,6 @@ type PaidUserData = { date: string; count: number; revenue: number };
 type ConversationData = { date: string; conversations: number };
 
 const DashboardPage = () => {
-  const router = useRouter();
-
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const [userGrowth, setUserGrowth] = useState<UserGrowthData[]>([]);
   const [paidUsersData, setPaidUsersData] = useState<PaidUserData[]>([]);
@@ -53,10 +50,6 @@ const DashboardPage = () => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const json = await res.json();
-          if (json.status === 403) {
-            localStorage.clear();
-            router.push("/admin/login");
-          }
           return json.success ? json.data : [];
         };
 
