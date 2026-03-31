@@ -17,7 +17,7 @@ export const moods: {
 export const trains = {
   normal: ["meditation_short", "light_breathing", "daily_tip"],
   happy: ["positive_meditation", "gratitude_exercise"],
-  excited: ["grounding_meditation", "calm_breathing"],
+  excited: ["grounding_meditation", "calm_breathing", "gratitude_exercise"],
   sad: ["calm_meditation", "chatbot_support", "journaling"],
   tired: ["restorative_meditation", "478_breathing"],
   relaxed: ["visualization_meditation", "gratitude_exercise"],

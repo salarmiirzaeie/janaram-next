@@ -32,7 +32,8 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     const users = db.collection<User>("users");
 
     // Check if user exists
-    const userDoc = await users.findOne({ _id: user.sub });
+    const userId = new ObjectId(user.sub);
+    const userDoc = await users.findOne({ _id: userId });
     const userExercise = await userExercises.findOne({
       _id: new ObjectId(exerciseId),
       userId: new ObjectId(user.sub),
