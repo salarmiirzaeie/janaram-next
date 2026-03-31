@@ -36,6 +36,7 @@ const DashboardPage = () => {
   const [conversationsData, setConversationsData] = useState<
     ConversationData[]
   >([]);
+  const [moodUsageData, setMoodUsageData] = useState<ConversationData[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -62,6 +63,9 @@ const DashboardPage = () => {
         );
         setConversationsData(
           await fetchJSON("/api/admin/analytics/conversations?days=30")
+        );
+        setMoodUsageData(
+          await fetchJSON("/api/admin/analytics/daily-mood?days=30")
         );
       } catch {
         setError(true);
@@ -124,6 +128,12 @@ const DashboardPage = () => {
           title="Daily Conversations (Last 30 Days)"
           data={conversationsData}
           dataKey="conversations"
+          stroke="#ff7300"
+        />
+        <ChartCard
+          title="Daily Mood Usage (Last 30 Days)"
+          data={conversationsData}
+          dataKey="mood"
           stroke="#ff7300"
         />
       </div>
