@@ -6,7 +6,6 @@ import clientPromise from "@/lib/mongodb";
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
-    console.log(email, password, "req");
     if (!email || !password) {
       return NextResponse.json(
         { success: false, message: "ایمیل و رمز عبور الزامی است" },

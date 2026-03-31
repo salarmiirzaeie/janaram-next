@@ -89,8 +89,6 @@ export async function POST(req: Request) {
       };
 
       const req = https.request(options, (res: any) => {
-        console.log("statusCode: " + res.statusCode);
-
         res.on("data", (d: any) => {
           process.stdout.write(d);
         });
@@ -102,7 +100,6 @@ export async function POST(req: Request) {
 
       req.write(data);
       req.end();
-      console.log(otp);
     } catch (smsError: any) {
       console.error("SMS API error:", {
         phoneNumber,

@@ -49,7 +49,7 @@ const plans: Plan[] = [
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const { id } = await req.json();
-
+    console.log(id, "paid");
     // Convert user.sub to ObjectId
     let userId: ObjectId;
     try {
