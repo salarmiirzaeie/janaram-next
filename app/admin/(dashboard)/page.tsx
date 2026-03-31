@@ -53,7 +53,6 @@ const DashboardPage = () => {
           const json = await res.json();
           return json.success ? json.data : [];
         };
-
         setOverview(await fetchJSON("/api/admin/analytics/overview"));
         setUserGrowth(
           await fetchJSON("/api/admin/analytics/user-growth?days=30")
@@ -85,7 +84,6 @@ const DashboardPage = () => {
         Failed to load dashboard data
       </div>
     );
-
   return (
     <div className="p-6 space-y-10">
       <h1 className="text-2xl font-bold mb-6">Dashboard Overview</h1>
@@ -132,8 +130,8 @@ const DashboardPage = () => {
         />
         <ChartCard
           title="Daily Mood Usage (Last 30 Days)"
-          data={conversationsData}
-          dataKey="mood"
+          data={moodUsageData}
+          dataKey="conversations"
           stroke="#ff7300"
         />
       </div>

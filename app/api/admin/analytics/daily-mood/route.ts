@@ -15,7 +15,6 @@ export const GET = withAdminAuth(async (req: Request) => {
     const moodsCollection = db.collection("mood-history");
 
     const data: { date: string; conversations: number }[] = [];
-
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
@@ -24,15 +23,13 @@ export const GET = withAdminAuth(async (req: Request) => {
       end.setDate(end.getDate() + 1);
 
       const count = await moodsCollection.countDocuments({
-        timestamp: { $gte: start, $lt: end },
+        createdAt: { $gte: start, $lt: end },
       });
-
       data.push({
         date: date.toISOString().split("T")[0],
         conversations: count,
       });
     }
-
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("Error fetching Moods usage", error);
