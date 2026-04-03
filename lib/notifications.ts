@@ -3,7 +3,7 @@ import { initializeApp, cert } from "firebase-admin/app";
 import { ObjectId } from "mongodb";
 import clientPromise from "./mongodb";
 import { User } from "./types/user";
-
+const disableNotification = true;
 declare global {
   var firebaseInitialized: boolean;
 }
@@ -73,6 +73,9 @@ export async function sendNotification({
   data,
   action,
 }: NotificationData) {
+  if (disableNotification) {
+    return;
+  }
   const db = (await clientPromise).db("janaram-db");
   const users = db.collection<User>("users");
   const notifications = db.collection("notifications");
@@ -139,6 +142,9 @@ export async function sendToAll({
   body: string;
   data?: Record<string, string>;
 }) {
+  if (disableNotification) {
+    return;
+  }
   const db = (await clientPromise).db("janaram-db");
   const notifications = db.collection("notifications");
 
