@@ -29,9 +29,14 @@ async function getBlogs({
     if (sort) query.set("sort", sort);
     if (limit) query.set("limit", limit.toString());
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs${query.toString() ? `?${query}` : ""}`, {
-      cache: "force-cache", // ensures fresh data on each request
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs${
+        query.toString() ? `?${query}` : ""
+      }`,
+      {
+        cache: "force-cache", // ensures fresh data on each request
+      }
+    );
 
     if (!res.ok) {
       console.error("Failed to fetch blogs from API:", res.statusText);
@@ -50,7 +55,9 @@ export default async function BlogPage() {
 
   return (
     <div className="max-w-6xl  mx-auto py-16 px-4 sm:px-6 lg:px-8">
-      <h2 className="text-2xl font-bold text-blue-500 text-center mb-8">وبلاگ</h2>
+      <h2 className="text-2xl font-bold text-blue-500 text-center mb-8">
+        وبلاگ
+      </h2>
 
       {blogs.length === 0 ? (
         <p className="text-center text-gray-500">هیچ مقاله‌ای موجود نیست.</p>
@@ -63,13 +70,19 @@ export default async function BlogPage() {
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
               >
                 <img
-                  src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
+                  src={
+                    blog.imageUrl
+                      ? BASE_URL_IMAGES + blog.imageUrl
+                      : "/hero-bg.webp"
+                  }
                   alt={blog.title}
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-4">
                   <Link href={`/blogs/${blog.slug}`}>
-                    <h2 className="text-xl text-right font-bold mb-2 hover:text-primary">{blog.title}</h2>
+                    <h2 className="text-xl text-right font-bold mb-2 hover:text-primary">
+                      {blog.title}
+                    </h2>
                   </Link>
 
                   <div className="flex flex-row items-end justify-end text-sm mb-4 text-gray-500">

@@ -19,7 +19,7 @@ interface IMood {
 }
 
 // Helper for today's date
-const getTodayGregorianDate = (): string =>
+export const getTodayGregorianDate = (): string =>
   moment.tz("Asia/Tehran").format("YYYY-MM-DD");
 
 // Create exercises for user dynamically
