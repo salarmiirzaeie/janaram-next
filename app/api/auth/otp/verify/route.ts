@@ -46,9 +46,7 @@ export async function POST(req: Request) {
 
     // Register or login user
     const users = db.collection<User>("users");
-    console.log(phoneNumber);
     let user: User | null = await users.findOne({ phoneNumber });
-    console.log(user);
     let isNewUser = false; // Flag to track if user is new
     let isOnboardingSelected = true; // Flag to track if user is new
 

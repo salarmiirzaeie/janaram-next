@@ -31,49 +31,97 @@ const DownloadSection = () => {
           <Image src={qrcode} alt="QR Code" className="rounded-lg shadow-sm" width={180} height={180} />
         </div> */}
         <div className="flex-1 text-center md:text-right">
-          <h2 className="font-bold text-blue-600 text-2xl md:text-3xl mb-3">{title}</h2>
+          <h2 className="font-bold text-blue-600 text-2xl md:text-3xl mb-3">
+            {title}
+          </h2>
           <p className="text-gray-600 mb-6">{subtitle}</p>
-          <div className="flex flex-wrap justify-center md:justify-start gap-4">{children}</div>
+          <div className="flex flex-wrap justify-center md:justify-start gap-4">
+            {children}
+          </div>
         </div>
       </div>
     </div>
   );
 
   return (
-    <Element name="downloadSection" className="bg-gray-50 py-12 px-4">
+    <Element name="downloadSection" className="bg-gray-50 pb-12 px-4">
       {/* Android Section */}
       <DownloadCard
-        title="اپلیکیشن Android"
+        title="Android اپلیکیشن"
         subtitle="اپلیکیشن اندروید جانارام را می‌توانید از مسیر‌های زیر دریافت نمایید"
         qrcode="/qrcode.png"
       >
         <Link href="https://cafebazaar.ir/app/com.salarmiirzapour.Janaram">
-          <Image src="/bazarDownload.png" alt="Bazar Download" width={200} height={70} />
+          <Image
+            src="/bazarDownload.png"
+            alt="Bazar Download"
+            width={200}
+            height={70}
+          />
         </Link>
         <a href="https://myket.ir/app/com.salarmiirzapour.Janaram" download>
-          <Image src="/myketDownload.png" alt="Myket Download" width={200} height={70} />
+          <Image
+            src="/myketDownload.png"
+            alt="Myket Download"
+            width={200}
+            height={70}
+          />
         </a>
         <a href="https://janaram.storage.c2.liara.space/apk/1.0.9.apk" download>
-          <Image src="/directInstall.png" alt="Direct Install" width={200} height={70} />
+          <Image
+            src="/directInstall.png"
+            alt="Direct Install"
+            width={200}
+            height={70}
+          />
         </a>
       </DownloadCard>
       {/* iOS Section */}
       <DownloadCard
-        title="اپلیکیشن IOS"
+        title="IOS اپلیکیشن"
         subtitle="اپلیکیشن آیفون جانارام را می‌توانید از مسیر‌های زیر دریافت نمایید"
         qrcode="/qrcode.png"
       >
-        <a href="https://sibapp.com/applications/janaram" className="cursor-pointer">
-          <Image src="/SibAppDownload.png" alt="SibApp Download" width={200} height={70} />
+        <a
+          href="https://sibapp.com/applications/janaram"
+          className="cursor-pointer"
+        >
+          <Image
+            src="/SibAppDownload.png"
+            alt="SibApp Download"
+            width={200}
+            height={70}
+          />
         </a>
-        <a href="https://anardoni.com/ios/app/comsalarmiirzapourjanaram" className="cursor-pointer">
-          <Image src="/anardoni-badge-black-persian.png" alt="Anardoni Download" width={200} height={70} />
+        <a
+          href="https://anardoni.com/ios/app/comsalarmiirzapourjanaram"
+          className="cursor-pointer"
+        >
+          <Image
+            src="/anardoni-badge-black-persian.png"
+            alt="Anardoni Download"
+            width={200}
+            height={70}
+          />
         </a>
-        <a href="https://iapps.ir/app/جانارام-مدیتیشن-و-روانشناس-AI/845783883" className="cursor-pointer">
-          <Image src="/Iapps-Badge-Black-.png" alt="Iapps Download" width={220} height={70} />
+        <a
+          href="https://iapps.ir/app/جانارام-مدیتیشن-و-روانشناس-AI/845783883"
+          className="cursor-pointer"
+        >
+          <Image
+            src="/Iapps-Badge-Black-.png"
+            alt="Iapps Download"
+            width={220}
+            height={70}
+          />
         </a>
         <a href="https://sibirani.com/apps/janaram/?utm_source=janaram&utm_medium=badge">
-          <Image src="https://fs.sibirani.com/badge.svg" width={180} height={70} alt="دانلود برنامه از سیب ایرانی" />
+          <Image
+            src="https://fs.sibirani.com/badge.svg"
+            width={180}
+            height={70}
+            alt="دانلود برنامه از سیب ایرانی"
+          />
         </a>
       </DownloadCard>
 

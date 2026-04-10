@@ -17,9 +17,9 @@ const Page = () => {
       <Hero />
       <About />
       <DownloadSection />
-      <Suspense fallback={<p>Loading...</p>}>
+      {/* <Suspense fallback={<p>Loading...</p>}>
         <BlogSection />
-      </Suspense>
+      </Suspense> */}
       <FAQSection />
       <CustomerReviewsSection />
       <QuoteForm />
