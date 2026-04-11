@@ -49,7 +49,6 @@ const plans: Plan[] = [
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const { id } = await req.json();
-    console.log(id, "paid");
     // Convert user.sub to ObjectId
     let userId: ObjectId;
     try {
@@ -61,6 +60,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         { status: 400 }
       );
     }
+    console.log(id, "paid", userId);
 
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
