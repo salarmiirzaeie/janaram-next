@@ -7,28 +7,61 @@ import { getMessaging } from "firebase-admin/messaging";
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
-    const { pushToken } = await req.json();
-    if (!pushToken) {
-      return NextResponse.json({ success: false, message: "توکن اعلان الزامی است" }, { status: 400 });
-    }
+    const db = (await clientPromise).db("janaram-db");
+    const users = db.collection<User>("users");
 
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
+    }
+    let userDoc = await users.findOne({ _id: userId });
+    if (!userDoc || !userDoc._id) {
+      console.error("User not found or missing _id for user.sub:", user.sub);
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" },
+        { status: 404 }
+      );
+    }
+    const now = new Date();
+    if (
+      userDoc.plan !== "free" &&
+      userDoc.subscriptionEndDate &&
+      userDoc.subscriptionEndDate < now
+    ) {
+      await users.updateOne(
+        { _id: userId },
+        {
+          $set: { plan: "free", updatedAt: now },
+          $unset: { subscriptionEndDate: "", subscriptionDuration: "" },
+        }
+      );
+    }
+    const { pushToken } = await req.json();
+    if (!pushToken) {
+      return NextResponse.json(
+        { success: false, message: "توکن اعلان الزامی است" },
+        { status: 400 }
+      );
     }
 
-    const db = (await clientPromise).db("janaram-db");
-    const users = db.collection<User>("users");
-
     // Save the push token in DB
-    const result = await users.updateOne({ _id: userId }, { $set: { pushToken, updatedAt: new Date() } });
+    const result = await users.updateOne(
+      { _id: userId },
+      { $set: { pushToken, updatedAt: new Date() } }
+    );
 
     if (result.matchedCount === 0) {
       console.error("User not found for _id:", userId.toString());
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد" },
+        { status: 404 }
+      );
     }
 
     // 🔑 Subscribe the token to "new-content" topic
@@ -40,6 +73,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     });
   } catch (err: any) {
     console.error("Error saving push token:", err);
-    return NextResponse.json({ success: false, message: "خطای سرور در ذخیره توکن اعلان" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور در ذخیره توکن اعلان" },
+      { status: 500 }
+    );
   }
 });
