@@ -4,12 +4,28 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-black  text-white py-8">
       <div className="container max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <a
+              referrerPolicy="origin"
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://trustseal.enamad.ir/?id=717598&Code=YCimzKfvD7Gjy8NE2ccSrZGA5sfYsc3M"
+            >
+              <img
+                referrerPolicy="origin"
+                src="https://trustseal.enamad.ir/logo.aspx?id=717598&Code=YCimzKfvD7Gjy8NE2ccSrZGA5sfYsc3M"
+                alt=""
+                style={{ cursor: "pointer" }}
+                code="YCimzKfvD7Gjy8NE2ccSrZGA5sfYsc3M"
+              />
+            </a>
+          </div>
           <div className="mb-6 md:mb-0">
             <h3 className="text-lg font-semibold text-right mb-4">جانارام</h3>
             <p className="text-sm text-right">
-              آرامش خود را در هر زمان پیدا کنید. یک اپلیکیشن مدیتیشن موبایل که به بازگرداندن تعادل، کاهش استرس و بهبود
-              سلامت روان کمک می‌کند.
+              آرامش خود را در هر زمان پیدا کنید. یک اپلیکیشن مدیتیشن موبایل که
+              به بازگرداندن تعادل، کاهش استرس و بهبود سلامت روان کمک می‌کند.
             </p>
           </div>
           <div className="text-right">

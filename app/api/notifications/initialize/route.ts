@@ -41,6 +41,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           $unset: { subscriptionEndDate: "", subscriptionDuration: "" },
         }
       );
+      console.log("expired done", userDoc._id);
     }
     const { pushToken } = await req.json();
     if (!pushToken) {
