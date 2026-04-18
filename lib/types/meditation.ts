@@ -10,7 +10,9 @@ export interface Meditation {
     | "sleep"
     | "sleep music"
     | "nature"
-    | "story";
+    | "story"
+    | "self";
+
   url: string;
   imageUrl: string; // اضافه کردن فیلد URL تصویر
   duration: number;

@@ -145,11 +145,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     }
     // شمارش پیام‌ها برای کنترل اینکه یکی‌در‌میان سؤال بپرسد
     const messageCount = (await chatHistory.countDocuments({ userId })) + 1;
-    if (messageCount % 3 === 0 && messageCount > 8) {
-      // این اخطار برای مکالمه دهم (آخرین مکالمه) نمایش داده می‌شود.
-      preLimitWarning =
-        "\n\nبا زدن دکمه ⚡ در پایین صفحه میتونی تحلیل شخصیتی خودت رو ببینی.";
-    }
+
     // اگر شماره فرد است (۱، ۳، ۵، ...) سؤال بپرس، وگرنه نه
     const shouldAskQuestion = messageCount % 2 === 1;
 

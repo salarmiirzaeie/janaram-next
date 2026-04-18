@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React from "react";
 
 const Footer: React.FC = () => {
@@ -9,15 +10,15 @@ const Footer: React.FC = () => {
             <a
               referrerPolicy="origin"
               target="_blank"
-              rel="noopener noreferrer"
               href="https://trustseal.enamad.ir/?id=717598&Code=YCimzKfvD7Gjy8NE2ccSrZGA5sfYsc3M"
+              rel="noopener noreferrer"
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 referrerPolicy="origin"
                 src="https://trustseal.enamad.ir/logo.aspx?id=717598&Code=YCimzKfvD7Gjy8NE2ccSrZGA5sfYsc3M"
-                alt=""
+                alt="Enamad Trust Seal"
                 style={{ cursor: "pointer" }}
-                code="YCimzKfvD7Gjy8NE2ccSrZGA5sfYsc3M"
               />
             </a>
           </div>

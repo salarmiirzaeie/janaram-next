@@ -43,7 +43,8 @@ export const GET = withAuth(async function (req: NextRequest) {
             | "sleep"
             | "nature"
             | "story"
-            | "sleep music";
+            | "sleep music"
+            | "self";
         }
       | {} = type ? { type } : {}; // Fetch meditations, sorted by createdAt in descending order (newer first)
     const meditations = await collection
