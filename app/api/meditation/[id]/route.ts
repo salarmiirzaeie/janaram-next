@@ -6,46 +6,52 @@ import { User } from "@/lib/types/user";
 
 export const GET = withAuth(async function (req: NextRequest, user: any) {
   try {
-    const id = req.nextUrl.pathname.split("/").pop(); // Extract ID from URL
-    // Validate ID
+    const id = req.nextUrl.pathname.split("/").pop();
+
     if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json(
         { success: false, message: "Invalid meditation ID" },
         { status: 400 }
       );
     }
+
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
     } catch (err) {
-      console.error("Invalid user.sub format:", user.sub, err);
       return NextResponse.json(
         { success: false, message: "شناسه کاربر نامعتبر است" },
         { status: 400 }
       );
     }
-    // Connect to MongoDB
+
     const client = await clientPromise;
     const db = client.db("janaram-db");
-    const collection = db.collection("meditations");
-    const users = db.collection<User>("users");
 
-    // Check if user exists
-    const userDoc = await users.findOne({ _id: userId });
-    if (!userDoc) {
-      console.error("User not found for _id:", userId.toString());
-      return NextResponse.json(
-        { success: false, message: "کاربر یافت نشد" },
-        { status: 404 }
-      );
-    }
-
-    // Fetch meditation by ID
-    const meditation = await collection.findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $inc: { listenCount: 1 } }, // Only increment listenCount
-      { returnDocument: "after" } // Return the updated document
-    );
+    // Parallel execution for faster response
+    const [meditation, userPlan] = await Promise.all([
+      db.collection("meditations").findOneAndUpdate(
+        { _id: new ObjectId(id) },
+        { $inc: { listenCount: 1 } },
+        {
+          returnDocument: "after",
+          projection: {
+            _id: 1,
+            title: 1,
+            type: 1,
+            fileUrl: 1,
+            imageUrl: 1,
+            description: 1,
+            duration: 1,
+            isSuggested: 1,
+            accessLevel: 1,
+          },
+        }
+      ),
+      db
+        .collection("users")
+        .findOne({ _id: userId }, { projection: { plan: 1 } }),
+    ]);
 
     if (!meditation) {
       return NextResponse.json(
@@ -53,48 +59,40 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
         { status: 404 }
       );
     }
-    if (
-      meditation?.accessLevel &&
-      meditation.accessLevel === "unlimited" &&
-      userDoc.plan !== "unlimited"
-    ) {
+
+    if (!userPlan) {
       return NextResponse.json(
-        {
-          success: true,
-          meditation: {
-            id: meditation._id.toString(),
-            title: meditation.title,
-            type: meditation.type,
-            file: "/meditations/silent_1s.mp3",
-            image: meditation.imageUrl,
-            description:
-              "🌙 این مدیتیشن مخصوص کاربران پرو است.  اشتراک پرو رو فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش و چت بات روانسناسی نامحدود و تخصصی استفاده کن",
-            duration: meditation.duration,
-            isSuggested: meditation.isSuggested || false,
-            isPro: meditation.accessLevel === "unlimited",
-          },
-        },
-        { status: 200 }
+        { success: false, message: "کاربر یافت نشد" },
+        { status: 404 }
       );
     }
-    // Return response
-    return NextResponse.json(
-      {
-        success: true,
-        meditation: {
-          id: meditation._id.toString(),
-          title: meditation.title,
-          type: meditation.type,
-          file: meditation.fileUrl,
-          image: meditation.imageUrl,
-          description: meditation.description,
-          duration: meditation.duration,
-          isSuggested: meditation.isSuggested || false,
-          isPro: meditation.accessLevel === "unlimited",
-        },
+
+    const isPro = meditation.accessLevel === "unlimited";
+    const isUserUnlimited = userPlan.plan === "unlimited";
+
+    // Use conditional response without code duplication
+    const response = {
+      success: true,
+      meditation: {
+        id: meditation._id.toString(),
+        title: meditation.title,
+        type: meditation.type,
+        file:
+          isPro && !isUserUnlimited
+            ? "/meditations/silent_1s.mp3"
+            : meditation.fileUrl,
+        image: meditation.imageUrl,
+        description:
+          isPro && !isUserUnlimited
+            ? "🌙 این مدیتیشن مخصوص کاربران پرو است. اشتراک پرو رو فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش و چت بات روانسناسی نامحدود و تخصصی استفاده کن"
+            : meditation.description,
+        duration: meditation.duration,
+        isSuggested: meditation.isSuggested || false,
+        isPro: isPro,
       },
-      { status: 200 }
-    );
+    };
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error("Error fetching meditation:", error);
     return NextResponse.json(

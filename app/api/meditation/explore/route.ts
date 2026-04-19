@@ -16,6 +16,7 @@ export const GET = withAuth(async function (req: NextRequest) {
       "nature",
       "story",
       "sleep-music",
+      "self",
     ];
 
     const result: { [key: string]: any[] } = {};
