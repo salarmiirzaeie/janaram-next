@@ -82,9 +82,9 @@ export const breathingDetails: Record<
   }
 > = {
   light_breathing: {
-    inhaleDuration: 2000,
+    inhaleDuration: 3000,
     holdDuration: 0,
-    exhaleDuration: 2000,
+    exhaleDuration: 3000,
     description:
       "معرفی: تنفس سبک به شما کمک می‌کند به سرعت ذهن و بدن خود را آرام کنید و تنش‌های روزانه را کاهش دهید.\n\n" +
       "راهنمای استفاده:\n" +
@@ -110,9 +110,9 @@ export const breathingDetails: Record<
   },
 
   mindful_breathing: {
-    inhaleDuration: 1000,
+    inhaleDuration: 3000,
     holdDuration: 1000,
-    exhaleDuration: 1000,
+    exhaleDuration: 3000,
     description:
       "معرفی: تنفس آگاهانه پایه مدیتیشن ذهن‌آگاهی است و به حضور در لحظه حال کمک می‌کند.\n\n" +
       "راهنمای استفاده:\n" +
@@ -176,9 +176,9 @@ export const breathingDetails: Record<
   },
 
   fire_breathing: {
-    inhaleDuration: 500,
+    inhaleDuration: 1000,
     holdDuration: 0,
-    exhaleDuration: 1000,
+    exhaleDuration: 2000,
     description:
       "معرفی: تنفس آتشین یک تمرین انرژی‌بخش برای افزایش هوشیاری و تمرکز است.\n\n" +
       "راهنمای استفاده:\n" +

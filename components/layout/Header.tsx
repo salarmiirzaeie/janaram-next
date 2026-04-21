@@ -48,6 +48,17 @@ const Header: React.FC = () => {
         button: true,
       },
     ],
+    "/psychologist": [
+      // 👈 Add this
+      { type: "link", href: "/", label: "خانه" },
+      { type: "link", href: "/blogs", label: "وبلاگ" },
+      {
+        type: "link",
+        href: "/#downloadSection",
+        label: "دانلود رایگان",
+        button: true,
+      },
+    ],
   };
 
   const currentNavs =
@@ -55,6 +66,8 @@ const Header: React.FC = () => {
       ? navItems["/"]
       : pathname.startsWith("/blogs")
       ? navItems["/blogs"]
+      : pathname.startsWith("/psychologist")
+      ? navItems["/psychologist"]
       : [];
   const downloadButtonClasses =
     "bg-[#AB47BC] text-white px-6 py-2 rounded-full hover:bg-[#AB47BC] transition-all duration-300 shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#AB47BC]";
