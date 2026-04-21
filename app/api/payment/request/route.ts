@@ -57,9 +57,13 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-
+    const isSandbox = process.env.NODE_ENV !== "production";
     const paymentId = paymentResult.insertedId;
-    const callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/payment/callback`;
+    const callbackUrl = `${
+      isSandbox
+        ? "http://10.213.178.162:3000"
+        : process.env.NEXT_PUBLIC_SITE_URL
+    }/api/payment/callback`;
 
     // درخواست به زرین‌پال با استفاده از SDK (طبق مستندات)
     const zarinpal = getZarinpal();

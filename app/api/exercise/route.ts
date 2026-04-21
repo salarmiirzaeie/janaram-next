@@ -81,6 +81,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
               url: breathing.url,
               imageUrl: breathing.imageUrl,
               done: ex.done,
+              isPro: ex.isPro,
             });
           }
           break;

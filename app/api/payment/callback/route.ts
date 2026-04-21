@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
     </html>
   `;
 
-  const appRedirectBase = "janaram://payment-result";
+  const appRedirectBase = "janaram://";
 
   // بررسی Status مطابق مستندات
   if (status !== "OK" || !authority) {

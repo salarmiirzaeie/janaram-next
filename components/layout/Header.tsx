@@ -63,7 +63,7 @@ const Header: React.FC = () => {
   return (
     <div className="absolute top-0 left-0 w-full">
       <div className="px-4 pt-4 lg:pt-8">
-        <header className="relative bg-white w-full max-w-4xl mx-auto rounded-xl px-4 lg:py-1 flex items-center justify-between z-50">
+        <header className="relative shadow-2xl bg-white w-full max-w-4xl mx-auto rounded-xl px-4 lg:py-1 flex items-center justify-between z-50">
           {/* Logo */}
           <div className="flex items-center z-10">
             <Image src="/logo.webp" alt="Logo" width={60} height={60} />
