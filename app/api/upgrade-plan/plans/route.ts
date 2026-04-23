@@ -14,6 +14,7 @@ export interface Plan {
   id: string;
   duration?: number; // Duration in months for unlimited plans
   oldPrice?: number;
+  isZarinPalEnabled?: boolean;
 }
 
 export const GET = withAuth(async (req: NextRequest, user: any) => {
@@ -32,6 +33,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
 
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
+    const plansConfig = db.collection("plans_config");
 
     // Fetch user data
     let userDoc = await users.findOne({ _id: userId });
@@ -69,7 +71,12 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       }
     }
 
-    // Define plans
+    // Fetch unlimited plan from database
+    const unlimitedPlanFromDb = await plansConfig.findOne({
+      name: "unlimited",
+    });
+
+    // Define plans with unlimited plan data from DB
     const plans: Plan[] = [
       {
         name: "free",
@@ -81,8 +88,9 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       },
       {
         name: "unlimited",
-        description: "طرح نامحدود برای ۱ ماه",
-        features: [
+        description:
+          unlimitedPlanFromDb?.description || "طرح نامحدود برای ۱ ماه",
+        features: unlimitedPlanFromDb?.features || [
           "Pro پیشنهاد روزانه تمرینات پیشرفته آگاه سازی و آرام سازی",
           "Pro دسترسی به تست های روانشناسی علمی و حرفه ای",
           "Pro دسترسی به مدیتیشن های نامحدود و حرفه ای",
@@ -94,34 +102,12 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         isActive:
           userDoc.plan === "unlimited" &&
           (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
-        id: "123456",
-        price: 199,
-        duration: 1,
-        oldPrice: 500,
+        id: unlimitedPlanFromDb?.id || "123456",
+        price: unlimitedPlanFromDb?.price || 199,
+        duration: unlimitedPlanFromDb?.duration || 1,
+        oldPrice: unlimitedPlanFromDb?.oldPrice || 500,
+        isZarinPalEnabled: unlimitedPlanFromDb?.isZarinPalEnabled || false,
       },
-      // {
-      //   name: "premium",
-      //   description: "طرح پریمیوم برای ۱ ماه",
-      //   features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "امکان شخصی سازی روانشناس"],
-      //   isActive: userDoc.plan === "premium" && userDoc.subscriptionDuration === 3,
-      //   id: "1234567",
-      //   price: 79,
-      //   duration: 1,
-      // },
-      // {
-      //   name: "pro",
-      //   description: "طرح پرو برای ۱ ماه",
-      //   features: [
-      //     "گفت‌وگوهای نامحدود روزانه",
-      //     "دسترسی به تاریخچه کامل گفت‌وگوها",
-      //     "امکان شخصی سازی روانشناس",
-      //     "پاسخ با تحلیل عمیق",
-      //   ],
-      //   isActive: userDoc.plan === "pro" && userDoc.subscriptionDuration === 6,
-      //   id: "12345678",
-      //   price: 149,
-      //   duration: 1,
-      // },
     ];
 
     return NextResponse.json({
