@@ -7,7 +7,12 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     const id = req.nextUrl.pathname.split("/").pop();
     const db = (await clientPromise).db("janaram-db");
     const tests = db.collection("tests");
-
+    // Increment the taken_count when user views the test
+    await tests.updateOne(
+      { test_id: id },
+      { $inc: { taken_count: 1 } },
+      { upsert: true } // Creates the field if it doesn't exist
+    );
     const test = await tests.findOne({ test_id: id });
 
     if (!test) {
