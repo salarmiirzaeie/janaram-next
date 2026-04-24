@@ -73,7 +73,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       message: "توکن اعلان ذخیره و در موضوع new-content عضو شد",
     });
   } catch (err: any) {
-    console.error("Error saving push token:", err);
+    // console.error("Error saving push token:", err);
     return NextResponse.json(
       { success: false, message: "خطای سرور در ذخیره توکن اعلان" },
       { status: 500 }
