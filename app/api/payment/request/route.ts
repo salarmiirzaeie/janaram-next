@@ -8,9 +8,9 @@ import { getZarinpal, getPaymentRedirectUrl } from "@/lib/zarinpal";
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const { planId, amount, description, mobile, email } = await req.json();
-
+    let amouuntInRial = amount * 10;
     // اعتبارسنجی
-    if (!planId || !amount || amount < 10000) {
+    if (!planId || !amouuntInRial || amouuntInRial < 10000) {
       return NextResponse.json(
         { success: false, message: "مبلغ نامعتبر است (حداقل 10,000 ریال)" },
         { status: 400 }
@@ -51,7 +51,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     const paymentResult = await payments.insertOne({
       userId: userId,
       planId: planId,
-      amount: amount,
+      amount: amouuntInRial,
       description: description,
       status: "PENDING",
       createdAt: new Date(),
@@ -69,7 +69,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     const zarinpal = getZarinpal();
 
     const response = await zarinpal.payments.create({
-      amount: amount,
+      amount: amouuntInRial,
       callback_url: callbackUrl,
       description: description,
       mobile: mobile || undefined,
