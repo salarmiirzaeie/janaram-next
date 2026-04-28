@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { getZarinpal } from "@/lib/zarinpal";
+const https = require("https");
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -145,6 +146,34 @@ export async function GET(req: NextRequest) {
           },
         }
       );
+      const data = JSON.stringify({
+        bodyId: 447300,
+        to: "09381811680",
+      });
+
+      const options = {
+        hostname: "console.melipayamak.com",
+        port: 443,
+        path: "/api/send/shared/6be212aadaea410b97e5ba4e98171dca",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": data.length,
+        },
+      };
+
+      const req = https.request(options, (res: any) => {
+        res.on("data", (d: any) => {
+          process.stdout.write(d);
+        });
+      });
+
+      req.on("error", (error: any) => {
+        console.error(error);
+      });
+
+      req.write(data);
+      req.end();
 
       return new NextResponse(
         htmlResponse(
