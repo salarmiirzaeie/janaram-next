@@ -28,21 +28,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         { status: 404 }
       );
     }
-    const now = new Date();
-    if (
-      userDoc.plan !== "free" &&
-      userDoc.subscriptionEndDate &&
-      userDoc.subscriptionEndDate < now
-    ) {
-      await users.updateOne(
-        { _id: userId },
-        {
-          $set: { plan: "free", updatedAt: now },
-          $unset: { subscriptionEndDate: "", subscriptionDuration: "" },
-        }
-      );
-      console.log("expired done", userDoc._id);
-    }
+
     const { pushToken } = await req.json();
     if (!pushToken) {
       return NextResponse.json(
