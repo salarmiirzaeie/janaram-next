@@ -149,6 +149,7 @@ export async function GET(req: NextRequest) {
       const data = JSON.stringify({
         bodyId: 447300,
         to: "09381811680",
+        args: ["197"],
       });
 
       const options = {
