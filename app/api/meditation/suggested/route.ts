@@ -67,6 +67,7 @@
 //     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
 //   }
 // });
+import { BASE_URL_IMAGES } from "@/lib/constants";
 import { withAuth } from "@/lib/middleware/withAuth";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
@@ -93,6 +94,8 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
           type: med.type,
           file: med.fileUrl,
           image: med.imageUrl,
+          file2: BASE_URL_IMAGES + med.fileUrl,
+          image2: BASE_URL_IMAGES + med.imageUrl,
           description: med.description,
           duration: med.duration,
           isSuggested: med.isSuggested || false,

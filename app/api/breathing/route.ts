@@ -2,6 +2,7 @@ import { withAuth } from "@/lib/middleware/withAuth";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
+import { BASE_URL_IMAGES } from "@/lib/constants";
 
 export const GET = withAuth(async function (req: NextRequest, user: any) {
   try {
@@ -65,7 +66,12 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
         title: breathing.title,
         type: breathing.type,
         file: !hasAccess ? "/meditations/silent_1s.mp3" : breathing.url,
+        file2: !hasAccess
+          ? BASE_URL_IMAGES + "/meditations/silent_1s.mp3"
+          : BASE_URL_IMAGES + breathing.url,
         image: breathing.imageUrl,
+        image2: BASE_URL_IMAGES + breathing.imageUrl,
+
         description: !hasAccess
           ? "🌙 این تنفس مخصوص کاربران پرو است. اشتراک پرو رو فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش و چت بات روانشناسی نامحدود و تخصصی استفاده کن"
           : breathing.description,

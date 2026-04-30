@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
+import { BASE_URL_IMAGES } from "@/lib/constants";
 
 export const GET = withAuth(async function (req: NextRequest, user: any) {
   try {
@@ -82,6 +83,11 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
             ? "/meditations/silent_1s.mp3"
             : meditation.fileUrl,
         image: meditation.imageUrl,
+        file2:
+          isPro && !isUserUnlimited
+            ? BASE_URL_IMAGES + "/meditations/silent_1s.mp3"
+            : BASE_URL_IMAGES + meditation.fileUrl,
+        image2: BASE_URL_IMAGES + meditation.imageUrl,
         description:
           isPro && !isUserUnlimited
             ? "🌙 این مدیتیشن مخصوص کاربران پرو است. اشتراک پرو رو فعال کن و از تمرین‌های حرفه‌ای و آرامش‌بخش و چت بات روانسناسی نامحدود و تخصصی استفاده کن"

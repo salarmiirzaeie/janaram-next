@@ -5,6 +5,7 @@ import { withAuth } from "@/lib/middleware/withAuth";
 import { ObjectId } from "mongodb";
 import { Meditation } from "@/lib/types/meditation";
 import moment from "moment-timezone";
+import { BASE_URL_IMAGES } from "@/lib/constants";
 
 type UserExerciseType =
   | "meditation"
@@ -23,6 +24,8 @@ interface UserExercise {
   done: boolean;
   url?: string; // برای مدیتیشن و تنفس
   imageUrl?: string; // برای مدیتیشن و تنفس
+  url2?: string; // برای مدیتیشن و تنفس
+  imageUrl2?: string; // برای مدیتیشن و تنفس
   isPro?: boolean;
 }
 
@@ -59,6 +62,8 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
               duration: meditation.duration,
               url: meditation.url,
               imageUrl: meditation.imageUrl,
+              url2: BASE_URL_IMAGES + meditation.url,
+              imageUrl2: BASE_URL_IMAGES + meditation.imageUrl,
               done: ex.done,
               isPro: ex.isPro,
             });
@@ -80,6 +85,8 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
               duration: breathing.duration,
               url: breathing.url,
               imageUrl: breathing.imageUrl,
+              url2: BASE_URL_IMAGES + breathing.url,
+              imageUrl2: BASE_URL_IMAGES + breathing.imageUrl,
               done: ex.done,
               isPro: ex.isPro,
             });

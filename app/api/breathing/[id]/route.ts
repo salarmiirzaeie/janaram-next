@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
+import { BASE_URL_IMAGES } from "@/lib/constants";
 
 export const GET = withAuth(async function (req: NextRequest, user: any) {
   try {
@@ -84,6 +85,8 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
           type: meditation.type,
           file: meditation.url,
           image: meditation.imageUrl,
+          file2: BASE_URL_IMAGES + meditation.url,
+          image2: BASE_URL_IMAGES + meditation.imageUrl,
           description: meditation.description,
           duration: meditation.duration,
           exhaleDuration: meditation.exhaleDuration,

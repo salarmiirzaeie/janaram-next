@@ -1,3 +1,4 @@
+import { BASE_URL_IMAGES } from "@/lib/constants";
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
@@ -22,6 +23,8 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
         isSuggested: med.isSuggested,
         accessLevel: med.accessLevel,
         listenCount: med.listenCount,
+        file2: BASE_URL_IMAGES + med.fileUrl,
+        image2: BASE_URL_IMAGES + med.imageUrl,
       })),
     });
   } catch (error) {
