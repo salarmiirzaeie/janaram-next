@@ -80,6 +80,7 @@ export const GET = withAuth(async function (req: NextRequest, user: any) {
         inhaleDuration: breathing.inhaleDuration || 5000,
         holdDuration: breathing.holdDuration || 5000,
         isPremium: isPremium,
+        isPo: isPremium,
         hasAccess: hasAccess,
         listenCount: breathing.listenCount || 0,
         createdAt: breathing.createdAt,
