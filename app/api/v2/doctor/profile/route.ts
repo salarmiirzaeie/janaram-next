@@ -29,6 +29,7 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
           successfulConsultations: 1,
           status: 1,
           rejectionReason: 1,
+          baleId: 1, // اضافه شد
         },
       }
     );
@@ -60,6 +61,7 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
         successfulConsultations: doctorDoc.successfulConsultations || 0,
         status: doctorDoc.status || "pending",
         rejectionReason: doctorDoc.rejectionReason || null,
+        baleId: doctorDoc.baleId || null, // اضافه شد
       },
     });
   } catch (err: any) {
@@ -84,6 +86,7 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
       sessionPrice,
       avatar,
       categoryId,
+      baleId, // اضافه شد
     } = body;
 
     const db = (await clientPromise).db("janaram-db");
@@ -100,6 +103,12 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
       );
     }
 
+    // تمیز کردن baleId (حذف @ اگر در ابتدا باشد)
+    let cleanedBaleId = baleId;
+    if (cleanedBaleId && cleanedBaleId.startsWith("@")) {
+      cleanedBaleId = cleanedBaleId.substring(1);
+    }
+
     // ساخت شیء برای بروزرسانی (فقط فیلدهایی که ارسال شده‌اند)
     const updateFields: any = {
       updatedAt: new Date(),
@@ -113,6 +122,8 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
     if (sessionPrice !== undefined) updateFields.sessionPrice = sessionPrice;
     if (avatar !== undefined) updateFields.avatar = avatar;
     if (categoryId !== undefined) updateFields.categoryId = categoryId;
+    if (cleanedBaleId !== undefined)
+      updateFields.baleId = cleanedBaleId || null; // اضافه شد
 
     // اعتبارسنجی ساده
     if (
@@ -171,6 +182,7 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
           avatar: 1,
           categoryId: 1,
           status: 1,
+          baleId: 1, // اضافه شد
         },
       }
     );
@@ -195,6 +207,7 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
         avatar: updatedDoctor?.avatar || null,
         categoryId: updatedDoctor?.categoryId || "individual",
         status: updatedDoctor?.status || "pending",
+        baleId: updatedDoctor?.baleId || null, // اضافه شد
       },
     });
   } catch (err: any) {

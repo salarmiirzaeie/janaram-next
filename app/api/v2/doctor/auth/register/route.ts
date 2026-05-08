@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
       bio,
       categoryId,
       medicalLicenseNumber, // شماره نظام پزشکی (اجباری)
+      baleId, // آیدی بله (اختیاری)
     } = body;
 
     // اعتبارسنجی
@@ -70,6 +71,12 @@ export async function POST(req: NextRequest) {
     // تخصص‌ها: اگر specialties ارسال شده از آن استفاده کن، وگرنه از specialty قدیمی یک آرایه بساز
     const finalSpecialties = specialties || (specialty ? [specialty] : []);
 
+    // تمیز کردن baleId (حذف @ اگر در ابتدا باشد)
+    let cleanedBaleId = baleId;
+    if (cleanedBaleId && cleanedBaleId.startsWith("@")) {
+      cleanedBaleId = cleanedBaleId.substring(1);
+    }
+
     // ایجاد روانشناس جدید با وضعیت pending
     const newDoctor = {
       name,
@@ -91,6 +98,7 @@ export async function POST(req: NextRequest) {
       schedule: {},
       offDays: [],
       isActive: true,
+      baleId: cleanedBaleId || null, // اضافه شد
       createdAt: new Date(),
       updatedAt: new Date(),
     };

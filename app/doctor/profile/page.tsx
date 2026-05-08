@@ -16,6 +16,7 @@ interface DoctorProfile {
   successfulConsultations: number;
   status: string;
   rejectionReason: string | null;
+  baleId: string | null; // اضافه شد
 }
 
 const SPECIALTIES_LIST = [
@@ -78,6 +79,7 @@ export default function DoctorProfilePage() {
     successfulConsultations: 0,
     status: "pending",
     rejectionReason: null,
+    baleId: null, // اضافه شد
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -148,6 +150,7 @@ export default function DoctorProfilePage() {
           experience: profile.experience,
           sessionPrice: profile.sessionPrice,
           categoryId: profile.categoryId,
+          baleId: profile.baleId, // اضافه شد
         }),
       });
       const data = await res.json();
@@ -395,6 +398,27 @@ export default function DoctorProfilePage() {
               </p>
             </div>
 
+            {/* آیدی بله - اضافه شد */}
+            <div>
+              <label className="block text-gray-700 font-medium mb-2 text-right">
+                آیدی بله (Bale ID)
+              </label>
+              <input
+                type="text"
+                value={profile.baleId || ""}
+                onChange={(e) =>
+                  setProfile({ ...profile, baleId: e.target.value })
+                }
+                disabled={profile.status === "pending"}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                placeholder="@username یا username"
+                dir="ltr"
+              />
+              <p className="text-gray-400 text-xs mt-1 text-right">
+                برای ارتباط با بیماران، آیدی خود را در پیام‌رسان بله وارد کنید
+              </p>
+            </div>
+
             {/* تعداد مشاوره‌های موفق */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
@@ -488,7 +512,7 @@ export default function DoctorProfilePage() {
               />
             </div>
 
-            {/* قیمت هر جلسه - اضافه شد */}
+            {/* قیمت هر جلسه */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 قیمت هر جلسه (تومان)

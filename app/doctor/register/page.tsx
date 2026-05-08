@@ -20,6 +20,7 @@ export default function DoctorRegisterPage() {
     bio: "",
     categoryId: "individual",
     medicalLicenseNumber: "",
+    baleId: "", // اضافه شد
   });
 
   const specialtiesList = [
@@ -121,6 +122,7 @@ export default function DoctorRegisterPage() {
           bio: formData.bio,
           categoryId: formData.categoryId,
           medicalLicenseNumber: formData.medicalLicenseNumber,
+          baleId: formData.baleId || null, // اضافه شد
         }),
       });
 
@@ -219,6 +221,24 @@ export default function DoctorRegisterPage() {
 
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
+                آیدی بله (Bale ID)
+              </label>
+              <input
+                type="text"
+                name="baleId"
+                value={formData.baleId}
+                onChange={handleChange}
+                placeholder="@username یا username"
+                dir="ltr"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-gray-400 text-xs mt-1 text-right">
+                برای ارتباط با بیماران، آیدی خود را در پیام‌رسان بله وارد کنید
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2 text-right">
                 رمز عبور <span className="text-red-500">*</span>
               </label>
               <input
@@ -309,7 +329,6 @@ export default function DoctorRegisterPage() {
               />
             </div>
 
-            {/* اضافه کردن فیلد قیمت جلسه */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 قیمت هر جلسه (تومان)
