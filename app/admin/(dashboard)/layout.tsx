@@ -46,6 +46,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 ["تنفس‌ها", "/admin/breathings"],
                 ["بلاگ‌ها", "/admin/blogs"],
                 ["نوتیفیکیشن", "/admin/notifications"],
+                ["روانشناس", "/admin/psychologists"],
               ].map(([label, href]) => (
                 <a
                   key={href}
