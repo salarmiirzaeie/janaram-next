@@ -15,17 +15,25 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       .sort({ date: -1, time: -1 })
       .toArray();
 
-    // Fetch doctor names
+    // Fetch doctor names and session prices
     const doctorIds = [...new Set(myAppointments.map((a) => a.doctorId))];
     const doctors = await psychologists
       .find({ _id: { $in: doctorIds.map((id) => new ObjectId(id)) } })
       .toArray();
-    const doctorMap = new Map(doctors.map((d) => [d._id.toString(), d.name]));
+
+    const doctorMap = new Map();
+    const doctorPriceMap = new Map();
+
+    doctors.forEach((d) => {
+      doctorMap.set(d._id.toString(), d.name);
+      doctorPriceMap.set(d._id.toString(), d.sessionPrice || 0);
+    });
 
     const enriched = myAppointments.map((a) => ({
       id: a._id.toString(),
       doctorId: a.doctorId,
       doctorName: doctorMap.get(a.doctorId) || "نامشخص",
+      sessionPrice: doctorPriceMap.get(a.doctorId) || 0, // ✅ اضافه کردن قیمت جلسه
       date: a.date,
       time: a.time,
       status: a.status,

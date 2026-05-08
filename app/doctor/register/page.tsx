@@ -14,12 +14,12 @@ export default function DoctorRegisterPage() {
     password: "",
     confirmPassword: "",
     specialty: "",
-    specialties: [] as string[], // آرایه تخصص‌ها (چندتایی)
+    specialties: [] as string[],
     experience: "",
     sessionPrice: "",
     bio: "",
     categoryId: "individual",
-    medicalLicenseNumber: "", // شماره نظام پزشکی
+    medicalLicenseNumber: "",
   });
 
   const specialtiesList = [
@@ -74,7 +74,6 @@ export default function DoctorRegisterPage() {
     setError("");
     setSuccess("");
 
-    // اعتبارسنجی
     if (!formData.name || !formData.phone || !formData.password) {
       setError("نام، شماره تلفن و رمز عبور الزامی هستند");
       return;
@@ -115,7 +114,7 @@ export default function DoctorRegisterPage() {
           name: formData.name,
           phone: formData.phone,
           password: formData.password,
-          specialty: formData.specialties[0], // تخصص اصلی (اولین)
+          specialty: formData.specialties[0],
           specialties: formData.specialties,
           experience: parseInt(formData.experience) || 0,
           sessionPrice: parseInt(formData.sessionPrice) || 0,
@@ -147,7 +146,6 @@ export default function DoctorRegisterPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        {/* هدر */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
@@ -170,10 +168,8 @@ export default function DoctorRegisterPage() {
           </p>
         </div>
 
-        {/* فرم */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* نام کامل */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 نام کامل <span className="text-red-500">*</span>
@@ -188,7 +184,6 @@ export default function DoctorRegisterPage() {
               />
             </div>
 
-            {/* شماره تلفن */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 شماره تلفن <span className="text-red-500">*</span>
@@ -207,7 +202,6 @@ export default function DoctorRegisterPage() {
               </p>
             </div>
 
-            {/* شماره نظام پزشکی */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 شماره نظام پزشکی <span className="text-red-500">*</span>
@@ -223,7 +217,6 @@ export default function DoctorRegisterPage() {
               />
             </div>
 
-            {/* رمز عبور */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 رمز عبور <span className="text-red-500">*</span>
@@ -238,7 +231,6 @@ export default function DoctorRegisterPage() {
               />
             </div>
 
-            {/* تکرار رمز عبور */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 تکرار رمز عبور <span className="text-red-500">*</span>
@@ -253,7 +245,6 @@ export default function DoctorRegisterPage() {
               />
             </div>
 
-            {/* تخصص‌ها (چند انتخابی) */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 تخصص‌ها <span className="text-red-500">*</span>
@@ -284,7 +275,6 @@ export default function DoctorRegisterPage() {
               )}
             </div>
 
-            {/* دسته‌بندی */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 دسته‌بندی
@@ -303,7 +293,6 @@ export default function DoctorRegisterPage() {
               </select>
             </div>
 
-            {/* سال تجربه */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 سال‌های تجربه
@@ -320,7 +309,26 @@ export default function DoctorRegisterPage() {
               />
             </div>
 
-            {/* بیوگرافی */}
+            {/* اضافه کردن فیلد قیمت جلسه */}
+            <div>
+              <label className="block text-gray-700 font-medium mb-2 text-right">
+                قیمت هر جلسه (تومان)
+              </label>
+              <input
+                type="number"
+                name="sessionPrice"
+                value={formData.sessionPrice}
+                onChange={handleChange}
+                placeholder="مثال: ۲۵۰۰۰۰"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                min="0"
+                step="10000"
+              />
+              <p className="text-gray-400 text-xs mt-1 text-right">
+                قیمت هر جلسه مشاوره به تومان
+              </p>
+            </div>
+
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 بیوگرافی
@@ -335,7 +343,6 @@ export default function DoctorRegisterPage() {
               />
             </div>
 
-            {/* پیام‌ها */}
             {error && (
               <div className="bg-red-50 text-red-500 p-3 rounded-xl text-center text-sm">
                 {error}
@@ -347,7 +354,6 @@ export default function DoctorRegisterPage() {
               </div>
             )}
 
-            {/* دکمه ثبت‌نام */}
             <button
               type="submit"
               disabled={isLoading}
@@ -356,7 +362,6 @@ export default function DoctorRegisterPage() {
               {isLoading ? "در حال ثبت‌نام..." : "ثبت‌نام"}
             </button>
 
-            {/* لینک ورود */}
             <div className="text-center">
               <a
                 href="/doctor/login"

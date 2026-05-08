@@ -156,7 +156,7 @@ export default function DoctorProfilePage() {
           type: "success",
           text: data.message || "پروفایل با موفقیت به‌روزرسانی شد",
         });
-        fetchProfile(); // به‌روزرسانی اطلاعات از سرور
+        fetchProfile();
         setTimeout(() => setMessage(null), 3000);
       } else {
         setMessage({
@@ -186,7 +186,6 @@ export default function DoctorProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* هدر */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -208,7 +207,6 @@ export default function DoctorProfilePage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* وضعیت تأیید حساب */}
         <div className="mb-6 bg-white rounded-xl shadow-sm p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-gray-700 font-medium">وضعیت حساب:</span>
@@ -221,7 +219,6 @@ export default function DoctorProfilePage() {
           )}
         </div>
 
-        {/* پیام موفقیت/خطا */}
         {message && (
           <div
             className={`mb-6 p-4 rounded-xl text-center ${
@@ -234,7 +231,6 @@ export default function DoctorProfilePage() {
           </div>
         )}
 
-        {/* فرم پروفایل */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="p-6 space-y-6">
             {/* نام کامل */}
@@ -254,7 +250,7 @@ export default function DoctorProfilePage() {
               />
             </div>
 
-            {/* شماره تلفن (فقط نمایش) */}
+            {/* شماره تلفن */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 شماره تلفن
@@ -270,7 +266,8 @@ export default function DoctorProfilePage() {
                 شماره تلفن قابل ویرایش نیست
               </p>
             </div>
-            {/* آپلود عکس پروفایل */}
+
+            {/* آپلود عکس */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 عکس پروفایل
@@ -309,19 +306,15 @@ export default function DoctorProfilePage() {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-
                         const token = localStorage.getItem("doctorToken");
                         const formData = new FormData();
                         formData.append("avatar", file);
-
                         try {
                           const res = await fetch(
                             "/api/v2/doctor/upload-avatar",
                             {
                               method: "POST",
-                              headers: {
-                                Authorization: `Bearer ${token}`,
-                              },
+                              headers: { Authorization: `Bearer ${token}` },
                               body: formData,
                             }
                           );
@@ -357,9 +350,7 @@ export default function DoctorProfilePage() {
                             "/api/v2/doctor/upload-avatar",
                             {
                               method: "DELETE",
-                              headers: {
-                                Authorization: `Bearer ${token}`,
-                              },
+                              headers: { Authorization: `Bearer ${token}` },
                             }
                           );
                           const data = await res.json();
@@ -386,7 +377,8 @@ export default function DoctorProfilePage() {
                 فرمت‌های مجاز: JPEG، PNG، WEBP (حداکثر ۲ مگابایت)
               </p>
             </div>
-            {/* شماره نظام پزشکی (فقط نمایش) */}
+
+            {/* شماره نظام پزشکی */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 شماره نظام پزشکی
@@ -403,7 +395,7 @@ export default function DoctorProfilePage() {
               </p>
             </div>
 
-            {/* تعداد مشاوره‌های موفق (فقط نمایش) */}
+            {/* تعداد مشاوره‌های موفق */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 تعداد مشاوره‌های موفق
@@ -416,7 +408,7 @@ export default function DoctorProfilePage() {
               />
             </div>
 
-            {/* تخصص‌ها (چند انتخابی) */}
+            {/* تخصص‌ها */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 تخصص‌ها <span className="text-red-500">*</span>
@@ -496,6 +488,31 @@ export default function DoctorProfilePage() {
               />
             </div>
 
+            {/* قیمت هر جلسه - اضافه شد */}
+            <div>
+              <label className="block text-gray-700 font-medium mb-2 text-right">
+                قیمت هر جلسه (تومان)
+              </label>
+              <input
+                type="number"
+                value={profile.sessionPrice}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    sessionPrice: parseInt(e.target.value) || 0,
+                  })
+                }
+                disabled={profile.status === "pending"}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                placeholder="مثال: ۲۵۰۰۰۰"
+                min="0"
+                step="10000"
+              />
+              <p className="text-gray-400 text-xs mt-1 text-right">
+                قیمت هر جلسه مشاوره به تومان
+              </p>
+            </div>
+
             {/* بیوگرافی */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
@@ -514,7 +531,6 @@ export default function DoctorProfilePage() {
             </div>
           </div>
 
-          {/* دکمه ذخیره - فقط اگر وضعیت pending نباشد نمایش داده شود */}
           {profile.status !== "pending" && (
             <div className="border-t border-gray-100 p-6 flex justify-end">
               <button
@@ -528,7 +544,6 @@ export default function DoctorProfilePage() {
           )}
         </div>
 
-        {/* راهنما */}
         <div className="mt-6 bg-gray-50 rounded-xl p-4">
           <h3 className="font-bold text-gray-800 mb-2">📌 راهنما:</h3>
           <ul className="text-gray-600 text-sm space-y-1">
@@ -537,6 +552,7 @@ export default function DoctorProfilePage() {
               می‌شود.
             </li>
             <li>• می‌توانید چند تخصص را همزمان انتخاب کنید.</li>
+            <li>• قیمت هر جلسه را بر اساس تعرفه خود وارد کنید.</li>
             <li>• بیوگرافی خوب باعث افزایش اعتماد کاربران می‌شود.</li>
             <li>
               • پس از ویرایش تخصص‌ها، حساب شما دوباره نیاز به تأیید ادمین دارد.
