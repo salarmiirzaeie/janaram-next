@@ -98,7 +98,7 @@ export default function DoctorAppointmentsPage() {
 
     try {
       const res = await fetch(
-        `/api/doctor/appointments/${appointmentId}/status`,
+        `/api/v2/doctor/appointments/${appointmentId}/status`,
         {
           method: "PUT",
           headers: {
