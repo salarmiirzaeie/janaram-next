@@ -1,36 +1,47 @@
-// app/api/psychologists/[id]/available-slots/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import moment from "moment-jalaali";
 
-moment.loadPersian({ dialect: "persian-modern", usePersianDigits: false });
-
-function getPersianWeekday(dateStr: string): number {
-  // استفاده مستقیم از متد day() در moment-jalaali
-  const m = moment(dateStr);
-  const weekday = m.day(); // 0=شنبه, 1=یکشنبه, ..., 6=جمعه
-
-  console.log("getPersianWeekday:", {
-    dateStr,
-    weekday,
-    weekdayName: getWeekdayName(weekday),
+// تبدیل تاریخ میلادی به نام روز هفته فارسی (با استفاده از Intl)
+function getPersianWeekdayName(dateStr: string): string {
+  const date = new Date(dateStr);
+  const formatter = new Intl.DateTimeFormat("fa-IR", {
+    timeZone: "Asia/Tehran",
+    weekday: "long",
   });
+  return formatter.format(date);
+}
 
-  return weekday;
+// تبدیل نام روز فارسی به عدد (0=شنبه تا 6=جمعه)
+function getPersianWeekdayNumber(dateStr: string): number {
+  const dayName = getPersianWeekdayName(dateStr);
+  const weekdayMap: Record<string, number> = {
+    شنبه: 0,
+    یکشنبه: 1,
+    دوشنبه: 2,
+    سه‌شنبه: 3,
+    چهارشنبه: 4,
+    پنجشنبه: 5,
+    جمعه: 6,
+  };
+  return weekdayMap[dayName] ?? 0;
 }
 
 function getWeekdayName(weekday: number): string {
-  const days = [
-    "شنبه",
-    "یکشنبه",
-    "دوشنبه",
-    "سه‌شنبه",
-    "چهارشنبه",
-    "پنجشنبه",
-    "جمعه",
-  ];
+  const days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
   return days[weekday];
+}
+
+// بررسی آیا زمان انتخابی از زمان فعلی گذشته است یا نه
+function isTimePassed(dateStr: string, timeStr: string): boolean {
+  const now = new Date();
+  const appointmentDateTime = new Date(`${dateStr}T${timeStr}:00`);
+  
+  // تنظیم منطقه زمانی ایران
+  const iranTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tehran" }));
+  const appointmentIranTime = new Date(appointmentDateTime.toLocaleString("en-US", { timeZone: "Asia/Tehran" }));
+  
+  return appointmentIranTime < iranTime;
 }
 
 export async function GET(
@@ -61,18 +72,27 @@ export async function GET(
       );
     }
 
-    const persianWeekday = getPersianWeekday(dateStr);
+    // محاسبه روز هفته شمسی بدون استفاده از moment
+    const persianWeekday = getPersianWeekdayNumber(dateStr);
     const schedule = doctor.schedule || {};
     const availableTimes = schedule[persianWeekday] || [];
 
+    // دریافت نوبت‌های رزرو شده برای این تاریخ
     const booked = await appointments
       .find({ doctorId: id, date: dateStr, status: { $ne: "cancelled" } })
       .toArray();
     const bookedTimes = booked.map((a) => a.time);
 
-    const freeSlots = availableTimes.filter(
-      (time: string) => !bookedTimes.includes(time)
-    );
+    // فیلتر کردن زمان‌های خالی و حذف زمان‌های گذشته
+    const freeSlots = availableTimes.filter((time: string) => {
+      // اگر تاریخ امروز است، زمان‌های گذشته را حذف کن
+      const today = new Date().toISOString().split("T")[0];
+      if (dateStr === today && isTimePassed(dateStr, time)) {
+        return false;
+      }
+      // اگر زمان رزرو شده است، حذف کن
+      return !bookedTimes.includes(time);
+    });
 
     console.log({
       dateStr,

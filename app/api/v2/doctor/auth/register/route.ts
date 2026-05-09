@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       sessionPrice: sessionPrice || 0,
       categoryId: categoryId || "individual",
       medicalLicenseNumber,
-      successfulConsultations: 0,
+      successfulConsultations: 100,
       status: "pending", // در انتظار تایید ادمین
       rejectionReason: null,
       verifiedAt: null,
@@ -101,6 +101,7 @@ export async function POST(req: NextRequest) {
       baleId: cleanedBaleId || null, // اضافه شد
       createdAt: new Date(),
       updatedAt: new Date(),
+      rating: 5,
     };
 
     const result = await psychologists.insertOne(newDoctor);
