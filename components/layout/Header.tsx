@@ -29,7 +29,7 @@ const Header: React.FC = () => {
   const navItems: NavItems = {
     "/": [
       { type: "scroll", to: "quoteForm", label: "تماس با ما" },
-      { type: "link", href: "/doctor/login", label: "پنل روانشناسان" },
+      { type: "link", href: "/doctor", label: "پنل روانشناسان" },
       { type: "link", href: "/blogs", label: "وبلاگ" },
       { type: "scroll", to: "faqSection", label: "سوالات متداول" },
       { type: "scroll", to: "reviewSection", label: "نظرات" },

@@ -32,7 +32,7 @@ export default function DoctorLoginPage() {
 
       if (data.success) {
         localStorage.setItem("doctorToken", data.data.token);
-        router.push("/doctor/dashboard");
+        router.replace("/doctor");
       } else {
         setError(data.message || "خطا در ورود");
       }
