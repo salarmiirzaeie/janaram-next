@@ -1,27 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import {
+  APPROVED_DOCTOR_FILTER,
+  getPersianWeekdayNumber,
+  getTodayTehran,
+} from "@/lib/booking";
 
-// Get current day index in Iran timezone (Sunday = 0, Monday = 1, ..., Saturday = 6)
-function getCurrentDayIndexInIran(): number {
-  const now = new Date();
-  const options: Intl.DateTimeFormatOptions = {
-    timeZone: "Asia/Tehran",
-    weekday: "short",
-  };
-  const weekdayName = new Intl.DateTimeFormat("en-US", options).format(now);
-  const weekdayMap: Record<string, number> = {
-    Sun: 0,
-    Mon: 1,
-    Tue: 2,
-    Wed: 3,
-    Thu: 4,
-    Fri: 5,
-    Sat: 6,
-  };
-  return weekdayMap[weekdayName] ?? now.getDay();
-}
-
-// تبدیل categoryId به عنوان تخصص برای جستجو در specialties
 function getCategorySpecialty(categoryId: string): string | null {
   const categoryMap: Record<string, string> = {
     individual: "مشاور فردی",
@@ -44,59 +28,53 @@ export async function GET(req: NextRequest) {
     const db = (await clientPromise).db("janaram-db");
     const psychologists = db.collection("psychologists");
 
-    let filter: any = {};
+    let filter: Record<string, unknown> = { ...APPROVED_DOCTOR_FILTER };
 
-    // فیلتر ترکیبی: هم دسته‌بندی اصلی (categoryId) و هم تخصص‌ها (specialties)
     if (category && category !== "all") {
       const specialtyTitle = getCategorySpecialty(category);
+      const categoryConditions: Record<string, unknown>[] = [
+        { categoryId: category },
+      ];
 
-      // ایجاد شرط OR برای جستجو در هر دو فیلد
-      const categoryConditions = [];
-
-      // شرط 1: جستجو در categoryId (دسته‌بندی اصلی)
-      categoryConditions.push({ categoryId: category });
-
-      // شرط 2: جستجو در specialties (آرایه تخصص‌ها)
       if (specialtyTitle) {
         categoryConditions.push({ specialties: { $in: [specialtyTitle] } });
-      }
-
-      // شرط 3: جستجو در specialty (فیلد قدیمی)
-      if (specialtyTitle) {
         categoryConditions.push({ specialty: specialtyTitle });
       }
 
-      filter.$or = categoryConditions;
+      filter = {
+        $and: [APPROVED_DOCTOR_FILTER, { $or: categoryConditions }],
+      };
     }
 
     if (search) {
-      // اگر قبلاً شرط $or داریم، باید با شرط جستجو ترکیب کنیم
       const searchConditions = [
         { name: { $regex: search, $options: "i" } },
         { specialty: { $regex: search, $options: "i" } },
         { specialties: { $regex: search, $options: "i" } },
       ];
 
-      if (filter.$or) {
-        // ترکیب شرط دسته‌بندی و شرط جستجو با $and
+      if (filter.$and) {
+        (filter.$and as unknown[]).push({ $or: searchConditions });
+      } else if (filter.$or) {
         filter = {
-          $and: [{ $or: filter.$or }, { $or: searchConditions }],
+          $and: [{ $or: filter.$or as unknown[] }, { $or: searchConditions }],
         };
       } else {
-        filter.$or = searchConditions;
+        filter = {
+          $and: [APPROVED_DOCTOR_FILTER, { $or: searchConditions }],
+        };
       }
     }
 
     const docs = await psychologists.find(filter).toArray();
-    const todayIndex = getCurrentDayIndexInIran();
+    const today = getTodayTehran();
+    const todayWeekday = getPersianWeekdayNumber(today);
 
-    const list = docs.map(({ _id, schedule, ...rest }) => {
+    const list = docs.map(({ _id, schedule, password, ...rest }) => {
       let availableToday = false;
-      if (
-        schedule &&
-        Array.isArray(schedule[todayIndex]) &&
-        schedule[todayIndex].length > 0
-      ) {
+      const todaySlots =
+        schedule?.[todayWeekday] ?? schedule?.[String(todayWeekday)];
+      if (Array.isArray(todaySlots) && todaySlots.length > 0) {
         availableToday = true;
       }
       return {

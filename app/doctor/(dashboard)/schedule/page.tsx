@@ -151,6 +151,18 @@ export default function DoctorSchedulePage() {
     }));
   };
 
+  const [offDayInput, setOffDayInput] = useState("");
+
+  const addOffDay = () => {
+    if (!offDayInput || offDays.includes(offDayInput)) return;
+    setOffDays((prev) => [...prev, offDayInput].sort());
+    setOffDayInput("");
+  };
+
+  const removeOffDay = (date: string) => {
+    setOffDays((prev) => prev.filter((d) => d !== date));
+  };
+
   // آمار ساعات کاری
   const getStats = () => {
     let totalSlots = 0;
@@ -326,6 +338,52 @@ export default function DoctorSchedulePage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* روزهای تعطیل */}
+      <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+        <h2 className="text-lg font-bold text-gray-900">روزهای تعطیل</h2>
+        <p className="text-sm text-gray-500">
+          تاریخ‌هایی که در آن‌ها نوبت‌دهی غیرفعال می‌شود (فرمت میلادی
+          YYYY-MM-DD)
+        </p>
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="date"
+            value={offDayInput}
+            onChange={(e) => setOffDayInput(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+          <button
+            type="button"
+            onClick={addOffDay}
+            className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm"
+          >
+            افزودن تعطیلی
+          </button>
+        </div>
+        {offDays.length > 0 ? (
+          <ul className="flex flex-wrap gap-2">
+            {offDays.map((d) => (
+              <li
+                key={d}
+                className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm"
+              >
+                {d}
+                <button
+                  type="button"
+                  onClick={() => removeOffDay(d)}
+                  className="text-red-500 hover:text-red-700"
+                  aria-label="حذف"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-400">روز تعطیلی ثبت نشده است.</p>
+        )}
       </div>
 
       {/* دکمه ذخیره */}

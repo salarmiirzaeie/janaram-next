@@ -18,11 +18,23 @@ interface Transaction {
   id: string;
   date: string;
   amount: number;
+  commission?: number;
+  net?: number;
   status: "success" | "pending" | "failed";
   type: "deposit" | "withdrawal" | "refund";
   description: string;
   patientName?: string;
   referenceId?: string;
+}
+
+interface SettlementRecord {
+  id: string;
+  amount: number;
+  settlementDate: string;
+  note: string;
+  referenceId: string;
+  paidAt: string | null;
+  createdAt: string;
 }
 
 interface Earning {
@@ -33,18 +45,34 @@ interface Earning {
   commission: number;
   net: number;
   appointments: number;
+  transactions?: number;
 }
 
 interface BankAccount {
   accountName: string;
-  bankName: string;
   cardNumber: string;
   sheba: string;
 }
 
 interface FinancialStats {
+  totalGross: number;
+  totalPlatformFee: number;
+  totalDoctorShare: number;
+  totalSettled: number;
+  pendingPayout: number;
   totalEarnings: number;
   pendingBalance: number;
+  commissionPercentLabel: string;
+  doctorSharePercentLabel: string;
+  today: {
+    date: string;
+    gross: number;
+    platformFee: number;
+    doctorShare: number;
+    settled: number;
+    pendingPayout: number;
+    sessionCount: number;
+  };
   totalAppointments: number;
   todayAppointments: number;
   currentMonthEarnings: number;
@@ -53,7 +81,6 @@ interface FinancialStats {
 export default function DoctorPaymentsPage() {
   const [bankAccount, setBankAccount] = useState<BankAccount>({
     accountName: "",
-    bankName: "",
     cardNumber: "",
     sheba: "",
   });
@@ -69,9 +96,7 @@ export default function DoctorPaymentsPage() {
   const [stats, setStats] = useState<FinancialStats | null>(null);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [settlements, setSettlements] = useState<SettlementRecord[]>([]);
 
   const itemsPerPage = 10;
 
@@ -121,12 +146,27 @@ export default function DoctorPaymentsPage() {
     }
   };
 
+  const fetchSettlements = async () => {
+    const token = localStorage.getItem("doctorToken");
+    try {
+      const res = await fetch("/api/v2/doctor/settlements?limit=10", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSettlements(data.data.settlements);
+      }
+    } catch (error) {
+      console.error("Error fetching settlements:", error);
+    }
+  };
+
   const fetchTransactions = async () => {
     const token = localStorage.getItem("doctorToken");
     try {
       const res = await fetch(
         `/api/v2/doctor/transactions?status=${filterStatus}&type=${filterType}&page=${currentPage}&limit=${itemsPerPage}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const data = await res.json();
       if (data.success) {
@@ -141,12 +181,7 @@ export default function DoctorPaymentsPage() {
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      await Promise.all([
-        fetchBankAccount(),
-        fetchStats(),
-        fetchEarnings(),
-        fetchTransactions(),
-      ]);
+      await Promise.all([fetchBankAccount(), fetchStats(), fetchEarnings(), fetchTransactions(), fetchSettlements()]);
       setIsLoading(false);
     };
     loadData();
@@ -174,42 +209,6 @@ export default function DoctorPaymentsPage() {
     } catch (error) {
       console.error("Error saving bank account:", error);
       alert("خطا در ارتباط با سرور");
-    }
-  };
-
-  const handleWithdrawRequest = async () => {
-    const amount = parseInt(withdrawAmount);
-    if (isNaN(amount) || amount < 50000) {
-      alert("حداقل مبلغ تسویه ۵۰,۰۰۰ تومان است");
-      return;
-    }
-
-    const token = localStorage.getItem("doctorToken");
-    setIsWithdrawing(true);
-    try {
-      const res = await fetch("/api/v2/doctor/withdraw-request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ amount }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert("درخواست تسویه با موفقیت ثبت شد");
-        setShowWithdrawModal(false);
-        setWithdrawAmount("");
-        fetchTransactions();
-        fetchStats();
-      } else {
-        alert(data.message || "خطا در ثبت درخواست");
-      }
-    } catch (error) {
-      console.error("Error withdrawing:", error);
-      alert("خطا در ارتباط با سرور");
-    } finally {
-      setIsWithdrawing(false);
     }
   };
 
@@ -254,10 +253,11 @@ export default function DoctorPaymentsPage() {
           </span>
         );
       case "withdrawal":
+      case "settlement":
         return (
           <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs">
             <TrendingDown className="w-3 h-3" />
-            برداشت
+            تسویه
           </span>
         );
       case "refund":
@@ -285,18 +285,20 @@ export default function DoctorPaymentsPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">مدیریت مالی</h1>
         <p className="text-gray-500 mt-1">
-          مدیریت حساب بانکی، مشاهده تراکنش‌ها و درآمدها
+          سهم شما {stats?.doctorSharePercentLabel || "۱۰۰٪"} — مبلغ پس از اتمام جلسه در گزارش ثبت می‌شود؛ تسویه توسط مدیریت
         </p>
       </div>
 
       {/* کارت‌های آمار کل */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">کل درآمد (خالص)</p>
+              <p className="text-blue-100 text-sm">
+                سهم شما ({stats?.doctorSharePercentLabel || "۱۰۰٪"})
+              </p>
               <p className="text-3xl font-bold mt-2">
-                {stats?.totalEarnings?.toLocaleString() || 0} تومان
+                {stats?.totalDoctorShare?.toLocaleString() || stats?.totalEarnings?.toLocaleString() || 0} تومان
               </p>
             </div>
             <div className="bg-white/20 p-3 rounded-full">
@@ -308,32 +310,26 @@ export default function DoctorPaymentsPage() {
         <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">مبلغ در انتظار تسویه</p>
+              <p className="text-green-100 text-sm">در انتظار واریز توسط مدیریت</p>
               <p className="text-3xl font-bold mt-2">
-                {stats?.pendingBalance?.toLocaleString() || 0} تومان
+                {stats?.pendingPayout?.toLocaleString() || stats?.pendingBalance?.toLocaleString() || 0} تومان
               </p>
             </div>
             <div className="bg-white/20 p-3 rounded-full">
               <RefreshCw className="w-6 h-6" />
             </div>
           </div>
-          {stats?.pendingBalance && stats.pendingBalance > 50000 && (
-            <button
-              onClick={() => setShowWithdrawModal(true)}
-              className="mt-4 w-full bg-white/20 hover:bg-white/30 text-white py-2 rounded-lg text-sm transition"
-            >
-              درخواست تسویه
-            </button>
-          )}
         </div>
 
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm">کل جلسات مشاوره</p>
-              <p className="text-3xl font-bold mt-2">
-                {stats?.totalAppointments || 0} جلسه
+              <p className="text-purple-100 text-sm">کل جلسات انجام‌شده</p>
+              <p className="text-purple-100 text-xs mt-1">
+                امروز: {stats?.todayAppointments || 0} نوبت · این ماه:{" "}
+                {stats?.currentMonthEarnings?.toLocaleString() || 0} تومان
               </p>
+              <p className="text-3xl font-bold mt-2">{stats?.totalAppointments || 0} جلسه</p>
             </div>
             <div className="bg-white/20 p-3 rounded-full">
               <CalendarIcon className="w-6 h-6" />
@@ -342,16 +338,41 @@ export default function DoctorPaymentsPage() {
         </div>
       </div>
 
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-800">تاریخچه تسویه‌های واریز شده</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr className="text-right text-xs text-gray-500">
+                <th className="px-6 py-3">تاریخ</th>
+                <th className="px-6 py-3">مبلغ</th>
+                <th className="px-6 py-3">یادداشت</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {settlements.map((s) => (
+                <tr key={s.id}>
+                  <td className="px-6 py-3 text-sm">{s.paidAt || s.createdAt}</td>
+                  <td className="px-6 py-3 text-sm font-medium text-green-700">{s.amount.toLocaleString()} تومان</td>
+                  <td className="px-6 py-3 text-sm text-gray-600">{s.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {settlements.length === 0 && (
+          <p className="p-6 text-center text-gray-500 text-sm">هنوز تسویه‌ای ثبت نشده است.</p>
+        )}
+      </div>
+
       {/* بخش اطلاعات بانکی */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-bold text-gray-800">
-              اطلاعات حساب بانکی
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              برای دریافت تسویه حساب، شماره شبا و کارت خود را وارد کنید
-            </p>
+            <h2 className="text-lg font-bold text-gray-800">اطلاعات حساب بانکی</h2>
+            <p className="text-sm text-gray-500 mt-1">برای دریافت تسویه حساب، شماره شبا و کارت خود را وارد کنید</p>
           </div>
           {!isEditing && (
             <button
@@ -366,9 +387,7 @@ export default function DoctorPaymentsPage() {
         {isEditing ? (
           <div className="p-6 space-y-4">
             <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">
-                نام دارنده حساب
-              </label>
+              <label className="block text-gray-700 font-medium mb-2 text-right">نام دارنده حساب</label>
               <input
                 type="text"
                 value={editedAccount.accountName}
@@ -384,32 +403,7 @@ export default function DoctorPaymentsPage() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">
-                نام بانک
-              </label>
-              <select
-                value={editedAccount.bankName}
-                onChange={(e) =>
-                  setEditedAccount({
-                    ...editedAccount,
-                    bankName: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
-              >
-                <option>بانک ملی ایران</option>
-                <option>بانک ملت</option>
-                <option>بانک صادرات</option>
-                <option>بانک تجارت</option>
-                <option>بانک رفاه</option>
-                <option>بانک سپه</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">
-                شماره کارت
-              </label>
+              <label className="block text-gray-700 font-medium mb-2 text-right">شماره کارت</label>
               <input
                 type="text"
                 value={editedAccount.cardNumber}
@@ -426,15 +420,11 @@ export default function DoctorPaymentsPage() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">
-                شماره شبا (IBAN)
-              </label>
+              <label className="block text-gray-700 font-medium mb-2 text-right">شماره شبا (IBAN)</label>
               <input
                 type="text"
                 value={editedAccount.sheba}
-                onChange={(e) =>
-                  setEditedAccount({ ...editedAccount, sheba: e.target.value })
-                }
+                onChange={(e) => setEditedAccount({ ...editedAccount, sheba: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                 placeholder="IR820540123456789012345678"
                 dir="ltr"
@@ -460,32 +450,19 @@ export default function DoctorPaymentsPage() {
           <div className="p-6 space-y-3">
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-500">نام دارنده حساب:</span>
-              <span className="font-medium text-gray-800">
-                {bankAccount.accountName || "ثبت نشده"}
-              </span>
+              <span className="font-medium text-gray-800">{bankAccount.accountName || "ثبت نشده"}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-500">نام بانک:</span>
-              <span className="font-medium text-gray-800">
-                {bankAccount.bankName || "ثبت نشده"}
-              </span>
-            </div>
+
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-500">شماره کارت:</span>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-gray-800">
-                  {bankAccount.cardNumber || "ثبت نشده"}
-                </span>
+                <span className="font-mono text-gray-800">{bankAccount.cardNumber || "ثبت نشده"}</span>
                 {bankAccount.cardNumber && (
                   <button
                     onClick={() => copyToClipboard(bankAccount.cardNumber)}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    {copied ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                 )}
               </div>
@@ -493,19 +470,13 @@ export default function DoctorPaymentsPage() {
             <div className="flex justify-between items-center py-2">
               <span className="text-gray-500">شماره شبا:</span>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-gray-800">
-                  {bankAccount.sheba || "ثبت نشده"}
-                </span>
+                <span className="font-mono text-gray-800">{bankAccount.sheba || "ثبت نشده"}</span>
                 {bankAccount.sheba && (
                   <button
                     onClick={() => copyToClipboard(bankAccount.sheba)}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    {copied ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                 )}
               </div>
@@ -518,65 +489,44 @@ export default function DoctorPaymentsPage() {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-800">درآمد ماهانه</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            گزارش درآمدهای شما در ماه‌های گذشته
-          </p>
+          <p className="text-sm text-gray-500 mt-1">گزارش درآمدهای شما در ماه‌های گذشته</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr className="text-right">
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">ماه</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">جلسات</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">کل درآمد</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  ماه
+                  کارمزد پلتفرم ({stats?.commissionPercentLabel || "۰٪"})
                 </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  جلسات
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  کل درآمد
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  کارمزد (۱۰٪)
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  خالص دریافتی
-                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">خالص دریافتی</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
+              {earnings.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500 text-sm">
+                    هنوز درآمدی ثبت نشده است.
+                  </td>
+                </tr>
+              )}
               {earnings.map((earning, index) => (
                 <tr key={index} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                    {earning.persianMonth}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-800">
-                    {earning.appointments} جلسه
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-800">
-                    {earning.amount.toLocaleString()} تومان
-                  </td>
-                  <td className="px-6 py-4 text-sm text-red-600">
-                    -{earning.commission.toLocaleString()} تومان
-                  </td>
-                  <td className="px-6 py-4 text-sm font-bold text-green-600">
-                    {earning.net.toLocaleString()} تومان
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
-                      جزئیات
-                    </button>
-                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-800">{earning.persianMonth}</td>
+                  <td className="px-6 py-4 text-sm text-gray-800">{earning.appointments} جلسه</td>
+                  <td className="px-6 py-4 text-sm text-gray-800">{earning.amount.toLocaleString()} تومان</td>
+                  <td className="px-6 py-4 text-sm text-red-600">-{earning.commission.toLocaleString()} تومان</td>
+                  <td className="px-6 py-4 text-sm font-bold text-green-600">{earning.net.toLocaleString()} تومان</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{earning.transactions} پرداخت</td>
                 </tr>
               ))}
             </tbody>
             <tfoot className="bg-gray-50 border-t border-gray-200">
               <tr>
-                <td
-                  colSpan={4}
-                  className="px-6 py-4 text-sm font-bold text-gray-800"
-                >
+                <td colSpan={4} className="px-6 py-4 text-sm font-bold text-gray-800">
                   مجموع کل
                 </td>
                 <td className="px-6 py-4 text-sm font-bold text-green-600">
@@ -594,12 +544,8 @@ export default function DoctorPaymentsPage() {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex flex-wrap justify-between items-center gap-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-800">
-                لیست تراکنش‌ها
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                تاریخچه کامل واریز و برداشت‌های شما
-              </p>
+              <h2 className="text-lg font-bold text-gray-800">لیست تراکنش‌ها</h2>
+              <p className="text-sm text-gray-500 mt-1">تاریخچه کامل واریز و برداشت‌های شما</p>
             </div>
             <div className="flex gap-3">
               <select
@@ -619,7 +565,8 @@ export default function DoctorPaymentsPage() {
               >
                 <option value="all">همه نوع‌ها</option>
                 <option value="deposit">واریز</option>
-                <option value="withdrawal">برداشت</option>
+                <option value="withdrawal">تسویه</option>
+                <option value="settlement">تسویه</option>
               </select>
             </div>
           </div>
@@ -629,50 +576,38 @@ export default function DoctorPaymentsPage() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr className="text-right">
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  کد تراکنش
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  تاریخ
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  شرح
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  مبلغ
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  نوع
-                </th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                  وضعیت
-                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">کد تراکنش</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">تاریخ</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">شرح</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">مبلغ ناخالص</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">خالص</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">نوع</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">وضعیت</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
+              {transactions.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500 text-sm">
+                    تراکنشی ثبت نشده است. پس از پرداخت موفق بیماران، واریزها اینجا نمایش داده می‌شوند.
+                  </td>
+                </tr>
+              )}
               {transactions.map((transaction) => (
-                <tr
-                  key={transaction.id}
-                  className="hover:bg-gray-50 transition"
-                >
+                <tr key={transaction.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 text-sm font-mono text-gray-600">
                     {transaction.referenceId || transaction.id}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-800">
-                    {transaction.date}
+                  <td className="px-6 py-4 text-sm text-gray-800">{transaction.date}</td>
+                  <td className="px-6 py-4 text-sm text-gray-800">{transaction.description}</td>
+                  <td className="px-6 py-4 text-sm text-gray-800">{transaction.amount.toLocaleString()} تومان</td>
+                  <td className="px-6 py-4 text-sm font-medium text-green-600">
+                    {transaction.type === "deposit" && transaction.net != null
+                      ? `${transaction.net.toLocaleString()} تومان`
+                      : "—"}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-800">
-                    {transaction.description}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                    {transaction.amount.toLocaleString()} تومان
-                  </td>
-                  <td className="px-6 py-4">
-                    {getTypeBadge(transaction.type)}
-                  </td>
-                  <td className="px-6 py-4">
-                    {getStatusBadge(transaction.status)}
-                  </td>
+                  <td className="px-6 py-4">{getTypeBadge(transaction.type)}</td>
+                  <td className="px-6 py-4">{getStatusBadge(transaction.status)}</td>
                 </tr>
               ))}
             </tbody>
@@ -693,9 +628,7 @@ export default function DoctorPaymentsPage() {
               صفحه {currentPage} از {totalPages}
             </span>
             <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, currentPage + 1))
-              }
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               className="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -705,53 +638,18 @@ export default function DoctorPaymentsPage() {
         )}
       </div>
 
-      {/* مودال درخواست تسویه */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 text-right">
-              درخواست تسویه حساب
-            </h2>
-            <p className="text-gray-600 text-sm mb-4 text-right">
-              موجودی قابل تسویه:{" "}
-              <span className="font-bold text-green-600">
-                {stats?.pendingBalance?.toLocaleString()} تومان
-              </span>
-            </p>
-            <input
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              placeholder="مبلغ مورد نظر (تومان)"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right mb-4"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowWithdrawModal(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
-              >
-                انصراف
-              </button>
-              <button
-                onClick={handleWithdrawRequest}
-                disabled={isWithdrawing}
-                className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
-              >
-                {isWithdrawing ? "در حال ثبت..." : "ثبت درخواست"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* راهنما */}
       <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
         <h3 className="font-bold text-blue-800 mb-2">📌 راهنمای مالی:</h3>
         <ul className="text-blue-700 text-sm space-y-1">
-          <li>• کارمزد پلتفرم ۱۰٪ از هر جلسه مشاوره می‌باشد.</li>
-          <li>• تسویه حساب‌ها هر ماه در تاریخ ۱ تا ۵ انجام می‌شود.</li>
-          <li>• واریز به حساب شما بین ۲ تا ۳ روز کاری زمان نیاز دارد.</li>
-          <li>• حداقل مبلغ برای درخواست تسویه ۵۰,۰۰۰ تومان است.</li>
+          <li>
+            • پس از مشخص شدن وضعیت جلسه (انجام‌شده، عدم پاسخ، یا لغو دیرهنگام مراجع)، سهم شما (
+            {stats?.doctorSharePercentLabel || "۱۰۰٪"}) ثبت می‌شود؛ کارمزد پلتفرم فعلاً{" "}
+            {stats?.commissionPercentLabel || "۰٪"}.
+          </li>
+          <li>• تسویه دستی توسط مدیریت در پایان روز از حساب زرین‌پال انجام می‌شود.</li>
+          <li>• شبای بانکی را کامل وارد کنید.</li>
+          <li>• پس از واریز، در «تاریخچه تسویه» نمایش داده می‌شود.</li>
         </ul>
       </div>
     </div>

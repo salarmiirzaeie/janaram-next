@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
 import { getZarinpal } from "@/lib/zarinpal";
+import {
+  completeSuccessfulPayment,
+  isDevPaymentAuthority,
+} from "@/lib/complete-payment";
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -51,7 +54,6 @@ export async function GET(req: NextRequest) {
   try {
     const db = (await clientPromise).db("janaram-db");
     const payments = db.collection("payments");
-    const appointments = db.collection("appointments");
 
     const payment = await payments.findOne({ authority: authority });
     if (!payment) {
@@ -64,48 +66,55 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    if (payment.status === "SUCCESS" && payment.refId) {
+      return new NextResponse(
+        htmlResponse(
+          "✅ پرداخت با موفقیت انجام شد. نوبت شما تأیید شد.",
+          `${appRedirectBase}?status=success&ref_id=${payment.refId}&type=appointment`
+        ),
+        { headers: { "Content-Type": "text/html" } }
+      );
+    }
+
+    if (
+      isDevPaymentAuthority(authority) &&
+      process.env.NODE_ENV !== "production"
+    ) {
+      const refId = `DEV-${Date.now()}`;
+      await completeSuccessfulPayment(db, payment, refId);
+
+      return new NextResponse(
+        htmlResponse(
+          "✅ پرداخت آزمایشی با موفقیت انجام شد. نوبت شما تأیید شد.",
+          `${appRedirectBase}?status=success&ref_id=${refId}&type=appointment`
+        ),
+        { headers: { "Content-Type": "text/html" } }
+      );
+    }
+
     const zarinpal = getZarinpal();
     const verification = await zarinpal.verifications.verify({
       amount: payment.amount,
       authority: authority,
     });
-    console.log("Payment found:", {
-      id: payment._id,
-      appointmentId: payment.appointmentId,
-      amount: payment.amount,
-      status: payment.status,
-    });
+
     if (verification.data?.code === 100) {
-      // به‌روزرسانی وضعیت پرداخت
       await payments.updateOne(
         { _id: payment._id },
         {
           $set: {
-            status: "SUCCESS",
-            refId: verification.data.ref_id,
             cardPan: verification.data.card_pan,
             fee: verification.data.fee,
             feeType: verification.data.fee_type,
-            verifiedAt: new Date(),
-            updatedAt: new Date(),
           },
         }
       );
 
-      // تأیید نوبت (تغییر وضعیت از pending_payment به confirmed)
-      if (payment.appointmentId) {
-        await appointments.updateOne(
-          { _id: new ObjectId(payment.appointmentId) },
-          {
-            $set: {
-              status: "confirmed",
-              paidAt: new Date(),
-              paymentRefId: verification.data.ref_id,
-              updatedAt: new Date(),
-            },
-          }
-        );
-      }
+      await completeSuccessfulPayment(
+        db,
+        payment,
+        String(verification.data.ref_id)
+      );
 
       return new NextResponse(
         htmlResponse(

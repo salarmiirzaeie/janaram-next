@@ -19,21 +19,19 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
       });
     }
 
-    const { _id, doctorId, ...rest } = account;
-
     return NextResponse.json({
       success: true,
       data: {
-        id: _id.toString(),
-        ...rest,
+        id: account._id.toString(),
+        accountName: account.accountName,
+        cardNumber: account.cardNumber,
+        sheba: account.sheba,
+        updatedAt: account.updatedAt,
       },
     });
   } catch (err: any) {
     console.error("Error fetching bank account:", err);
-    return NextResponse.json(
-      { success: false, message: "خطای سرور" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
   }
 });
 
@@ -41,40 +39,27 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
 export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
   try {
     const body = await req.json();
-    const { accountName, bankName, cardNumber, sheba } = body;
-
+    const { accountName, cardNumber, sheba } = body;
     // اعتبارسنجی
-    if (!accountName || !bankName || !cardNumber || !sheba) {
-      return NextResponse.json(
-        { success: false, message: "تمامی فیلدها الزامی هستند" },
-        { status: 400 }
-      );
+    if (!accountName || !cardNumber || !sheba) {
+      return NextResponse.json({ success: false, message: "تمامی فیلدها الزامی هستند" }, { status: 400 });
     }
 
     // اعتبارسنجی ساده شماره شبا (IR + 24 رقم)
     const shebaRegex = /^IR[0-9]{24}$/;
     if (!shebaRegex.test(sheba)) {
-      return NextResponse.json(
-        { success: false, message: "شماره شبا نامعتبر است" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "شماره شبا نامعتبر است" }, { status: 400 });
     }
 
     // اعتبارسنجی شماره کارت (16 رقم)
     const cardRegex = /^[0-9]{16}$/;
     const cleanCardNumber = cardNumber.replace(/-/g, "");
     if (!cardRegex.test(cleanCardNumber)) {
-      return NextResponse.json(
-        { success: false, message: "شماره کارت نامعتبر است" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "شماره کارت نامعتبر است" }, { status: 400 });
     }
 
     // فرمت کردن شماره کارت با ستاره
-    const maskedCardNumber = `${cleanCardNumber.slice(
-      0,
-      4
-    )}‑****‑****‑${cleanCardNumber.slice(-4)}`;
+    const maskedCardNumber = `${cleanCardNumber.slice(0, 4)}‑****‑****‑${cleanCardNumber.slice(-4)}`;
 
     const db = (await clientPromise).db("janaram-db");
     const bankAccounts = db.collection("doctor_bank_accounts");
@@ -84,7 +69,6 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
       {
         $set: {
           accountName,
-          bankName,
           cardNumber: maskedCardNumber,
           cardNumberRaw: cleanCardNumber, // ذخیره خام برای استفاده بعدی
           sheba,
@@ -95,7 +79,7 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
           createdAt: new Date(),
         },
       },
-      { upsert: true }
+      { upsert: true },
     );
 
     return NextResponse.json({
@@ -104,9 +88,6 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
     });
   } catch (err: any) {
     console.error("Error updating bank account:", err);
-    return NextResponse.json(
-      { success: false, message: "خطای سرور" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
   }
 });

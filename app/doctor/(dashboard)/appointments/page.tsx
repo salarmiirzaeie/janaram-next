@@ -3,17 +3,8 @@
 import { useEffect, useState } from "react";
 import moment from "moment-jalaali";
 import Link from "next/link";
-import {
-  Calendar,
-  Clock,
-  User,
-  Phone,
-  CheckCircle,
-  XCircle,
-  Filter,
-  ChevronLeft,
-  AlertCircle,
-} from "lucide-react";
+import { Calendar, Clock, User, Phone, CheckCircle, XCircle, Filter, ChevronLeft, AlertCircle } from "lucide-react";
+import { canDoctorMarkCompleted, canDoctorMarkNoShow, NO_SHOW_GRACE_MINUTES } from "@/lib/booking-lifecycle";
 
 // تنظیم moment-jalaali
 moment.loadPersian({ dialect: "persian-modern", usePersianDigits: false });
@@ -58,10 +49,17 @@ export default function DoctorAppointmentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState("all"); // all, today, upcoming, past
   const [statusFilter, setStatusFilter] = useState("all"); // all, confirmed, completed, cancelled
+  /** Re-render so session action buttons unlock when Tehran time passes thresholds */
+  const [, setNowTick] = useState(0);
 
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  // useEffect(() => {
+  //   const id = setInterval(() => setNowTick((n) => n + 1), 30_000);
+  //   return () => clearInterval(id);
+  // }, []);
 
   const fetchAppointments = async () => {
     const token = localStorage.getItem("doctorToken");
@@ -84,13 +82,14 @@ export default function DoctorAppointmentsPage() {
       let allAppointments: Appointment[] = [];
 
       if (todayData.success) {
-        allAppointments = [...todayData.data.appointments];
+        const todayDate = todayData.data.date;
+        allAppointments = todayData.data.appointments.map((app: Appointment) => ({
+          ...app,
+          date: app.date || todayDate,
+        }));
       }
       if (upcomingData.success) {
-        allAppointments = [
-          ...allAppointments,
-          ...upcomingData.data.appointments,
-        ];
+        allAppointments = [...allAppointments, ...upcomingData.data.appointments];
       }
 
       setAppointments(allAppointments);
@@ -101,48 +100,57 @@ export default function DoctorAppointmentsPage() {
     }
   };
 
-  const handleStatusChange = async (
-    appointmentId: string,
-    newStatus: string
-  ) => {
+  const handleStatusChange = async (appointmentId: string, newStatus: string) => {
     const token = localStorage.getItem("doctorToken");
     if (!token) return;
 
+    const confirmMessages: Record<string, string> = {
+      completed:
+        "جلسه برگزار شد؟ مبلغ جلسه (منهای کارمزد پلتفرم در صورت وجود) در گزارش مالی شما ثبت می‌شود.",
+      "no-show": `قبل از ثبت «حضور نیافت»، با مراجع تماس گرفته و برای زمان دیگر هماهنگ کرده‌اید؟\n\nاگر مراجع پاسخ نداد: با تأیید، حضور نیافت ثبت می‌شود و کل مبلغ جلسه به سهم شما در گزارش مالی واریز می‌شود.`,
+    };
+    if (!window.confirm(confirmMessages[newStatus] || "وضعیت تغییر کند؟")) {
+      return;
+    }
+
     try {
-      const res = await fetch(
-        `/api/v2/doctor/appointments/${appointmentId}/status`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
+      const res = await fetch(`/api/v2/doctor/appointments/${appointmentId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
       const data = await res.json();
       if (data.success) {
         fetchAppointments();
+      } else {
+        alert(data.message || "خطا در به‌روزرسانی وضعیت");
       }
     } catch (error) {
       console.error("Error updating status:", error);
+      alert("خطا در ارتباط با سرور");
     }
   };
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, string> = {
+      pending_payment: "bg-orange-100 text-orange-700",
       confirmed: "bg-yellow-100 text-yellow-700",
       completed: "bg-green-100 text-green-700",
       cancelled: "bg-red-100 text-red-700",
       "no-show": "bg-gray-100 text-gray-700",
     };
     const texts: Record<string, string> = {
+      pending_payment: "در انتظار پرداخت",
       confirmed: "تأیید شده",
       completed: "انجام شده",
       cancelled: "لغو شده",
-      "no-show": "حضور نیافته",
+      "no-show": "حضور نیافت",
     };
     const icons: Record<string, React.ReactNode> = {
+      pending_payment: <Clock className="w-3 h-3 ml-1" />,
       confirmed: <AlertCircle className="w-3 h-3 ml-1" />,
       completed: <CheckCircle className="w-3 h-3 ml-1" />,
       cancelled: <XCircle className="w-3 h-3 ml-1" />,
@@ -174,8 +182,7 @@ export default function DoctorAppointmentsPage() {
       matchesDateFilter = appDateNumber < todayNumber;
     }
 
-    const matchesStatusFilter =
-      statusFilter === "all" || app.status === statusFilter;
+    const matchesStatusFilter = statusFilter === "all" || app.status === statusFilter;
 
     return matchesDateFilter && matchesStatusFilter;
   });
@@ -183,12 +190,8 @@ export default function DoctorAppointmentsPage() {
   // آمار برای نمایش
   const stats = {
     total: filteredAppointments.length,
-    today: appointments.filter(
-      (app) => toJalaaliNumber(app.date) === getTodayJalaaliNumber()
-    ).length,
-    upcoming: appointments.filter(
-      (app) => toJalaaliNumber(app.date) > getTodayJalaaliNumber()
-    ).length,
+    today: appointments.filter((app) => toJalaaliNumber(app.date) === getTodayJalaaliNumber()).length,
+    upcoming: appointments.filter((app) => toJalaaliNumber(app.date) > getTodayJalaaliNumber()).length,
     completed: appointments.filter((app) => app.status === "completed").length,
   };
 
@@ -207,6 +210,11 @@ export default function DoctorAppointmentsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">مدیریت نوبت‌ها</h1>
           <p className="text-gray-500 mt-1">مشاهده و مدیریت نوبت‌های بیماران</p>
+          <p className="text-amber-700 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 max-w-xl">
+            مراجع هنگام رزرو پرداخت می‌کند. مبلغ تا مشخص شدن وضعیت جلسه (انجام‌شده، حضور نیافت، یا لغو دیرهنگام توسط
+            مراجع) در گزارش مالی شما ثبت نمی‌شود. شما نمی‌توانید نوبت را لغو کنید؛ قبل از «حضور نیافت» با مراجع تماس
+            بگیرید؛ پس از شروع وقت، «انجام شد» یا «حضور نیافت» را بزنید.
+          </p>
         </div>
       </div>
 
@@ -216,9 +224,7 @@ export default function DoctorAppointmentsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">کل نوبت‌ها</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {stats.total}
-              </p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{stats.total}</p>
             </div>
             <div className="bg-blue-100 p-2 rounded-full">
               <Calendar className="w-5 h-5 text-blue-600" />
@@ -230,9 +236,7 @@ export default function DoctorAppointmentsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">نوبت‌های امروز</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {stats.today}
-              </p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{stats.today}</p>
             </div>
             <div className="bg-yellow-100 p-2 rounded-full">
               <Clock className="w-5 h-5 text-yellow-600" />
@@ -244,9 +248,7 @@ export default function DoctorAppointmentsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">نوبت‌های آینده</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {stats.upcoming}
-              </p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{stats.upcoming}</p>
             </div>
             <div className="bg-green-100 p-2 rounded-full">
               <Calendar className="w-5 h-5 text-green-600" />
@@ -258,9 +260,7 @@ export default function DoctorAppointmentsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">انجام شده</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {stats.completed}
-              </p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{stats.completed}</p>
             </div>
             <div className="bg-purple-100 p-2 rounded-full">
               <CheckCircle className="w-5 h-5 text-purple-600" />
@@ -276,9 +276,7 @@ export default function DoctorAppointmentsPage() {
             <button
               onClick={() => setFilter("all")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filter === "all"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                filter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               همه
@@ -286,9 +284,7 @@ export default function DoctorAppointmentsPage() {
             <button
               onClick={() => setFilter("today")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filter === "today"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                filter === "today" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               امروز
@@ -296,9 +292,7 @@ export default function DoctorAppointmentsPage() {
             <button
               onClick={() => setFilter("upcoming")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filter === "upcoming"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                filter === "upcoming" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               آینده
@@ -306,9 +300,7 @@ export default function DoctorAppointmentsPage() {
             <button
               onClick={() => setFilter("past")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filter === "past"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                filter === "past" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               گذشته
@@ -323,6 +315,7 @@ export default function DoctorAppointmentsPage() {
               className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">همه وضعیت‌ها</option>
+              <option value="pending_payment">در انتظار پرداخت</option>
               <option value="confirmed">تأیید شده</option>
               <option value="completed">انجام شده</option>
               <option value="cancelled">لغو شده</option>
@@ -346,32 +339,18 @@ export default function DoctorAppointmentsPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr className="text-right">
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                    تاریخ
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                    ساعت
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                    نام بیمار
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                    شماره تماس
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                    وضعیت
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                    عملیات
-                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">تاریخ</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">ساعت</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">نام بیمار</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">شماره تماس</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">وضعیت</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredAppointments.map((app) => (
                   <tr key={app.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
-                      {formatDatePersian(app.date)}
-                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">{formatDatePersian(app.date)}</td>
                     <td className="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-gray-400" />
@@ -392,28 +371,60 @@ export default function DoctorAppointmentsPage() {
                     </td>
                     <td className="px-6 py-4">{getStatusBadge(app.status)}</td>
                     <td className="px-6 py-4">
-                      {app.status === "confirmed" && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() =>
-                              handleStatusChange(app.id, "completed")
-                            }
-                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs transition flex items-center gap-1"
-                          >
-                            <CheckCircle className="w-3 h-3" />
-                            انجام شد
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleStatusChange(app.id, "no-show")
-                            }
-                            className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-xs transition flex items-center gap-1"
-                          >
-                            <XCircle className="w-3 h-3" />
-                            حضور نیافت
-                          </button>
-                        </div>
-                      )}
+                      {app.status === "confirmed" &&
+                        (() => {
+                          const slot = {
+                            status: "confirmed" as const,
+                            date: app.date,
+                            time: app.time,
+                          };
+                          const showComplete = canDoctorMarkCompleted(slot);
+                          const showNoShow = canDoctorMarkNoShow(slot);
+                          return (
+                            <div className="flex flex-col gap-1 items-start max-w-xs">
+                              <div className="flex flex-wrap gap-2">
+                                {showComplete && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusChange(app.id, "completed")}
+                                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs transition flex items-center gap-1"
+                                  >
+                                    <CheckCircle className="w-3 h-3" />
+                                    انجام شد
+                                  </button>
+                                )}
+                                {showNoShow && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusChange(app.id, "no-show")}
+                                    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-lg text-xs transition flex items-center gap-1"
+                                  >
+                                    <XCircle className="w-3 h-3" />
+                                    حضور نیافت
+                                  </button>
+                                )}
+                              </div>
+                              {!showComplete && (
+                                <p className="text-[11px] text-gray-500 leading-relaxed">
+                                  «انجام شد» پس از شروع زمان نوبت فعال می‌شود.
+                                </p>
+                              )}
+                              {showComplete && !showNoShow && (
+                                <p className="text-[11px] text-gray-500 leading-relaxed">
+                                  «حضور نیافت» از {NO_SHOW_GRACE_MINUTES} دقیقه پس از شروع زمان نوبت فعال می‌شود.
+                                </p>
+                              )}
+                              {showNoShow && (
+                                <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5 leading-relaxed max-w-xs">
+                                  توصیه: ابتدا با مراجع تماس بگیرید و در صورت امکان
+                                  برای زمان دیگر جلسه هماهنگ کنید. در صورت عدم پاسخ،
+                                  «حضور نیافت» را بزنید — مبلغ جلسه به سهم شما واریز
+                                  می‌شود.
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
                     </td>
                   </tr>
                 ))}

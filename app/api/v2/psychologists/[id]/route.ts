@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { APPROVED_DOCTOR_FILTER } from "@/lib/booking";
 
 export async function GET(
   req: NextRequest,
@@ -12,7 +13,10 @@ export async function GET(
     const db = (await clientPromise).db("janaram-db");
     const psychologists = db.collection("psychologists");
 
-    const doc = await psychologists.findOne({ _id: new ObjectId(id) });
+    const doc = await psychologists.findOne({
+      _id: new ObjectId(id),
+      ...APPROVED_DOCTOR_FILTER,
+    });
     if (!doc) {
       return NextResponse.json(
         { success: false, message: "روانشناس یافت نشد" },
@@ -20,16 +24,13 @@ export async function GET(
       );
     }
 
-    // حذف فیلدهای حساس
     const { _id, password, ...rest } = doc;
 
-    // ساخت پاسخ با فیلدهای جدید
     return NextResponse.json({
       success: true,
       data: {
         id: _id.toString(),
         name: rest.name,
-        phone: rest.phone,
         specialty: rest.specialty,
         specialties: rest.specialties || [],
         bio: rest.bio || "",
@@ -40,6 +41,7 @@ export async function GET(
         medicalLicenseNumber: rest.medicalLicenseNumber || "",
         successfulConsultations: rest.successfulConsultations || 0,
         schedule: rest.schedule || {},
+        offDays: rest.offDays || [],
         rating: rest.rating || 4.5,
         createdAt: rest.createdAt,
         updatedAt: rest.updatedAt,

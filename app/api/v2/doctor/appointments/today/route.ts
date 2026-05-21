@@ -2,19 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withDoctorAuth } from "@/lib/doctor/lib/middleware/withDoctorAuth";
-
-// گرفتن تاریخ امروز به وقت ایران (فرمت YYYY-MM-DD)
-function getTodayTehran(): string {
-  const now = new Date();
-  // استفاده از Intl.DateTimeFormat برای گرفتن تاریخ به وقت تهران
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Tehran",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  return formatter.format(now); // خروجی: YYYY-MM-DD
-}
+import { getTodayTehran } from "@/lib/booking";
 
 export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
   try {
@@ -22,10 +10,8 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
     const appointments = db.collection("appointments");
     const users = db.collection("users");
 
-    // تاریخ امروز به وقت ایران
     const today = getTodayTehran();
 
-    // پیدا کردن نوبت‌های امروز این روانشناس
     const todayAppointments = await appointments
       .find({
         doctorId: doctor.sub,
@@ -35,7 +21,6 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
       .sort({ time: 1 })
       .toArray();
 
-    // گرفتن اطلاعات کاربران
     const userIds = todayAppointments.map((a) => new ObjectId(a.userId));
     const userDocs = await users
       .find({ _id: { $in: userIds } })
@@ -52,8 +37,10 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
 
     const result = todayAppointments.map((app) => ({
       id: app._id.toString(),
+      date: app.date,
       time: app.time,
       status: app.status,
+      sessionPrice: app.sessionPrice,
       user: userMap.get(app.userId) || {
         name: "کاربر ناشناس",
         phone: "نامشخص",

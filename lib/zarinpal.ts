@@ -7,8 +7,7 @@ export const getZarinpal = () => {
   if (!zarinpalInstance) {
     zarinpalInstance = new ZarinPal({
       merchantId: process.env.ZARINPAL_MERCHANT_ID!,
-      sandbox: process.env.NODE_ENV !== "production", // در development از sandbox استفاده کن
-      // accessToken: process.env.ZARINPAL_ACCESS_TOKEN, // فقط برای عملیات خاص مثل refund
+      sandbox: process.env.NODE_ENV !== "production",
     });
   }
   return zarinpalInstance;

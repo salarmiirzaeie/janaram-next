@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
+import { isReviewWindowOpen } from "@/lib/booking-lifecycle";
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
@@ -38,6 +39,16 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       return NextResponse.json(
         { success: false, message: "نوبت انجام شده یافت نشد" },
         { status: 404 }
+      );
+    }
+
+    if (!isReviewWindowOpen(appointment)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "مهلت ثبت نظر برای این جلسه به پایان رسیده است",
+        },
+        { status: 400 }
       );
     }
 
