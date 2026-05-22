@@ -19,6 +19,7 @@ import {
   Info,
   MessageCircle,
 } from "lucide-react";
+import { useFeedbackModal } from "@/components/doctor/useFeedbackModal";
 
 interface DoctorProfile {
   name: string;
@@ -104,10 +105,7 @@ export default function DoctorProfilePage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const { modal, showSuccess, showError } = useFeedbackModal();
 
   useEffect(() => {
     fetchProfile();
@@ -154,7 +152,6 @@ export default function DoctorProfilePage() {
     if (!token) return;
 
     setIsSaving(true);
-    setMessage(null);
 
     try {
       const res = await fetch("/api/v2/doctor/profile", {
@@ -176,20 +173,13 @@ export default function DoctorProfilePage() {
       });
       const data = await res.json();
       if (data.success) {
-        setMessage({
-          type: "success",
-          text: data.message || "پروفایل با موفقیت به‌روزرسانی شد",
-        });
+        showSuccess(data.message || "پروفایل با موفقیت به‌روزرسانی شد.");
         fetchProfile();
-        setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage({
-          type: "error",
-          text: data.message || "خطا در ذخیره سازی",
-        });
+        showError(data.message || "خطا در ذخیره سازی");
       }
-    } catch (error) {
-      setMessage({ type: "error", text: "خطا در ارتباط با سرور" });
+    } catch {
+      showError("خطا در ارتباط با سرور");
     } finally {
       setIsSaving(false);
     }
@@ -205,6 +195,7 @@ export default function DoctorProfilePage() {
 
   return (
     <div className="space-y-6">
+      {modal}
       {/* هدر صفحه */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">پروفایل من</h1>
@@ -226,24 +217,6 @@ export default function DoctorProfilePage() {
           </div>
         )}
       </div>
-
-      {/* پیام موفقیت/خطا */}
-      {message && (
-        <div
-          className={`p-4 rounded-xl flex items-center gap-2 ${
-            message.type === "success"
-              ? "bg-green-50 text-green-600"
-              : "bg-red-50 text-red-600"
-          }`}
-        >
-          {message.type === "success" ? (
-            <CheckCircle className="w-5 h-5" />
-          ) : (
-            <XCircle className="w-5 h-5" />
-          )}
-          {message.text}
-        </div>
-      )}
 
       {/* فرم پروفایل */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -329,19 +302,12 @@ export default function DoctorProfilePage() {
                             ...profile,
                             avatar: data.data.avatar,
                           });
-                          setMessage({
-                            type: "success",
-                            text: "عکس با موفقیت آپلود شد",
-                          });
-                          setTimeout(() => setMessage(null), 3000);
+                          showSuccess("عکس پروفایل با موفقیت آپلود شد.");
                         } else {
-                          setMessage({ type: "error", text: data.message });
+                          showError(data.message || "خطا در آپلود عکس");
                         }
-                      } catch (error) {
-                        setMessage({
-                          type: "error",
-                          text: "خطا در آپلود عکس",
-                        });
+                      } catch {
+                        showError("خطا در آپلود عکس");
                       }
                     }}
                   />
@@ -361,14 +327,12 @@ export default function DoctorProfilePage() {
                         const data = await res.json();
                         if (data.success) {
                           setProfile({ ...profile, avatar: null });
-                          setMessage({
-                            type: "success",
-                            text: "عکس با موفقیت حذف شد",
-                          });
-                          setTimeout(() => setMessage(null), 3000);
+                          showSuccess("عکس پروفایل حذف شد.");
+                        } else {
+                          showError(data.message || "خطا در حذف عکس");
                         }
-                      } catch (error) {
-                        setMessage({ type: "error", text: "خطا در حذف عکس" });
+                      } catch {
+                        showError("خطا در حذف عکس");
                       }
                     }}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition flex items-center gap-2"

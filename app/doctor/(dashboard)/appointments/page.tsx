@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import moment from "moment-jalaali";
-import Link from "next/link";
-import { Calendar, Clock, User, Phone, CheckCircle, XCircle, Filter, ChevronLeft, AlertCircle } from "lucide-react";
+import { Calendar, Clock, User, Phone, CheckCircle, XCircle, Filter, AlertCircle } from "lucide-react";
 import { canDoctorMarkCompleted, canDoctorMarkNoShow, NO_SHOW_GRACE_MINUTES } from "@/lib/booking-lifecycle";
+import { useFeedbackModal } from "@/components/doctor/useFeedbackModal";
 
 // تنظیم moment-jalaali
 moment.loadPersian({ dialect: "persian-modern", usePersianDigits: false });
@@ -44,13 +45,83 @@ const getTodayJalaaliNumber = (): number => {
   return jYear * 10000 + jMonth * 100 + jDay;
 };
 
+const DATE_FILTERS = ["all", "today", "upcoming", "past"] as const;
+
+function AppointmentActions({
+  app,
+  onStatusChange,
+}: {
+  app: Appointment;
+  onStatusChange: (id: string, status: string) => void;
+}) {
+  if (app.status !== "confirmed") return null;
+
+  const slot = {
+    status: "confirmed" as const,
+    date: app.date,
+    time: app.time,
+  };
+  const showComplete = canDoctorMarkCompleted(slot);
+  const showNoShow = canDoctorMarkNoShow(slot);
+
+  return (
+    <div className="flex flex-col gap-1.5 items-stretch sm:items-start w-full">
+      <div className="flex flex-wrap gap-2">
+        {showComplete && (
+          <button
+            type="button"
+            onClick={() => onStatusChange(app.id, "completed")}
+            className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xs transition flex items-center justify-center gap-1 min-h-[36px] flex-1 sm:flex-initial"
+          >
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            انجام شد
+          </button>
+        )}
+        {showNoShow && (
+          <button
+            type="button"
+            onClick={() => onStatusChange(app.id, "no-show")}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-xs transition flex items-center justify-center gap-1 min-h-[36px] flex-1 sm:flex-initial"
+          >
+            <XCircle className="w-3.5 h-3.5 shrink-0" />
+            حضور نیافت
+          </button>
+        )}
+      </div>
+      {!showComplete && (
+        <p className="text-[11px] text-gray-500 leading-relaxed">
+          «انجام شد» پس از شروع زمان نوبت فعال می‌شود.
+        </p>
+      )}
+      {showComplete && !showNoShow && (
+        <p className="text-[11px] text-gray-500 leading-relaxed">
+          «حضور نیافت» از {NO_SHOW_GRACE_MINUTES} دقیقه پس از شروع زمان نوبت فعال می‌شود.
+        </p>
+      )}
+      {showNoShow && (
+        <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5 leading-relaxed">
+          توصیه: ابتدا با مراجع تماس بگیرید و در صورت امکان برای زمان دیگر جلسه هماهنگ کنید. در صورت عدم پاسخ، «حضور
+          نیافت» را بزنید — مبلغ جلسه به سهم شما واریز می‌شود.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function DoctorAppointmentsPage() {
+  const searchParams = useSearchParams();
+  const initialDateFilter = searchParams.get("filter");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState("all"); // all, today, upcoming, past
+  const [filter, setFilter] = useState(() =>
+    DATE_FILTERS.includes(initialDateFilter as (typeof DATE_FILTERS)[number])
+      ? (initialDateFilter as string)
+      : "all"
+  );
   const [statusFilter, setStatusFilter] = useState("all"); // all, confirmed, completed, cancelled
   /** Re-render so session action buttons unlock when Tehran time passes thresholds */
   const [, setNowTick] = useState(0);
+  const { modal, showSuccess, showError } = useFeedbackModal();
 
   useEffect(() => {
     fetchAppointments();
@@ -125,12 +196,21 @@ export default function DoctorAppointmentsPage() {
       const data = await res.json();
       if (data.success) {
         fetchAppointments();
+        const successMessages: Record<string, string> = {
+          completed:
+            "جلسه به «انجام شده» ثبت شد. مبلغ در گزارش مالی شما منظور می‌شود.",
+          "no-show":
+            "«حضور نیافت» ثبت شد. مبلغ جلسه طبق قوانین به سهم شما ثبت می‌شود.",
+        };
+        showSuccess(
+          successMessages[newStatus] || "وضعیت نوبت با موفقیت به‌روزرسانی شد."
+        );
       } else {
-        alert(data.message || "خطا در به‌روزرسانی وضعیت");
+        showError(data.message || "خطا در به‌روزرسانی وضعیت");
       }
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("خطا در ارتباط با سرور");
+      showError("خطا در ارتباط با سرور");
     }
   };
 
@@ -158,7 +238,7 @@ export default function DoctorAppointmentsPage() {
     };
     return (
       <span
-        className={`inline-flex items-center ${
+        className={`inline-flex items-center shrink-0 ${
           badges[status] || "bg-gray-100 text-gray-700"
         } px-2 py-1 rounded-full text-xs`}
       >
@@ -204,13 +284,14 @@ export default function DoctorAppointmentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0">
+      {modal}
       {/* هدر صفحه */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">مدیریت نوبت‌ها</h1>
-          <p className="text-gray-500 mt-1">مشاهده و مدیریت نوبت‌های بیماران</p>
-          <p className="text-amber-700 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 max-w-xl">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">مدیریت نوبت‌ها</h1>
+          <p className="text-gray-500 mt-1 text-sm sm:text-base">مشاهده و مدیریت نوبت‌های بیماران</p>
+          <p className="text-amber-700 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 leading-relaxed">
             مراجع هنگام رزرو پرداخت می‌کند. مبلغ تا مشخص شدن وضعیت جلسه (انجام‌شده، حضور نیافت، یا لغو دیرهنگام توسط
             مراجع) در گزارش مالی شما ثبت نمی‌شود. شما نمی‌توانید نوبت را لغو کنید؛ قبل از «حضور نیافت» با مراجع تماس
             بگیرید؛ پس از شروع وقت، «انجام شد» یا «حضور نیافت» را بزنید.
@@ -219,12 +300,12 @@ export default function DoctorAppointmentsPage() {
       </div>
 
       {/* کارت‌های آماری */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-4 border-r-4 border-blue-500">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border-r-4 border-blue-500 min-w-0">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">کل نوبت‌ها</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{stats.total}</p>
+              <p className="text-gray-500 text-xs sm:text-sm">کل نوبت‌ها</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{stats.total}</p>
             </div>
             <div className="bg-blue-100 p-2 rounded-full">
               <Calendar className="w-5 h-5 text-blue-600" />
@@ -232,11 +313,11 @@ export default function DoctorAppointmentsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 border-r-4 border-yellow-500">
+        <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border-r-4 border-yellow-500 min-w-0">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">نوبت‌های امروز</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{stats.today}</p>
+              <p className="text-gray-500 text-xs sm:text-sm">نوبت‌های امروز</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{stats.today}</p>
             </div>
             <div className="bg-yellow-100 p-2 rounded-full">
               <Clock className="w-5 h-5 text-yellow-600" />
@@ -244,11 +325,11 @@ export default function DoctorAppointmentsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 border-r-4 border-green-500">
+        <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border-r-4 border-green-500 min-w-0">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">نوبت‌های آینده</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{stats.upcoming}</p>
+              <p className="text-gray-500 text-xs sm:text-sm">نوبت‌های آینده</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{stats.upcoming}</p>
             </div>
             <div className="bg-green-100 p-2 rounded-full">
               <Calendar className="w-5 h-5 text-green-600" />
@@ -256,11 +337,11 @@ export default function DoctorAppointmentsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 border-r-4 border-purple-500">
+        <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 border-r-4 border-purple-500 min-w-0">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">انجام شده</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{stats.completed}</p>
+              <p className="text-gray-500 text-xs sm:text-sm">انجام شده</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{stats.completed}</p>
             </div>
             <div className="bg-purple-100 p-2 rounded-full">
               <CheckCircle className="w-5 h-5 text-purple-600" />
@@ -270,12 +351,12 @@ export default function DoctorAppointmentsPage() {
       </div>
 
       {/* فیلترها */}
-      <div className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex flex-wrap gap-2">
+      <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4 sm:items-center sm:justify-between">
+          <div className="flex gap-2 overflow-x-auto pb-0.5 -mx-0.5 px-0.5 sm:flex-wrap sm:overflow-visible">
             <button
               onClick={() => setFilter("all")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
@@ -283,7 +364,7 @@ export default function DoctorAppointmentsPage() {
             </button>
             <button
               onClick={() => setFilter("today")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === "today" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
@@ -291,7 +372,7 @@ export default function DoctorAppointmentsPage() {
             </button>
             <button
               onClick={() => setFilter("upcoming")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === "upcoming" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
@@ -299,7 +380,7 @@ export default function DoctorAppointmentsPage() {
             </button>
             <button
               onClick={() => setFilter("past")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === "past" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
@@ -307,12 +388,12 @@ export default function DoctorAppointmentsPage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
+            <Filter className="w-4 h-4 text-gray-400 shrink-0" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 sm:flex-initial min-w-0 px-3 sm:px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">همه وضعیت‌ها</option>
               <option value="pending_payment">در انتظار پرداخت</option>
@@ -335,102 +416,96 @@ export default function DoctorAppointmentsPage() {
             <p className="text-gray-500">نوبتی با این فیلترها یافت نشد</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr className="text-right">
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">تاریخ</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">ساعت</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">نام بیمار</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">شماره تماس</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">وضعیت</th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">عملیات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredAppointments.map((app) => (
-                  <tr key={app.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">{formatDatePersian(app.date)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-gray-400" />
-                        {app.time}
+          <>
+            {/* نمای موبایل — کارت */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {filteredAppointments.map((app) => (
+                <div key={app.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3 min-w-0">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <User className="w-4 h-4 text-gray-400 shrink-0" />
+                        <p className="font-semibold text-gray-900 truncate">{app.user.name || "نامشخص"}</p>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      <div className="flex items-center gap-1">
-                        <User className="w-3 h-3 text-gray-400" />
-                        {app.user.name || "نامشخص"}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-sm text-gray-600">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          {formatDatePersian(app.date)}
+                        </span>
+                        <span className="text-gray-300">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          {app.time}
+                        </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dir-ltr">
-                      <div className="flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-gray-400" />
-                        {app.user.phone || "نامشخص"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">{getStatusBadge(app.status)}</td>
-                    <td className="px-6 py-4">
-                      {app.status === "confirmed" &&
-                        (() => {
-                          const slot = {
-                            status: "confirmed" as const,
-                            date: app.date,
-                            time: app.time,
-                          };
-                          const showComplete = canDoctorMarkCompleted(slot);
-                          const showNoShow = canDoctorMarkNoShow(slot);
-                          return (
-                            <div className="flex flex-col gap-1 items-start max-w-xs">
-                              <div className="flex flex-wrap gap-2">
-                                {showComplete && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusChange(app.id, "completed")}
-                                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs transition flex items-center gap-1"
-                                  >
-                                    <CheckCircle className="w-3 h-3" />
-                                    انجام شد
-                                  </button>
-                                )}
-                                {showNoShow && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusChange(app.id, "no-show")}
-                                    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-lg text-xs transition flex items-center gap-1"
-                                  >
-                                    <XCircle className="w-3 h-3" />
-                                    حضور نیافت
-                                  </button>
-                                )}
-                              </div>
-                              {!showComplete && (
-                                <p className="text-[11px] text-gray-500 leading-relaxed">
-                                  «انجام شد» پس از شروع زمان نوبت فعال می‌شود.
-                                </p>
-                              )}
-                              {showComplete && !showNoShow && (
-                                <p className="text-[11px] text-gray-500 leading-relaxed">
-                                  «حضور نیافت» از {NO_SHOW_GRACE_MINUTES} دقیقه پس از شروع زمان نوبت فعال می‌شود.
-                                </p>
-                              )}
-                              {showNoShow && (
-                                <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5 leading-relaxed max-w-xs">
-                                  توصیه: ابتدا با مراجع تماس بگیرید و در صورت امکان
-                                  برای زمان دیگر جلسه هماهنگ کنید. در صورت عدم پاسخ،
-                                  «حضور نیافت» را بزنید — مبلغ جلسه به سهم شما واریز
-                                  می‌شود.
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })()}
-                    </td>
+                    </div>
+                    {getStatusBadge(app.status)}
+                  </div>
+
+                  {app.user.phone ? (
+                    <a
+                      href={`tel:${app.user.phone}`}
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dir-ltr"
+                    >
+                      <Phone className="w-4 h-4 shrink-0" />
+                      <span className="font-medium">{app.user.phone}</span>
+                    </a>
+                  ) : (
+                    <p className="text-sm text-gray-400">شماره تماس نامشخص</p>
+                  )}
+
+                  <AppointmentActions app={app} onStatusChange={handleStatusChange} />
+                </div>
+              ))}
+            </div>
+
+            {/* نمای دسکتاپ — جدول */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr className="text-right">
+                    <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">تاریخ</th>
+                    <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">ساعت</th>
+                    <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">نام بیمار</th>
+                    <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">شماره تماس</th>
+                    <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">وضعیت</th>
+                    <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">عملیات</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredAppointments.map((app) => (
+                    <tr key={app.id} className="hover:bg-gray-50 transition">
+                      <td className="px-4 lg:px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
+                        {formatDatePersian(app.date)}
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-gray-400" />
+                          {app.time}
+                        </div>
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 text-sm text-gray-800">
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3 text-gray-400" />
+                          {app.user.name || "نامشخص"}
+                        </div>
+                      </td>
+                      <td className="px-4 lg:px-6 py-4 text-sm text-gray-600 dir-ltr">
+                        <div className="flex items-center gap-1">
+                          <Phone className="w-3 h-3 text-gray-400" />
+                          {app.user.phone || "نامشخص"}
+                        </div>
+                      </td>
+                      <td className="px-4 lg:px-6 py-4">{getStatusBadge(app.status)}</td>
+                      <td className="px-4 lg:px-6 py-4">
+                        <AppointmentActions app={app} onStatusChange={handleStatusChange} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

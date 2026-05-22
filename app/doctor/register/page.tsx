@@ -132,9 +132,9 @@ export default function DoctorRegisterPage() {
         setSuccess(
           "ثبت‌نام با موفقیت انجام شد. پس از تأیید ادمین می‌توانید وارد پنل شوید."
         );
-        setTimeout(() => {
-          router.push("/doctor/login");
-        }, 2000);
+        // setTimeout(() => {
+        //   router.push("/doctor/login");
+        // }, 2000);
       } else {
         setError(data.message || "خطا در ثبت‌نام");
       }

@@ -13,6 +13,7 @@ import {
   Calendar as CalendarIcon,
   Eye,
 } from "lucide-react";
+import { useFeedbackModal } from "@/components/doctor/useFeedbackModal";
 
 interface Transaction {
   id: string;
@@ -99,6 +100,7 @@ export default function DoctorPaymentsPage() {
   const [settlements, setSettlements] = useState<SettlementRecord[]>([]);
 
   const itemsPerPage = 10;
+  const { modal, showSuccess, showError } = useFeedbackModal();
 
   const fetchBankAccount = async () => {
     const token = localStorage.getItem("doctorToken");
@@ -202,13 +204,13 @@ export default function DoctorPaymentsPage() {
       if (data.success) {
         setBankAccount(editedAccount);
         setIsEditing(false);
-        alert("اطلاعات بانکی با موفقیت ذخیره شد");
+        showSuccess("اطلاعات حساب بانکی با موفقیت ذخیره شد.");
       } else {
-        alert(data.message || "خطا در ذخیره اطلاعات");
+        showError(data.message || "خطا در ذخیره اطلاعات");
       }
     } catch (error) {
       console.error("Error saving bank account:", error);
-      alert("خطا در ارتباط با سرور");
+      showError("خطا در ارتباط با سرور");
     }
   };
 
@@ -281,11 +283,13 @@ export default function DoctorPaymentsPage() {
 
   return (
     <div className="space-y-6">
+      {modal}
       {/* هدر صفحه */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">مدیریت مالی</h1>
         <p className="text-gray-500 mt-1">
-          سهم شما {stats?.doctorSharePercentLabel || "۱۰۰٪"} — مبلغ پس از اتمام جلسه در گزارش ثبت می‌شود؛ تسویه توسط مدیریت
+          سهم شما {stats?.doctorSharePercentLabel || "۱۰۰٪"} — مبلغ پس از اتمام جلسه در گزارش ثبت می‌شود؛ تسویه توسط
+          مدیریت
         </p>
       </div>
 
@@ -294,9 +298,7 @@ export default function DoctorPaymentsPage() {
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">
-                سهم شما ({stats?.doctorSharePercentLabel || "۱۰۰٪"})
-              </p>
+              <p className="text-blue-100 text-sm">سهم شما ({stats?.doctorSharePercentLabel || "۱۰۰٪"})</p>
               <p className="text-3xl font-bold mt-2">
                 {stats?.totalDoctorShare?.toLocaleString() || stats?.totalEarnings?.toLocaleString() || 0} تومان
               </p>
@@ -420,7 +422,7 @@ export default function DoctorPaymentsPage() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">شماره شبا (IBAN)</label>
+              <label className="block text-gray-700 font-medium mb-2 text-right">شماره شبا </label>
               <input
                 type="text"
                 value={editedAccount.sheba}

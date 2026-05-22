@@ -40,6 +40,10 @@ export default function DoctorLayout({
     setIsLoading(false);
   }, [router]);
 
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
   const handleLogout = () => {
     localStorage.removeItem("doctorToken");
     router.replace("/doctor/login");
@@ -84,6 +88,7 @@ export default function DoctorLayout({
                   <Link
                     key={item.name}
                     href={item.href}
+                    onClick={() => setSidebarOpen(false)}
                     className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                       isActive
                         ? "bg-blue-50 text-blue-700"
@@ -100,7 +105,10 @@ export default function DoctorLayout({
                 );
               })}
               <button
-                onClick={handleLogout}
+                onClick={() => {
+                  setSidebarOpen(false);
+                  handleLogout();
+                }}
                 className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
               >
                 <LogOut className="ml-3 w-5 h-5" />
