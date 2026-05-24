@@ -199,9 +199,7 @@ export default function DoctorProfilePage() {
       {/* هدر صفحه */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">پروفایل من</h1>
-        <p className="text-gray-500 mt-1">
-          مشاهده و ویرایش اطلاعات حرفه‌ای شما
-        </p>
+        <p className="text-gray-500 mt-1">مشاهده و ویرایش اطلاعات حرفه‌ای شما</p>
       </div>
 
       {/* وضعیت حساب */}
@@ -258,9 +256,7 @@ export default function DoctorProfilePage() {
 
           {/* آپلود عکس */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2 text-right">
-              عکس پروفایل
-            </label>
+            <label className="block text-gray-700 font-medium mb-2 text-right">عکس پروفایل</label>
             <div className="flex flex-wrap items-center gap-4">
               {profile.avatar ? (
                 <img
@@ -288,14 +284,11 @@ export default function DoctorProfilePage() {
                       const formData = new FormData();
                       formData.append("avatar", file);
                       try {
-                        const res = await fetch(
-                          "/api/v2/doctor/upload-avatar",
-                          {
-                            method: "POST",
-                            headers: { Authorization: `Bearer ${token}` },
-                            body: formData,
-                          }
-                        );
+                        const res = await fetch("/api/v2/doctor/upload-avatar", {
+                          method: "POST",
+                          headers: { Authorization: `Bearer ${token}` },
+                          body: formData,
+                        });
                         const data = await res.json();
                         if (data.success) {
                           setProfile({
@@ -317,13 +310,10 @@ export default function DoctorProfilePage() {
                     onClick={async () => {
                       const token = localStorage.getItem("doctorToken");
                       try {
-                        const res = await fetch(
-                          "/api/v2/doctor/upload-avatar",
-                          {
-                            method: "DELETE",
-                            headers: { Authorization: `Bearer ${token}` },
-                          }
-                        );
+                        const res = await fetch("/api/v2/doctor/upload-avatar", {
+                          method: "DELETE",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
                         const data = await res.json();
                         if (data.success) {
                           setProfile({ ...profile, avatar: null });
@@ -343,9 +333,7 @@ export default function DoctorProfilePage() {
                 )}
               </div>
             </div>
-            <p className="text-gray-400 text-xs mt-2 text-right">
-              فرمت‌های مجاز: JPEG، PNG، WEBP (حداکثر ۲ مگابایت)
-            </p>
+            <p className="text-gray-400 text-xs mt-2 text-right">فرمت‌های مجاز: JPEG، PNG، WEBP (حداکثر ۲ مگابایت)</p>
           </div>
 
           {/* شماره نظام پزشکی */}
@@ -361,9 +349,7 @@ export default function DoctorProfilePage() {
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-right text-gray-500"
               dir="ltr"
             />
-            <p className="text-gray-400 text-xs mt-1 text-right">
-              شماره نظام پزشکی قابل ویرایش نیست
-            </p>
+            <p className="text-gray-400 text-xs mt-1 text-right">شماره نظام پزشکی قابل ویرایش نیست</p>
           </div>
 
           {/* آیدی بله */}
@@ -375,9 +361,7 @@ export default function DoctorProfilePage() {
             <input
               type="text"
               value={profile.baleId || ""}
-              onChange={(e) =>
-                setProfile({ ...profile, baleId: e.target.value })
-              }
+              onChange={(e) => setProfile({ ...profile, baleId: e.target.value })}
               disabled={profile.status === "pending"}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
               placeholder="@username یا username"
@@ -407,9 +391,7 @@ export default function DoctorProfilePage() {
             <label className="block text-gray-700 font-medium mb-2 text-right">
               <Stethoscope className="inline w-4 h-4 ml-1" />
               تخصص‌ها <span className="text-red-500">*</span>
-              <span className="text-gray-400 text-xs mr-2">
-                (می‌توانید چند مورد را انتخاب کنید)
-              </span>
+              <span className="text-gray-400 text-xs mr-2">(می‌توانید چند مورد را انتخاب کنید)</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {SPECIALTIES_LIST.map((item) => (
@@ -422,11 +404,7 @@ export default function DoctorProfilePage() {
                     profile.specialties.includes(item.name)
                       ? "bg-blue-500 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  } ${
-                    profile.status === "pending"
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
+                  } ${profile.status === "pending" ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {item.name}
                 </button>
@@ -441,14 +419,10 @@ export default function DoctorProfilePage() {
 
           {/* دسته‌بندی */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2 text-right">
-              دسته‌بندی
-            </label>
+            <label className="block text-gray-700 font-medium mb-2 text-right">دسته‌بندی</label>
             <select
               value={profile.categoryId}
-              onChange={(e) =>
-                setProfile({ ...profile, categoryId: e.target.value })
-              }
+              onChange={(e) => setProfile({ ...profile, categoryId: e.target.value })}
               disabled={profile.status === "pending"}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
             >
@@ -488,7 +462,7 @@ export default function DoctorProfilePage() {
           <div>
             <label className="block text-gray-700 font-medium mb-2 text-right">
               <CreditCard className="inline w-4 h-4 ml-1" />
-              قیمت هر جلسه (تومان)
+              قیمت هر جلسه (تومان)(نیم ساعت)
             </label>
             <input
               type="number"
@@ -505,9 +479,7 @@ export default function DoctorProfilePage() {
               min="0"
               step="10000"
             />
-            <p className="text-gray-400 text-xs mt-1 text-right">
-              قیمت هر جلسه مشاوره به تومان
-            </p>
+            <p className="text-gray-400 text-xs mt-1 text-right">قیمت هر جلسه مشاوره به تومان</p>
           </div>
 
           {/* بیوگرافی */}
@@ -548,16 +520,11 @@ export default function DoctorProfilePage() {
           📌 راهنما:
         </h3>
         <ul className="text-blue-700 text-sm space-y-1">
-          <li>
-            • اطلاعات پروفایل شما در صفحه جزئیات روانشناس به کاربران نشان داده
-            می‌شود.
-          </li>
+          <li>• اطلاعات پروفایل شما در صفحه جزئیات روانشناس به کاربران نشان داده می‌شود.</li>
           <li>• می‌توانید چند تخصص را همزمان انتخاب کنید.</li>
           <li>• قیمت هر جلسه را بر اساس تعرفه خود وارد کنید.</li>
           <li>• بیوگرافی خوب باعث افزایش اعتماد کاربران می‌شود.</li>
-          <li>
-            • پس از ویرایش تخصص‌ها، حساب شما دوباره نیاز به تأیید ادمین دارد.
-          </li>
+          <li>• پس از ویرایش تخصص‌ها، حساب شما دوباره نیاز به تأیید ادمین دارد.</li>
         </ul>
       </div>
     </div>

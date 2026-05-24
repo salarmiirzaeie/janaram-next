@@ -49,12 +49,7 @@ export default function DoctorLoginPage() {
         {/* هدر */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-blue-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -64,17 +59,13 @@ export default function DoctorLoginPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-800">ورود روانشناسان</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            لطفاً اطلاعات خود را وارد کنید
-          </p>
+          <p className="text-gray-500 text-sm mt-1">لطفاً اطلاعات خود را وارد کنید</p>
         </div>
 
         {/* فرم */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-gray-700 font-medium mb-2 text-right">
-              شماره تلفن
-            </label>
+            <label className="block text-gray-700 font-medium mb-2 text-right">شماره تلفن</label>
             <input
               type="tel"
               value={phone}
@@ -86,9 +77,7 @@ export default function DoctorLoginPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-2 text-right">
-              رمز عبور
-            </label>
+            <label className="block text-gray-700 font-medium mb-2 text-right">رمز عبور</label>
             <input
               type="password"
               value={password}
@@ -99,11 +88,7 @@ export default function DoctorLoginPage() {
             />
           </div>
 
-          {error && (
-            <div className="bg-red-50 text-red-500 p-3 rounded-xl text-center text-sm">
-              {error}
-            </div>
-          )}
+          {error && <div className="bg-red-50 text-red-500 p-3 rounded-xl text-center text-sm">{error}</div>}
 
           <button
             type="submit"
@@ -112,7 +97,7 @@ export default function DoctorLoginPage() {
           >
             {isLoading ? "در حال ورود..." : "ورود به پنل"}
           </button>
-          <Link className="text-right underline" href={"/doctor/register"}>
+          <Link className="text-right text-blue-500 underline" href={"/doctor/register"}>
             ثبت نام به عنوان روانشناس
           </Link>
         </form>

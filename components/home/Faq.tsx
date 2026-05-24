@@ -37,7 +37,7 @@ const FAQSection = () => {
             <div key={index} className="mb-4">
               <button
                 onClick={() => handleToggle(index)}
-                className={`w-full text-left p-4 ${openIndex === index ? "bg-blue-100" : "bg-blue-50"} ${
+                className={`w-full text-right p-4 ${openIndex === index ? "bg-blue-100" : "bg-blue-50"} ${
                   openIndex === index ? "rounded-t-2xl" : "rounded-2xl"
                 }  focus:outline-none flex flex-row-reverse justify-between items-center`}
               >

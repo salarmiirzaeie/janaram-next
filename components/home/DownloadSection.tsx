@@ -35,7 +35,7 @@ const DownloadSection = () => {
             {title}
           </h2>
           <p className="text-gray-600 mb-6">{subtitle}</p>
-          <div className="flex flex-wrap justify-center md:justify-start gap-4">
+          <div className="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4">
             {children}
           </div>
         </div>
@@ -57,6 +57,7 @@ const DownloadSection = () => {
             alt="Bazar Download"
             width={200}
             height={70}
+            className="h-auto w-[min(100%,180px)] sm:w-[200px]"
           />
         </Link>
         <a href="https://myket.ir/app/com.salarmiirzapour.Janaram" download>
@@ -65,6 +66,7 @@ const DownloadSection = () => {
             alt="Myket Download"
             width={200}
             height={70}
+            className="h-auto w-[min(100%,180px)] sm:w-[200px]"
           />
         </a>
         <a href="https://janaram.storage.c2.liara.space/apk/1.0.9.apk" download>
@@ -73,6 +75,7 @@ const DownloadSection = () => {
             alt="Direct Install"
             width={200}
             height={70}
+            className="h-auto w-[min(100%,180px)] sm:w-[200px]"
           />
         </a>
       </DownloadCard>
@@ -91,6 +94,7 @@ const DownloadSection = () => {
             alt="SibApp Download"
             width={200}
             height={70}
+            className="h-auto w-[min(100%,180px)] sm:w-[200px]"
           />
         </a>
         <a
@@ -102,6 +106,7 @@ const DownloadSection = () => {
             alt="Anardoni Download"
             width={200}
             height={70}
+            className="h-auto w-[min(100%,180px)] sm:w-[200px]"
           />
         </a>
         <a
@@ -113,6 +118,7 @@ const DownloadSection = () => {
             alt="Iapps Download"
             width={220}
             height={70}
+            className="h-auto w-[min(100%,180px)] sm:w-[220px]"
           />
         </a>
         <a href="https://sibirani.com/apps/janaram/?utm_source=janaram&utm_medium=badge">
@@ -121,6 +127,7 @@ const DownloadSection = () => {
             width={180}
             height={70}
             alt="دانلود برنامه از سیب ایرانی"
+            className="h-auto w-[min(100%,160px)] sm:w-[180px]"
           />
         </a>
       </DownloadCard>

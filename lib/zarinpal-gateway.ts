@@ -12,7 +12,7 @@ export function getZarinpalErrorCode(err: unknown): number | undefined {
 
 export function getDevCallbackBase(): string {
   return (
-    process.env.DEV_PAYMENT_CALLBACK_BASE || "http://10.205.111.162:3000"
+    process.env.DEV_PAYMENT_CALLBACK_BASE || "http://10.34.190.162:3000"
   ).replace(/\/$/, "");
 }
 

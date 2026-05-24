@@ -10,7 +10,7 @@ export default function ScrollToHash() {
         duration: 500,
         delay: 0,
         smooth: "easeInOutQuart",
-        offset: -100, // adjust if header overlaps
+        offset: 80,
       });
     }
   }, []);
