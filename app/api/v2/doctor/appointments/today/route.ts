@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withDoctorAuth } from "@/lib/doctor/lib/middleware/withDoctorAuth";
 import { getTodayTehran } from "@/lib/booking";
+import { serializeDoctorAppointment } from "@/lib/doctor-appointment-display";
 
 export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
   try {
@@ -16,7 +17,6 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
       .find({
         doctorId: doctor.sub,
         date: today,
-        status: { $ne: "cancelled" },
       })
       .sort({ time: 1 })
       .toArray();
@@ -35,18 +35,9 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
       });
     });
 
-    const result = todayAppointments.map((app) => ({
-      id: app._id.toString(),
-      date: app.date,
-      time: app.time,
-      status: app.status,
-      sessionPrice: app.sessionPrice,
-      user: userMap.get(app.userId) || {
-        name: "کاربر ناشناس",
-        phone: "نامشخص",
-      },
-      createdAt: app.createdAt,
-    }));
+    const result = todayAppointments.map((app) =>
+      serializeDoctorAppointment(app, userMap.get(app.userId))
+    );
 
     return NextResponse.json({
       success: true,

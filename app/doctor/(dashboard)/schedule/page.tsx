@@ -245,7 +245,9 @@ export default function DoctorSchedulePage() {
     <div className="space-y-4 pb-28 lg:pb-6" dir="rtl">
       {modal}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">ساعت کاری</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+          ساعت کاری
+        </h1>
         <p className="text-gray-500 text-sm mt-1 leading-relaxed">
           روز و ساعت پذیرش را مشخص کنید تا مراجعان بتوانند نوبت رزرو کنند.
         </p>
@@ -253,9 +255,12 @@ export default function DoctorSchedulePage() {
 
       {isScheduleEmpty && (
         <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4">
-          <p className="font-bold text-violet-900 text-sm">هنوز ساعتی ثبت نشده</p>
+          <p className="font-bold text-violet-900 text-sm">
+            هنوز ساعتی ثبت نشده
+          </p>
           <p className="text-violet-800 text-sm mt-1 leading-relaxed">
-            از نوار روزها یک روز را انتخاب کنید، ساعت‌ها را بزنید و در پایین «ذخیره» را بزنید.
+            از نوار روزها یک روز را انتخاب کنید، ساعت‌ها را بزنید و در پایین
+            «ذخیره» را بزنید.
           </p>
         </div>
       )}
@@ -270,7 +275,9 @@ export default function DoctorSchedulePage() {
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3.5">
           <p className="text-xs text-gray-500">نوبت ۳۰ دقیقه‌ای در هفته</p>
-          <p className="text-xl font-bold text-gray-900 mt-0.5">{stats.totalSlots.toLocaleString("fa-IR")}</p>
+          <p className="text-xl font-bold text-gray-900 mt-0.5">
+            {stats.totalSlots.toLocaleString("fa-IR")}
+          </p>
         </div>
       </div>
 
@@ -290,12 +297,14 @@ export default function DoctorSchedulePage() {
                   active
                     ? "border-blue-600 bg-blue-600 text-white shadow-md"
                     : count > 0
-                      ? "border-green-200 bg-green-50 text-green-800"
-                      : "border-gray-200 bg-white text-gray-600"
+                    ? "border-green-200 bg-green-50 text-green-800"
+                    : "border-gray-200 bg-white text-gray-600"
                 }`}
               >
                 <span className="text-sm font-bold">{day.short}</span>
-                <span className="text-[10px] mt-0.5 opacity-90">{count > 0 ? `${count} ساعت` : "خالی"}</span>
+                <span className="text-[10px] mt-0.5 opacity-90">
+                  {count > 0 ? `${count} ساعت` : "خالی"}
+                </span>
               </button>
             );
           })}
@@ -307,10 +316,14 @@ export default function DoctorSchedulePage() {
         <div className="p-4 border-b border-gray-100 bg-gray-50/80">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">{selectedDayMeta.name}</h2>
+              <h2 className="text-lg font-bold text-gray-900">
+                {selectedDayMeta.name}
+              </h2>
               <p className="text-sm text-gray-500 mt-0.5">
                 {selectedSlots.length > 0
-                  ? `${selectedSlots.length.toLocaleString("fa-IR")} نوبت فعال — هر نوبت ۳۰ دقیقه`
+                  ? `${selectedSlots.length.toLocaleString(
+                      "fa-IR"
+                    )} نوبت فعال — هر نوبت ۳۰ دقیقه`
                   : "این روز برای رزرو بسته است"}
               </p>
             </div>
@@ -329,7 +342,7 @@ export default function DoctorSchedulePage() {
                 className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-3 py-2 rounded-lg"
               >
                 <Square className="w-3.5 h-3.5" />
-                پاک کردن
+                پاک کردن همه ساعات
               </button>
             </div>
           </div>
@@ -345,7 +358,9 @@ export default function DoctorSchedulePage() {
                   type="button"
                   onClick={() => applyPreset(selectedDay, group.from, group.to)}
                   className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition ${
-                    allOn ? "border-violet-300 bg-violet-100 text-violet-800" : "border-gray-200 bg-white text-gray-700"
+                    allOn
+                      ? "border-violet-300 bg-violet-100 text-violet-800"
+                      : "border-gray-200 bg-white text-gray-700"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -367,7 +382,9 @@ export default function DoctorSchedulePage() {
               <div key={group.id}>
                 <div className="flex items-center gap-2 mb-2">
                   <Icon className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-semibold text-gray-700">{group.label}</span>
+                  <span className="text-sm font-semibold text-gray-700">
+                    {group.label}
+                  </span>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {groupSlots.map((time) => {
@@ -411,7 +428,9 @@ export default function DoctorSchedulePage() {
                   type="button"
                   onClick={() => setSelectedDay(day.id)}
                   className={`w-full flex items-center justify-between gap-2 p-3 rounded-xl text-right transition ${
-                    selectedDay === day.id ? "bg-blue-50 ring-2 ring-blue-200" : "bg-gray-50 hover:bg-gray-100"
+                    selectedDay === day.id
+                      ? "bg-blue-50 ring-2 ring-blue-200"
+                      : "bg-gray-50 hover:bg-gray-100"
                   }`}
                 >
                   <span className="font-medium text-gray-900">{day.name}</span>
@@ -419,8 +438,8 @@ export default function DoctorSchedulePage() {
                     {slots.length === 0
                       ? "بسته"
                       : slots.length === 1
-                        ? `ساعت ${first}`
-                        : `${first} تا ${last} (${slots.length} نوبت)`}
+                      ? `ساعت ${first}`
+                      : `${first} تا ${last} (${slots.length} نوبت)`}
                   </span>
                 </button>
               </li>

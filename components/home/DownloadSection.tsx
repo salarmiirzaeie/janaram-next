@@ -92,9 +92,9 @@ const DownloadSection = () => {
           <Image
             src="/SibAppDownload.png"
             alt="SibApp Download"
-            width={200}
+            width={160}
             height={70}
-            className="h-auto w-[min(100%,180px)] sm:w-[200px]"
+            className="h-auto w-[min(100%,180px)] sm:w-[160px]"
           />
         </a>
         <a
@@ -104,9 +104,9 @@ const DownloadSection = () => {
           <Image
             src="/anardoni-badge-black-persian.png"
             alt="Anardoni Download"
-            width={200}
+            width={160}
             height={70}
-            className="h-auto w-[min(100%,180px)] sm:w-[200px]"
+            className="h-auto w-[min(100%,180px)] sm:w-[160px]"
           />
         </a>
         <a
@@ -116,18 +116,18 @@ const DownloadSection = () => {
           <Image
             src="/Iapps-Badge-Black-.png"
             alt="Iapps Download"
-            width={220}
+            width={160}
             height={70}
-            className="h-auto w-[min(100%,180px)] sm:w-[220px]"
+            className="h-auto w-[min(100%,180px)] sm:w-[160px]"
           />
         </a>
         <a href="https://sibirani.com/apps/janaram/?utm_source=janaram&utm_medium=badge">
           <Image
             src="https://fs.sibirani.com/badge.svg"
-            width={180}
+            width={160}
             height={70}
             alt="دانلود برنامه از سیب ایرانی"
-            className="h-auto w-[min(100%,160px)] sm:w-[180px]"
+            className="h-auto w-[min(100%,160px)] sm:w-[160px]"
           />
         </a>
       </DownloadCard>

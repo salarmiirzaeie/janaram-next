@@ -66,7 +66,7 @@ const FeedbackForm = () => {
   return (
     <Element name="quoteForm">
       <section
-        className="bg-blue-200 flex items-center justify-center p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8 font-sans"
+        className="bg-blue-400 flex items-center justify-center p-4 sm:p-6 lg:p-8 pb-28 lg:pb-8 font-sans"
         aria-labelledby="feedback-form-heading"
       >
         <div className="w-full max-w-6xl p-6 sm:p-8 lg:p-8 rounded-lg">

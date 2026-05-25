@@ -32,15 +32,24 @@ const FAQSection = () => {
     <Element name="faqSection">
       <div className="border-t border-gray-200">
         <div className="max-w-6xl  mx-auto py-8 md:py-12 px-4">
-          <h2 className="text-xl font-bold text-blue-500  bg-clip-text   leading-9 text-center mb-8">سوالات متداول</h2>
+          <h2 className="text-xl font-bold text-blue-500  bg-clip-text   leading-9 text-center mb-8">
+            سوالات متداول
+          </h2>
           {faqs.map((faq, index) => (
             <div key={index} className="mb-4">
               <button
                 onClick={() => handleToggle(index)}
-                className={`w-full text-right p-4 ${openIndex === index ? "bg-blue-100" : "bg-blue-50"} ${
+                className={`w-full text-right p-4 ${
+                  openIndex === index ? "bg-blue-100" : "bg-blue-50"
+                } ${
                   openIndex === index ? "rounded-t-2xl" : "rounded-2xl"
-                }  focus:outline-none flex flex-row-reverse justify-between items-center`}
+                }  focus:outline-none flex flex-row-reverse justify-between  items-center`}
               >
+                <ChevronDown
+                  className={`transition-transform ${
+                    openIndex === index ? "text-blue-800" : "text-neutral-900"
+                  } duration-300 ${openIndex === index ? "rotate-180" : ""}`}
+                />
                 <span
                   className={`text-lg ${
                     openIndex === index ? "text-blue-800" : "text-neutral-900"
@@ -48,11 +57,6 @@ const FAQSection = () => {
                 >
                   {faq.question}
                 </span>
-                <ChevronDown
-                  className={`transition-transform ${
-                    openIndex === index ? "text-blue-800" : "text-neutral-900"
-                  } duration-300 ${openIndex === index ? "rotate-180" : ""}`}
-                />
               </button>
               <div
                 className={`overflow-hidden -mt-1 rounded-b-2xl  transition-all duration-300 ${

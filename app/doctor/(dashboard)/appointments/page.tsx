@@ -15,6 +15,10 @@ interface Appointment {
   date: string;
   time: string;
   status: string;
+  cancelReason?: string;
+  cancelledAt?: string;
+  cancelPayoutNote?: string;
+  doctorGetsPaid?: boolean | null;
   user: {
     name: string;
     phone: string;
@@ -46,6 +50,27 @@ const getTodayJalaaliNumber = (): number => {
 };
 
 const DATE_FILTERS = ["all", "today", "upcoming", "past"] as const;
+
+function CancelledAppointmentNote({ app }: { app: Appointment }) {
+  if (app.status !== "cancelled" || !app.cancelPayoutNote) return null;
+
+  const paid = app.doctorGetsPaid === true;
+  const notPaid = app.doctorGetsPaid === false;
+
+  return (
+    <p
+      className={`text-[11px] leading-relaxed rounded-lg px-2.5 py-2 border ${
+        paid
+          ? "text-emerald-800 bg-emerald-50 border-emerald-100"
+          : notPaid
+            ? "text-gray-700 bg-gray-50 border-gray-200"
+            : "text-amber-800 bg-amber-50 border-amber-100"
+      }`}
+    >
+      {app.cancelPayoutNote}
+    </p>
+  );
+}
 
 function AppointmentActions({
   app,
@@ -138,17 +163,21 @@ export default function DoctorAppointmentsPage() {
 
     try {
       // دریافت نوبت‌های امروز و آینده با هم
-      const [todayRes, upcomingRes] = await Promise.all([
+      const [todayRes, upcomingRes, pastRes] = await Promise.all([
         fetch("/api/v2/doctor/appointments/today", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch("/api/v2/doctor/appointments/upcoming", {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch("/api/v2/doctor/appointments/past", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const todayData = await todayRes.json();
       const upcomingData = await upcomingRes.json();
+      const pastData = await pastRes.json();
 
       let allAppointments: Appointment[] = [];
 
@@ -161,6 +190,15 @@ export default function DoctorAppointmentsPage() {
       }
       if (upcomingData.success) {
         allAppointments = [...allAppointments, ...upcomingData.data.appointments];
+      }
+      if (pastData.success) {
+        const seen = new Set(allAppointments.map((a) => a.id));
+        for (const app of pastData.data.appointments as Appointment[]) {
+          if (!seen.has(app.id)) {
+            allAppointments.push(app);
+            seen.add(app.id);
+          }
+        }
       }
 
       setAppointments(allAppointments);
@@ -442,6 +480,8 @@ export default function DoctorAppointmentsPage() {
                     {getStatusBadge(app.status)}
                   </div>
 
+                  <CancelledAppointmentNote app={app} />
+
                   {app.user.phone ? (
                     <a
                       href={`tel:${app.user.phone}`}
@@ -469,6 +509,9 @@ export default function DoctorAppointmentsPage() {
                     <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">نام بیمار</th>
                     <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">شماره تماس</th>
                     <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">وضعیت</th>
+                    <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase min-w-[200px]">
+                      توضیح
+                    </th>
                     <th className="px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase">عملیات</th>
                   </tr>
                 </thead>
@@ -497,6 +540,11 @@ export default function DoctorAppointmentsPage() {
                         </div>
                       </td>
                       <td className="px-4 lg:px-6 py-4">{getStatusBadge(app.status)}</td>
+                      <td className="px-4 lg:px-6 py-4 max-w-xs">
+                        {app.status === "cancelled" ? (
+                          <CancelledAppointmentNote app={app} />
+                        ) : null}
+                      </td>
                       <td className="px-4 lg:px-6 py-4">
                         <AppointmentActions app={app} onStatusChange={handleStatusChange} />
                       </td>

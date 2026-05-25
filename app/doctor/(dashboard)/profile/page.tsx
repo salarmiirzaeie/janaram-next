@@ -21,6 +21,26 @@ import {
 } from "lucide-react";
 import { useFeedbackModal } from "@/components/doctor/useFeedbackModal";
 
+// تابع تبدیل اعداد فارسی/عربی به انگلیسی
+const toEnglishNumber = (str: string): string => {
+  if (!str) return str;
+  const persianNumbers = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+  const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  let result = str;
+  for (let i = 0; i < 10; i++) {
+    result = result.replace(new RegExp(persianNumbers[i], "g"), i.toString());
+    result = result.replace(new RegExp(arabicNumbers[i], "g"), i.toString());
+  }
+  return result;
+};
+
+// تابع تبدیل عدد ورودی (ممکن است فارسی باشد) به عدد انگلیسی
+const parsePersianNumber = (value: string): number => {
+  const englishStr = toEnglishNumber(value);
+  const num = parseInt(englishStr, 10);
+  return isNaN(num) ? 0 : num;
+};
+
 interface DoctorProfile {
   name: string;
   phone: string;
@@ -105,6 +125,7 @@ export default function DoctorProfilePage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [priceError, setPriceError] = useState<string>("");
   const { modal, showSuccess, showError } = useFeedbackModal();
 
   useEffect(() => {
@@ -147,11 +168,55 @@ export default function DoctorProfilePage() {
     });
   };
 
+  // هندلر تغییر قیمت با تبدیل خودکار فارسی به انگلیسی
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const englishValue = toEnglishNumber(rawValue);
+    const numValue = parseInt(englishValue, 10);
+
+    setProfile({ ...profile, sessionPrice: isNaN(numValue) ? 0 : numValue });
+
+    // اعتبارسنجی لحظه‌ای
+    if (numValue === 0 || (isNaN(numValue) && rawValue !== "")) {
+      setPriceError("قیمت جلسه نمی‌تواند صفر باشد");
+    } else {
+      setPriceError("");
+    }
+  };
+
+  // هندلر تغییر سال تجربه با تبدیل خودکار فارسی به انگلیسی
+  const handleExperienceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const englishValue = toEnglishNumber(rawValue);
+    const numValue = parseInt(englishValue, 10);
+    setProfile({ ...profile, experience: isNaN(numValue) ? 0 : numValue });
+  };
+
   const handleSave = async () => {
     const token = localStorage.getItem("doctorToken");
     if (!token) return;
 
+    // اعتبارسنجی قیمت قبل از ارسال
+    if (profile.sessionPrice <= 0) {
+      showError(
+        "قیمت هر جلسه نمی‌تواند صفر یا منفی باشد. لطفاً مبلغ معتبر وارد کنید."
+      );
+      return;
+    }
+
     setIsSaving(true);
+
+    // اطمینان از انگلیسی بودن تمام اعداد قبل از ارسال
+    const payload = {
+      name: profile.name,
+      specialty: profile.specialties[0] || "",
+      specialties: profile.specialties,
+      bio: profile.bio,
+      experience: profile.experience, // قبلاً عدد انگلیسی است
+      sessionPrice: profile.sessionPrice, // قبلاً عدد انگلیسی است
+      categoryId: profile.categoryId,
+      baleId: profile.baleId,
+    };
 
     try {
       const res = await fetch("/api/v2/doctor/profile", {
@@ -160,16 +225,7 @@ export default function DoctorProfilePage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name: profile.name,
-          specialty: profile.specialties[0] || "",
-          specialties: profile.specialties,
-          bio: profile.bio,
-          experience: profile.experience,
-          sessionPrice: profile.sessionPrice,
-          categoryId: profile.categoryId,
-          baleId: profile.baleId,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
@@ -199,7 +255,9 @@ export default function DoctorProfilePage() {
       {/* هدر صفحه */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">پروفایل من</h1>
-        <p className="text-gray-500 mt-1">مشاهده و ویرایش اطلاعات حرفه‌ای شما</p>
+        <p className="text-gray-500 mt-1">
+          مشاهده و ویرایش اطلاعات حرفه‌ای شما
+        </p>
       </div>
 
       {/* وضعیت حساب */}
@@ -256,7 +314,9 @@ export default function DoctorProfilePage() {
 
           {/* آپلود عکس */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2 text-right">عکس پروفایل</label>
+            <label className="block text-gray-700 font-medium mb-2 text-right">
+              عکس پروفایل
+            </label>
             <div className="flex flex-wrap items-center gap-4">
               {profile.avatar ? (
                 <img
@@ -284,11 +344,14 @@ export default function DoctorProfilePage() {
                       const formData = new FormData();
                       formData.append("avatar", file);
                       try {
-                        const res = await fetch("/api/v2/doctor/upload-avatar", {
-                          method: "POST",
-                          headers: { Authorization: `Bearer ${token}` },
-                          body: formData,
-                        });
+                        const res = await fetch(
+                          "/api/v2/doctor/upload-avatar",
+                          {
+                            method: "POST",
+                            headers: { Authorization: `Bearer ${token}` },
+                            body: formData,
+                          }
+                        );
                         const data = await res.json();
                         if (data.success) {
                           setProfile({
@@ -310,10 +373,13 @@ export default function DoctorProfilePage() {
                     onClick={async () => {
                       const token = localStorage.getItem("doctorToken");
                       try {
-                        const res = await fetch("/api/v2/doctor/upload-avatar", {
-                          method: "DELETE",
-                          headers: { Authorization: `Bearer ${token}` },
-                        });
+                        const res = await fetch(
+                          "/api/v2/doctor/upload-avatar",
+                          {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                          }
+                        );
                         const data = await res.json();
                         if (data.success) {
                           setProfile({ ...profile, avatar: null });
@@ -333,7 +399,9 @@ export default function DoctorProfilePage() {
                 )}
               </div>
             </div>
-            <p className="text-gray-400 text-xs mt-2 text-right">فرمت‌های مجاز: JPEG، PNG، WEBP (حداکثر ۲ مگابایت)</p>
+            <p className="text-gray-400 text-xs mt-2 text-right">
+              فرمت‌های مجاز: JPEG، PNG، WEBP (حداکثر ۲ مگابایت)
+            </p>
           </div>
 
           {/* شماره نظام پزشکی */}
@@ -349,7 +417,9 @@ export default function DoctorProfilePage() {
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-right text-gray-500"
               dir="ltr"
             />
-            <p className="text-gray-400 text-xs mt-1 text-right">شماره نظام پزشکی قابل ویرایش نیست</p>
+            <p className="text-gray-400 text-xs mt-1 text-right">
+              شماره نظام پزشکی قابل ویرایش نیست
+            </p>
           </div>
 
           {/* آیدی بله */}
@@ -361,7 +431,9 @@ export default function DoctorProfilePage() {
             <input
               type="text"
               value={profile.baleId || ""}
-              onChange={(e) => setProfile({ ...profile, baleId: e.target.value })}
+              onChange={(e) =>
+                setProfile({ ...profile, baleId: e.target.value })
+              }
               disabled={profile.status === "pending"}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
               placeholder="@username یا username"
@@ -391,7 +463,9 @@ export default function DoctorProfilePage() {
             <label className="block text-gray-700 font-medium mb-2 text-right">
               <Stethoscope className="inline w-4 h-4 ml-1" />
               تخصص‌ها <span className="text-red-500">*</span>
-              <span className="text-gray-400 text-xs mr-2">(می‌توانید چند مورد را انتخاب کنید)</span>
+              <span className="text-gray-400 text-xs mr-2">
+                (می‌توانید چند مورد را انتخاب کنید)
+              </span>
             </label>
             <div className="flex flex-wrap gap-2">
               {SPECIALTIES_LIST.map((item) => (
@@ -404,7 +478,11 @@ export default function DoctorProfilePage() {
                     profile.specialties.includes(item.name)
                       ? "bg-blue-500 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  } ${profile.status === "pending" ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${
+                    profile.status === "pending"
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                 >
                   {item.name}
                 </button>
@@ -419,10 +497,14 @@ export default function DoctorProfilePage() {
 
           {/* دسته‌بندی */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2 text-right">دسته‌بندی</label>
+            <label className="block text-gray-700 font-medium mb-2 text-right">
+              دسته‌بندی
+            </label>
             <select
               value={profile.categoryId}
-              onChange={(e) => setProfile({ ...profile, categoryId: e.target.value })}
+              onChange={(e) =>
+                setProfile({ ...profile, categoryId: e.target.value })
+              }
               disabled={profile.status === "pending"}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
             >
@@ -442,19 +524,14 @@ export default function DoctorProfilePage() {
               سال‌های تجربه
             </label>
             <input
-              type="number"
-              value={profile.experience}
-              onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  experience: parseInt(e.target.value) || 0,
-                })
-              }
+              type="text"
+              inputMode="numeric"
+              value={profile.experience === 0 ? "" : profile.experience}
+              onChange={handleExperienceChange}
               disabled={profile.status === "pending"}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
               placeholder="مثال: ۱۲"
-              min="0"
-              max="100"
+              dir="ltr"
             />
           </div>
 
@@ -465,21 +542,28 @@ export default function DoctorProfilePage() {
               قیمت هر جلسه (تومان)(نیم ساعت)
             </label>
             <input
-              type="number"
-              value={profile.sessionPrice}
-              onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  sessionPrice: parseInt(e.target.value) || 0,
-                })
-              }
+              type="text"
+              inputMode="numeric"
+              value={profile.sessionPrice === 0 ? "" : profile.sessionPrice}
+              onChange={handlePriceChange}
               disabled={profile.status === "pending"}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className={`w-full px-4 py-3 rounded-xl border ${
+                priceError
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-200 focus:ring-blue-500"
+              } focus:outline-none focus:ring-2 focus:border-transparent text-right`}
               placeholder="مثال: ۲۵۰۰۰۰"
-              min="0"
-              step="10000"
+              dir="ltr"
             />
-            <p className="text-gray-400 text-xs mt-1 text-right">قیمت هر جلسه مشاوره به تومان</p>
+            {priceError && (
+              <p className="text-red-500 text-xs mt-1 text-right flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                {priceError}
+              </p>
+            )}
+            <p className="text-gray-400 text-xs mt-1 text-right">
+              قیمت هر جلسه مشاوره به تومان (حداقل ۱ تومان)
+            </p>
           </div>
 
           {/* بیوگرافی */}
@@ -503,7 +587,7 @@ export default function DoctorProfilePage() {
           <div className="border-t border-gray-100 p-6 flex justify-end">
             <button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || priceError !== ""}
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition disabled:opacity-50 flex items-center gap-2"
             >
               <Save className="w-5 h-5" />
@@ -520,11 +604,18 @@ export default function DoctorProfilePage() {
           📌 راهنما:
         </h3>
         <ul className="text-blue-700 text-sm space-y-1">
-          <li>• اطلاعات پروفایل شما در صفحه جزئیات روانشناس به کاربران نشان داده می‌شود.</li>
+          <li>
+            • اطلاعات پروفایل شما در صفحه جزئیات روانشناس به کاربران نشان داده
+            می‌شود.
+          </li>
           <li>• می‌توانید چند تخصص را همزمان انتخاب کنید.</li>
-          <li>• قیمت هر جلسه را بر اساس تعرفه خود وارد کنید.</li>
+          <li>
+            • قیمت هر جلسه را بر اساس تعرفه خود وارد کنید (حداقل ۱ تومان).
+          </li>
           <li>• بیوگرافی خوب باعث افزایش اعتماد کاربران می‌شود.</li>
-          <li>• پس از ویرایش تخصص‌ها، حساب شما دوباره نیاز به تأیید ادمین دارد.</li>
+          <li>
+            • پس از ویرایش تخصص‌ها، حساب شما دوباره نیاز به تأیید ادمین دارد.
+          </li>
         </ul>
       </div>
     </div>

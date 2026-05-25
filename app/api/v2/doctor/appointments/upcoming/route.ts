@@ -2,18 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withDoctorAuth } from "@/lib/doctor/lib/middleware/withDoctorAuth";
-
-// گرفتن تاریخ امروز به وقت ایران (فرمت YYYY-MM-DD)
-function getTodayTehran(): string {
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Tehran",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  return formatter.format(now);
-}
+import { getTodayTehran } from "@/lib/booking";
+import { serializeDoctorAppointment } from "@/lib/doctor-appointment-display";
 
 export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
   try {
@@ -21,20 +11,16 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
     const appointments = db.collection("appointments");
     const users = db.collection("users");
 
-    // تاریخ امروز به وقت ایران
     const today = getTodayTehran();
 
-    // نوبت‌های آینده (بعد از امروز)
     const upcomingAppointments = await appointments
       .find({
         doctorId: doctor.sub,
         date: { $gt: today },
-        status: { $ne: "cancelled" },
       })
       .sort({ date: 1, time: 1 })
       .toArray();
 
-    // گرفتن اطلاعات کاربران
     const userIds = upcomingAppointments.map((a) => new ObjectId(a.userId));
     const userDocs = await users
       .find({ _id: { $in: userIds } })
@@ -49,17 +35,9 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
       });
     });
 
-    const result = upcomingAppointments.map((app) => ({
-      id: app._id.toString(),
-      date: app.date,
-      time: app.time,
-      status: app.status,
-      user: userMap.get(app.userId) || {
-        name: "کاربر ناشناس",
-        phone: "نامشخص",
-      },
-      createdAt: app.createdAt,
-    }));
+    const result = upcomingAppointments.map((app) =>
+      serializeDoctorAppointment(app, userMap.get(app.userId))
+    );
 
     return NextResponse.json({
       success: true,

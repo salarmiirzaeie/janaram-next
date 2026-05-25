@@ -96,12 +96,13 @@ export default function DoctorDashboard() {
 
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [profileRes, todayRes, financialRes, scheduleRes] = await Promise.all([
-        fetch("/api/v2/doctor/profile", { headers }),
-        fetch("/api/v2/doctor/appointments/today", { headers }),
-        fetch("/api/v2/doctor/financial/stats", { headers }),
-        fetch("/api/v2/doctor/schedule", { headers }),
-      ]);
+      const [profileRes, todayRes, financialRes, scheduleRes] =
+        await Promise.all([
+          fetch("/api/v2/doctor/profile", { headers }),
+          fetch("/api/v2/doctor/appointments/today", { headers }),
+          fetch("/api/v2/doctor/financial/stats", { headers }),
+          fetch("/api/v2/doctor/schedule", { headers }),
+        ]);
 
       const profileData = await profileRes.json();
       if (profileData.success) {
@@ -125,7 +126,9 @@ export default function DoctorDashboard() {
 
         const now = new Date();
         const upcoming = apps
-          .filter((a) => a.status === "confirmed" || a.status === "pending_payment")
+          .filter(
+            (a) => a.status === "confirmed" || a.status === "pending_payment"
+          )
           .filter((a) => {
             const [h, m] = a.time.split(":").map(Number);
             const slot = new Date();
@@ -185,11 +188,13 @@ export default function DoctorDashboard() {
   return (
     <div className="space-y-6" dir="rtl">
       <div className="bg-gradient-to-l from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-1">خوش آمدید، دکتر {doctorName || "عزیز"}</h1>
+        <h1 className="text-2xl font-bold mb-1">
+          خوش آمدید، دکتر {doctorName || "عزیز"}
+        </h1>
         <p className="text-blue-100 text-sm">
           {new Date().toLocaleDateString("fa-IR", {
             weekday: "long",
-            year: "numeric",
+            // year: "numeric",
             month: "long",
             day: "numeric",
           })}
@@ -198,35 +203,47 @@ export default function DoctorDashboard() {
 
       <div
         className={`rounded-2xl border p-5 ${
-          scheduleSummary.totalSlots === 0 ? "bg-violet-50 border-violet-200" : "bg-white border-gray-200"
+          scheduleSummary.totalSlots === 0
+            ? "bg-violet-50 border-violet-200"
+            : "bg-white border-gray-200"
         }`}
       >
         <div className="flex items-start gap-3">
           <div
             className={`p-2.5 rounded-xl shrink-0 ${
-              scheduleSummary.totalSlots === 0 ? "bg-violet-600 text-white" : "bg-blue-50 text-blue-600"
+              scheduleSummary.totalSlots === 0
+                ? "bg-violet-600 text-white"
+                : "bg-blue-50 text-blue-600"
             }`}
           >
             <ListChecks className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-bold text-gray-900 text-base">
-              {scheduleSummary.totalSlots === 0 ? "برای شروع: ساعت کاری را تنظیم کنید" : "راهنمای شروع کار در جانارام"}
+              {scheduleSummary.totalSlots === 0
+                ? "برای شروع: ساعت کاری را تنظیم کنید"
+                : "راهنمای شروع کار در جانارام"}
             </h2>
             <p className="text-sm text-gray-600 mt-1 leading-relaxed">
               {scheduleSummary.totalSlots === 0
                 ? "تا زمانی که روز و ساعت پذیرش را مشخص نکنید، مراجعان نمی‌توانند برای شما نوبت رزرو کنند."
-                : `ساعت کاری شما فعال است (${scheduleSummary.activeDays.toLocaleString("fa-IR")} روز، ${scheduleSummary.totalSlots.toLocaleString("fa-IR")} نوبت در هفته). در صورت نیاز به‌روزرسانی کنید.`}
+                : `ساعت کاری شما فعال است (${scheduleSummary.activeDays.toLocaleString(
+                    "fa-IR"
+                  )} روز، ${scheduleSummary.totalSlots.toLocaleString(
+                    "fa-IR"
+                  )} نوبت در هفته). در صورت نیاز به‌روزرسانی کنید.`}
             </p>
             <ol className="text-sm text-gray-700 mt-3 space-y-2 list-decimal mr-5 leading-relaxed">
               <li>
-                <strong>ساعت کاری:</strong> روزهای هفته و بازه‌های ۳۰ دقیقه‌ای را انتخاب و ذخیره کنید.
+                <strong>ساعت کاری:</strong> روزهای هفته و بازه‌های ۳۰ دقیقه‌ای
+                را انتخاب و ذخیره کنید.
               </li>
               <li>
                 <strong>پروفایل:</strong> در صورت نیاز تکمیل کنید.
               </li>
               <li>
-                <strong>نوبت‌ها:</strong> پس از رزرو، وضعیت جلسه را بعد از زمان مقرر ثبت کنید.
+                <strong>نوبت‌ها:</strong>
+                پس از فرارسیدن زمان جلسه وضعیت آن را تعیین کنید
               </li>
             </ol>
             <Link
@@ -237,7 +254,9 @@ export default function DoctorDashboard() {
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
             >
-              {scheduleSummary.totalSlots === 0 ? "تنظیم ساعت کاری" : "ویرایش جدول زمانی"}
+              {scheduleSummary.totalSlots === 0
+                ? "تنظیم ساعت کاری"
+                : "ویرایش جدول زمانی"}
               <ArrowLeft className="w-4 h-4" />
             </Link>
           </div>
@@ -249,7 +268,9 @@ export default function DoctorDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500">نوبت امروز</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.todayCount.toLocaleString("fa-IR")}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {stats.todayCount.toLocaleString("fa-IR")}
+              </p>
             </div>
             <div className="bg-blue-50 p-2.5 rounded-xl">
               <Calendar className="w-5 h-5 text-blue-600" />
@@ -261,7 +282,9 @@ export default function DoctorDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500">تأییدشده امروز</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.confirmedToday.toLocaleString("fa-IR")}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {stats.confirmedToday.toLocaleString("fa-IR")}
+              </p>
             </div>
             <div className="bg-indigo-50 p-2.5 rounded-xl">
               <ClipboardList className="w-5 h-5 text-indigo-600" />
@@ -291,8 +314,10 @@ export default function DoctorDashboard() {
               <p className="text-xs text-gray-500">نوبت بعدی امروز</p>
               <p className="text-sm font-bold text-gray-900 mt-0.5">
                 {stats.nextTime
-                  ? `${stats.nextTime}${stats.nextPatient ? ` — ${stats.nextPatient}` : ""}`
-                  : "نوبت فعالی باقی نمانده"}
+                  ? `${stats.nextTime}${
+                      stats.nextPatient ? ` — ${stats.nextPatient}` : ""
+                    }`
+                  : "نوبتی باقی نمانده"}
               </p>
             </div>
           </div>
@@ -311,13 +336,19 @@ export default function DoctorDashboard() {
                 className={`group bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all hover:-translate-y-0.5 ring-2 ${item.ring} ring-transparent hover:ring-opacity-100`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className={`bg-gradient-to-br ${item.accent} p-3 rounded-xl text-white shadow-sm`}>
+                  <div
+                    className={`bg-gradient-to-br ${item.accent} p-3 rounded-xl text-white shadow-sm`}
+                  >
                     <Icon className="w-6 h-6" />
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors rotate-180" />
                 </div>
-                <h3 className="font-bold text-gray-900 mt-4 text-base">{item.title}</h3>
-                <p className="text-sm text-gray-500 mt-1 leading-relaxed">{item.description}</p>
+                <h3 className="font-bold text-gray-900 mt-4 text-base">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                  {item.description}
+                </p>
               </Link>
             );
           })}
@@ -325,8 +356,9 @@ export default function DoctorDashboard() {
       </div>
 
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-900 leading-relaxed">
-        <strong>یادآوری:</strong> مبلغ جلسات پس از مشخص شدن وضعیت (انجام‌شده، حضور نیافت، یا لغو دیرهنگام مراجع) در بخش
-        مالی ثبت می‌شود. قبل از «حضور نیافت» با مراجع تماس بگیرید.
+        <strong>یادآوری:</strong> مبلغ جلسات پس از مشخص شدن وضعیت (انجام‌شده،
+        حضور نیافت، یا لغو دیرهنگام مراجع) در بخش مالی ثبت می‌شود. قبل از «حضور
+        نیافت» با مراجع تماس بگیرید.
       </div>
     </div>
   );
