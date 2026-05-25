@@ -2,7 +2,6 @@
 import React from "react";
 
 const Users = () => {
-  const colors = ["green", "red", "yellow", "purple", "blue"];
   const avatars = [
     { label: "م", color: "skyblue" },
     { label: "س", color: "brown" },
@@ -11,24 +10,22 @@ const Users = () => {
     { label: "ح", color: "green" },
   ];
   return (
-    <div className="flex items-center shadow-lg rounded-2xl p-2 pr-4 space-x-3">
-      {/* Avatar Group */}
-      <div className="flex  rounded-2xl">
+    <div className="flex items-center shadow-lg rounded-2xl p-2 pr-4 gap-3 bg-white">
+      <div className="flex rounded-2xl -space-x-2">
         {avatars.map((avatar, index) => (
           <div
             key={index}
-            className={`w-8 h-8 rounded-full -ml-3 justify-center items-end  object-cover`}
+            className="w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shrink-0"
             style={{ backgroundColor: avatar.color }}
           >
-            <p className="text-center font-semibold text-white">
+            <span className="text-xs font-semibold text-white">
               {avatar.label}
-            </p>
+            </span>
           </div>
         ))}
       </div>
 
-      {/* Text Content */}
-      <div className="flex flex-col items-start justify-center">
+      <div className="flex flex-col items-start justify-center text-right">
         <span className="text-xl font-semibold text-gray-800">10K +</span>
         <span className="text-sm text-gray-600">کاربر فعال</span>
       </div>

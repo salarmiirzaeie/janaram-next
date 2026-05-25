@@ -33,18 +33,23 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4">لینک‌ها</h3>
             <ul className="space-y-2">
               <li>
-                <a href="/" className="hover:text-gray-300">
-                  نظرات{" "}
+                <a href="/#reviewSection" className="hover:text-gray-300">
+                  نظرات
                 </a>
               </li>
               <li>
-                <a href="/" className="hover:text-gray-300">
+                <a href="/#faqSection" className="hover:text-gray-300">
                   سوالات متداول
                 </a>
               </li>
               <li>
-                <a href="/" className="hover:text-gray-300">
+                <a href="/#quoteForm" className="hover:text-gray-300">
                   تماس با ما
+                </a>
+              </li>
+              <li>
+                <a href="/doctor/register" className="hover:text-gray-300">
+                  ثبت‌نام روانشناس
                 </a>
               </li>
             </ul>

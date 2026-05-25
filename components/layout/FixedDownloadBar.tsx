@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 
 const FixedDownloadBar: React.FC = () => {
   const pathname = usePathname();
-  if (pathname !== "/psychologist") {
+  if (pathname === "/") {
     return (
       <div className="fixed bottom-0 left-0 right-0 lg:hidden p-3 bg-white border-t border-gray-200 shadow-2xl z-50">
         <LinkScroll

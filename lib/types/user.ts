@@ -20,4 +20,5 @@ export interface User {
   pushToken?: string;
   goals?: string[];
   meditationTime?: number;
+  baleId?: string;
 }

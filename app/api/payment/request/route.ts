@@ -1,27 +1,29 @@
-// app/api/payment/request/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
-import { getZarinpal, getPaymentRedirectUrl } from "@/lib/zarinpal";
+import {
+  createZarinpalPayment,
+  getDevMockPaymentUrl,
+  getPaymentCallbackUrl,
+} from "@/lib/zarinpal-gateway";
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
-    const { planId, amount, description, mobile, email } = await req.json();
-    let amouuntInRial = amount * 10;
-    // اعتبارسنجی
-    if (!planId || !amouuntInRial || amouuntInRial < 10000) {
+    const { appointmentId, amount, description, mobile, email } =
+      await req.json();
+
+    if (!appointmentId) {
       return NextResponse.json(
-        { success: false, message: "مبلغ نامعتبر است (حداقل 10,000 ریال)" },
+        { success: false, message: "شناسه نوبت الزامی است" },
         { status: 400 }
       );
     }
 
-    // تبدیل userId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
-    } catch (err) {
+    } catch {
       return NextResponse.json(
         { success: false, message: "شناسه کاربر نامعتبر است" },
         { status: 400 }
@@ -29,102 +31,119 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     }
 
     const db = (await clientPromise).db("janaram-db");
-    const users = db.collection("users");
+    const appointments = db.collection("appointments");
     const payments = db.collection("payments");
 
-    // بررسی وضعیت اشتراک فعلی کاربر
-    const userDoc = await users.findOne({ _id: userId });
-    const now = new Date();
+    const appointment = await appointments.findOne({
+      _id: new ObjectId(appointmentId),
+      userId: user.sub,
+    });
 
-    if (
-      userDoc?.plan !== "free" &&
-      userDoc?.subscriptionEndDate &&
-      userDoc.subscriptionEndDate > now
-    ) {
+    if (!appointment) {
       return NextResponse.json(
-        { success: false, message: "شما در حال حاضر اشتراک فعال دارید" },
+        { success: false, message: "نوبت یافت نشد" },
+        { status: 404 }
+      );
+    }
+
+    if (appointment.status !== "pending_payment") {
+      return NextResponse.json(
+        { success: false, message: "این نوبت قابل پرداخت نیست" },
         { status: 400 }
       );
     }
 
-    // ایجاد رکورد پرداخت در دیتابیس
+    const amountToman =
+      amount && amount >= 1000 ? amount : appointment.sessionPrice;
+
+    if (!amountToman || amountToman < 1000) {
+      return NextResponse.json(
+        { success: false, message: "اطلاعات پرداخت نامعتبر است" },
+        { status: 400 }
+      );
+    }
+
+    const amountInRial = amountToman * 10;
+
     const paymentResult = await payments.insertOne({
-      userId: userId,
-      planId: planId,
-      amount: amouuntInRial,
-      description: description,
+      userId,
+      appointmentId,
+      amount: amountInRial,
+      amountToman,
+      description: description || "پرداخت هزینه جلسه مشاوره",
       status: "PENDING",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    const isSandbox = process.env.NODE_ENV !== "production";
-    const paymentId = paymentResult.insertedId;
-    const callbackUrl = `${
-      isSandbox
-        ? "http://10.213.178.162:3000"
-        : process.env.NEXT_PUBLIC_SITE_URL
-    }/api/payment/callback`;
 
-    // درخواست به زرین‌پال با استفاده از SDK (طبق مستندات)
-    const zarinpal = getZarinpal();
+    const paymentId = paymentResult.insertedId.toString();
+    const callbackUrl = getPaymentCallbackUrl();
 
-    const response = await zarinpal.payments.create({
-      amount: amouuntInRial,
-      callback_url: callbackUrl,
-      description: description,
-      mobile: mobile || undefined,
-      email: email || undefined,
-      // currency: 'IRR', // پیش‌فرض IRR است
+    const gateway = await createZarinpalPayment({
+      amountInRial,
+      callbackUrl,
+      description: description || "پرداخت هزینه جلسه مشاوره",
+      mobile,
+      email,
     });
 
-    console.log("Zarinpal payment response:", response);
-
-    // بررسی پاسخ بر اساس مستندات
-    if (response.data?.code === 100 && response.data?.authority) {
-      const authority = response.data.authority;
-
-      // به‌روزرسانی رکورد پرداخت با authority
+    if (gateway.ok) {
       await payments.updateOne(
-        { _id: paymentId },
-        {
-          $set: {
-            authority: authority,
-            updatedAt: new Date(),
-          },
-        }
+        { _id: paymentResult.insertedId },
+        { $set: { authority: gateway.authority, updatedAt: new Date() } }
       );
-
-      const paymentUrl = getPaymentRedirectUrl(authority);
 
       return NextResponse.json({
         success: true,
-        authority: authority,
-        paymentUrl: paymentUrl,
-        paymentId: paymentId.toString(),
+        authority: gateway.authority,
+        paymentUrl: gateway.paymentUrl,
+        paymentId,
       });
-    } else {
-      // خطا در درخواست به زرین‌پال
+    }
+
+    // Sandbox rate-limited: local dev mock (same flow as booking test)
+    if (
+      gateway.code === -12 &&
+      process.env.NODE_ENV !== "production"
+    ) {
+      const authority = `DEV-${paymentId}`;
       await payments.updateOne(
-        { _id: paymentId },
+        { _id: paymentResult.insertedId },
         {
           $set: {
-            status: "FAILED",
-            errorMessage: response.data?.message || "خطا در اتصال به درگاه",
+            authority,
+            devMock: true,
             updatedAt: new Date(),
           },
         }
       );
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: response.data?.message || "خطا در ایجاد درخواست پرداخت",
-        },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: true,
+        authority,
+        paymentUrl: getDevMockPaymentUrl(paymentId),
+        paymentId,
+        devMock: true,
+      });
     }
+
+    await payments.updateOne(
+      { _id: paymentResult.insertedId },
+      {
+        $set: {
+          status: "FAILED",
+          errorMessage: gateway.message,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    return NextResponse.json(
+      { success: false, message: gateway.message },
+      { status: gateway.code === -12 ? 429 : 400 }
+    );
   } catch (err: any) {
-    console.error("Error in payment request:", err);
+    console.error("Error in payment request:", err?.response?.data ?? err);
     return NextResponse.json(
       { success: false, message: "خطای سرور در ایجاد درخواست پرداخت" },
       { status: 500 }

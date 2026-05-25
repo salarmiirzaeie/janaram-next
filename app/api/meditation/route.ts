@@ -34,13 +34,21 @@ export const GET = withAuth(async function (req: NextRequest) {
     const collection = db.collection("meditations");
 
     // Build query
-    const query = type ? { type } : {};
+    let query = {};
+
+    if (type === "sleep") {
+      // When category is sleep, fetch sleep, sleep-music, and story together
+      query = { type: { $in: ["sleep", "sleep-music", "story"] } };
+    } else if (type) {
+      query = { type };
+    }
 
     // Fetch meditations
     const meditations = await collection
       .find(query)
       .sort({ createdAt: -1 })
       .toArray();
+
     // Return response
     return NextResponse.json(
       {

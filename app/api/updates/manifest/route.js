@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildManifest } from "@/lib/expo-updates";
 
 function getBaseUrl(request) {
+  console.log("call");
   if (process.env.UPDATES_BASE_URL) {
     return process.env.UPDATES_BASE_URL.replace(/\/$/, "");
   }
@@ -12,36 +13,20 @@ function getBaseUrl(request) {
 
 export async function GET(request) {
   const runtimeVersion =
-    request.headers.get("expo-runtime-version") ||
-    new URL(request.url).searchParams.get("runtimeVersion");
+    request.headers.get("expo-runtime-version") || new URL(request.url).searchParams.get("runtimeVersion");
 
-  const platform =
-    request.headers.get("expo-platform") ||
-    new URL(request.url).searchParams.get("platform");
+  const platform = request.headers.get("expo-platform") || new URL(request.url).searchParams.get("platform");
 
-  const protocolVersion = parseInt(
-    request.headers.get("expo-protocol-version") || "0",
-    10
-  );
+  const protocolVersion = parseInt(request.headers.get("expo-protocol-version") || "0", 10);
 
   console.log("📱 Update request:", { runtimeVersion, platform, protocolVersion });
 
-  if (
-    !runtimeVersion ||
-    runtimeVersion === "null" ||
-    runtimeVersion === "undefined"
-  ) {
-    return NextResponse.json(
-      { error: "runtimeVersion is required" },
-      { status: 400 }
-    );
+  if (!runtimeVersion || runtimeVersion === "null" || runtimeVersion === "undefined") {
+    return NextResponse.json({ error: "runtimeVersion is required" }, { status: 400 });
   }
 
   if (platform !== "ios" && platform !== "android") {
-    return NextResponse.json(
-      { error: "platform must be ios or android" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "platform must be ios or android" }, { status: 400 });
   }
 
   try {
