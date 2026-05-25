@@ -1,101 +1,143 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import DOMPurify from "isomorphic-dompurify";
 import { BASE_URL_IMAGES } from "@/lib/constants";
+import { formatDate } from "@/lib/time";
+import Link from "next/link";
+import Image from "next/image";
+import type { Metadata } from "next";
+import BlogCtaBox from "@/components/home/BlogCtaBox";
 
+// Blog interface
 interface Blog {
   _id: string;
-  title: string;
   slug: string;
+  title: string;
   content: string;
   authorId: string;
   imageUrl: string;
   createdAt: string;
   updatedAt: string;
+  description: string;
 }
 
-const BlogDetailPage: React.FC = () => {
-  const params = useParams();
-  const slug = params?.slug as string; // Get the blog slug from the URL
-  const [blog, setBlog] = useState<Blog | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+// Fetch blog (server-side)
+async function getBlog(slug: string): Promise<Blog | null> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/blogs/${slug}`, { cache: "force-cache" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.success && data.blog ? data.blog : null;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
 
-  const fetchBlog = async (blogSlug: string) => {
-    try {
-      const response = await fetch(`/api/blogs/${blogSlug}`, {
-        headers: {
-          // Uncomment if authentication is required
-          // Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch blog");
-      }
-      const data = await response.json();
-      if (data.success && data.blog) {
-        setBlog(data.blog);
-      } else {
-        throw new Error(data.message || "Blog not found");
-      }
-    } catch (err) {
-      console.error("Error fetching blog:", err);
-      setError("Failed to load blog");
-    } finally {
-      setLoading(false);
-    }
+// SEO metadata (بدون تغییر)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const blog = await getBlog(slug);
+  if (!blog) return { title: "Blog Not Found" };
+
+  const url = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/blogs/${slug}`;
+
+  return {
+    title: blog.title,
+    description: blog.description,
+    openGraph: {
+      title: blog.title,
+      description: blog.description,
+      url,
+      type: "article",
+      images: blog.imageUrl ? [BASE_URL_IMAGES + blog.imageUrl] : ["/hero-bg.webp"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: blog.title,
+      description: blog.description,
+      images: blog.imageUrl ? [BASE_URL_IMAGES + blog.imageUrl] : ["/hero-bg.webp"],
+    },
+    alternates: {
+      canonical: url,
+    },
   };
+}
 
-  useEffect(() => {
-    if (slug) {
-      fetchBlog(slug);
-    }
-  }, [slug]);
+// Blog page (SSR)
+export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const blog = await getBlog(slug);
 
-  if (loading) {
+  if (!blog) {
     return (
-      <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-blue-500 text-center mb-8">وبلاگ</h2>
-        <p className="text-center text-gray-500">Loading...</p>
+      <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8 text-center">
+        <h2 className="text-2xl font-bold text-pink-600 mb-8">وبلاگ</h2>
+        <p className="text-red-500">مقاله پیدا نشد</p>
+        <Link href="/blogs" className="text-pink-600 hover:underline mt-4 inline-block">
+          بازگشت به وبلاگ
+        </Link>
       </div>
     );
   }
 
-  if (error || !blog) {
-    return (
-      <div className="max-w-3xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-blue-500 text-center mb-8">وبلاگ</h2>
-        <p className="text-center text-red-500">{error || "Blog not found"}</p>
-        <div className="text-center mt-4">
-          <Link href="/blog" className="text-blue-500 hover:underline">
-            Back to Blogs
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const sanitizedContent = DOMPurify.sanitize(blog.content);
 
   return (
-    <div className="max-w-6xl mt-28 mx-auto py-16 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">{blog.title}</h1>
-      <img
-        src={BASE_URL_IMAGES + blog.imageUrl || "/hero-bg.webp"}
-        alt={blog.title}
-        className="w-full h-64 object-cover rounded-lg mb-6"
-      />
-      <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
-        <span>Unknown Author</span>
-        <span>
-          {new Date(blog.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-        </span>
-      </div>
-      <div className="prose prose-lg text-gray-700">
-        <p>{blog.content}</p>
-      </div>
-    </div>
-  );
-};
+    <article className="max-w-6xl min-h-screen bg-white mt-28 mx-auto py-16 px-4 rounded-2xl sm:px-6 lg:px-8">
+      <header>
+        <h1 className="text-3xl text-right font-bold text-gray-800 mb-4">{blog.title}</h1>
+        <p className="w-full mb-4 lg:w-full text-right text-xl font-bold text-gray-700">{blog.description}</p>
 
-export default BlogDetailPage;
+        {/* 1. CTA Box در ابتدای مقاله (بعد از توضیحات) */}
+        <div className="hidden lg:block">
+          <BlogCtaBox />
+        </div>
+
+        {/* این بخش CTA قدیمی که کامنت کرده بودید، حذف شد */}
+
+        <div className="mb-6 flex flex-col lg:flex-row lg:space-x-6 items-center">
+          <div className="w-full lg:w-1/2 relative  mb-4 lg:mb-0 rounded-2xl overflow-hidden">
+            <img
+              src={blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp"}
+              alt={blog.title}
+              className="object-cover"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
+          <span>تاریخ انتشار: {formatDate(blog.createdAt)}</span>
+        </div>
+      </header>
+
+      {/* محتوای مقاله */}
+      <section className="prose prose-lg text-gray-700" dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+
+      {/* 2. CTA Box در انتهای مقاله (قبل از Structured Data) */}
+      <div className="mt-12">
+        <BlogCtaBox />
+      </div>
+
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: blog.title,
+            image: blog.imageUrl ? BASE_URL_IMAGES + blog.imageUrl : "/hero-bg.webp",
+            author: { "@type": "Person", name: "جانارام" },
+            datePublished: blog.createdAt,
+            dateModified: blog.updatedAt,
+            description: blog.description,
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/blogs/${blog.slug}`,
+            },
+          }),
+        }}
+      />
+    </article>
+  );
+}

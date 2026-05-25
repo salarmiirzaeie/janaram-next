@@ -1,102 +1,114 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+// app/blogs/page.tsx
 import Link from "next/link";
-import BlogCardHome from "./BlogCardHome";
+import { BASE_URL_IMAGES } from "@/lib/constants";
+import { formatDate } from "@/lib/time";
+import type { Metadata } from "next";
 
 interface Blog {
   _id: string;
+  slug: string;
   title: string;
   content: string;
   authorId: string;
   imageUrl: string;
   createdAt: string;
   updatedAt: string;
-  slug: string;
+  description: string;
 }
 
-const BlogSection: React.FC = () => {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+// ✅ Server-side fetch via API
+async function getBlogs({
+  sort,
+  limit,
+}: {
+  sort?: string;
+  limit?: number;
+} = {}): Promise<{ success: boolean; blogs: Blog[] }> {
+  try {
+    const query = new URLSearchParams();
+    if (sort) query.set("sort", sort);
+    if (limit) query.set("limit", limit.toString());
 
-  const fetchBlogs = async () => {
-    try {
-      const response = await fetch("/api/blogs?sort=createdAt&limit=3", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch blogs");
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/blogs${
+        query.toString() ? `?${query}` : ""
+      }`,
+      {
+        cache: "force-cache", // ensures fresh data on each request
       }
-      const data = await response.json();
-      setBlogs(data.blogs || []);
-    } catch (err) {
-      console.error("Error fetching blogs:", err);
-      setError("Failed to load blogs");
-    } finally {
-      setLoading(false);
+    );
+
+    if (!res.ok) {
+      console.error("Failed to fetch blogs from API:", res.statusText);
+      return { success: false, blogs: [] };
     }
-  };
 
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="border-b border-gray-200">
-        <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl font-bold text-blue-500 bg-clip-text leading-9 text-center mb-8">وبلاگ</h2>
-          <p className="text-center text-gray-500">Loading...</p>
-        </div>
-      </div>
-    );
+    return await res.json();
+  } catch (err) {
+    console.error("Error fetching blogs:", err);
+    return { success: false, blogs: [] };
   }
+}
 
-  if (error) {
-    return (
-      <div className="border-b border-gray-200">
-        <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl font-bold text-blue-500 bg-clip-text leading-9 text-center mb-8">وبلاگ</h2>
-          <p className="text-center text-red-500">{error}</p>
-        </div>
-      </div>
-    );
-  }
+export default async function BlogPage() {
+  const { success, blogs } = await getBlogs({ sort: "createdAt", limit: 3 });
 
   return (
-    <div className="border-b border-gray-200">
-      <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <h2 className="text-xl font-bold text-blue-500 bg-clip-text leading-9 text-center mb-8">وبلاگ</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {blogs.length === 0 ? (
-            <p className="text-center text-gray-500">No blogs available.</p>
-          ) : (
-            blogs.map((post) => (
-              <BlogCardHome
-                post_name={post.slug} // Map _id to post_name
-                key={post._id}
-                imageSrc={post.imageUrl || "/hero-bg.webp"} // Fallback to default image
-                title={post.title}
-                summary={post.content.slice(0, 250)} // Truncate content to 250 characters
-                author="Unknown Author" // Placeholder; replace with actual author name if available
-                date={new Date(post.createdAt).toISOString().split("T")[0]} // Format date as YYYY-MM-DD
-              />
-            ))
-          )}
+    <div className="max-w-6xl  mx-auto py-16 px-4 sm:px-6 lg:px-8">
+      <h2 className="text-2xl font-bold text-blue-500 text-center mb-8">
+        وبلاگ
+      </h2>
+
+      {blogs.length === 0 ? (
+        <p className="text-center text-gray-500">هیچ مقاله‌ای موجود نیست.</p>
+      ) : (
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {blogs.map((blog) => (
+              <div
+                key={blog._id}
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <img
+                  src={
+                    blog.imageUrl
+                      ? BASE_URL_IMAGES + blog.imageUrl
+                      : "/hero-bg.webp"
+                  }
+                  alt={blog.title}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-4">
+                  <Link href={`/blogs/${blog.slug}`}>
+                    <h2 className="text-xl text-right font-bold mb-2 hover:text-primary">
+                      {blog.title}
+                    </h2>
+                  </Link>
+
+                  <div className="flex flex-row items-end justify-end text-sm mb-4 text-gray-500">
+                    <p className="text-right">نوشته شده بوسیله جانارام</p>
+                    <span className="mx-2">|</span>
+                    <span>{formatDate(blog.createdAt)}</span>
+                  </div>
+
+                  <Link href={`/blogs/${blog.slug}`}>
+                    <p className="text-primary hover:text-primary text-left text-sm mt-4 sm:text-base font-semibold">
+                      بیشتر
+                    </p>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center">
+            <Link className="mx-auto" href={"/blogs"}>
+              <button className="bg-black text-white mx-auto px-4 mt-16 py-2 rounded-2xl hover:bg-white hover:text-black">
+                مشاهده همه مقالات{" "}
+              </button>
+            </Link>
+          </div>
         </div>
-        <div className="text-center">
-          <Link href="/blogs">
-            <button className="bg-black text-white px-4 mt-16 py-2 rounded-2xl hover:bg-white hover:text-black">
-              مشاهده همه بلاگ ها
-            </button>
-          </Link>
-        </div>
-      </div>
+      )}
     </div>
   );
-};
-
-export default BlogSection;
+}

@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import Header from "@/components/layout/Header";
-
-import localFont from "next/font/local";
 import Footer from "@/components/layout/Footer";
+import localFont from "next/font/local";
+import Script from "next/script";
+import { GA_TRACKING_ID } from "@/lib/gtag";
+import GAListener from "../GAListener";
+import { Suspense } from "react";
+import FixedDownloadBar from "@/components/layout/FixedDownloadBar";
 
 const iranSans = localFont({
   src: [
@@ -35,20 +39,67 @@ export const metadata: Metadata = {
   title: "جانارام | اپلیکیشن مدیتیشن و آرامش ذهن",
   description:
     "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است. همین حالا دانلود کنید و آرامش را تجربه کنید.",
+  openGraph: {
+    title: "جانارام | اپلیکیشن مدیتیشن و آرامش ذهن",
+    description:
+      "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
+    url: "https://janaram.ir",
+    siteName: "جانارام",
+    type: "website",
+  },
+  other: {
+    "application/ld+json": JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "جانارام",
+      url: "https://janaram.ir",
+      description:
+        "اپلیکیشن مدیتیشن جانارام برای کاهش استرس، افزایش تمرکز، خواب آرام‌تر و آرامش ذهنی طراحی شده است.",
+    }),
+  },
+  verification: {
+    google: "HFmM8X8uAAK3rM2f5GiE5861gjq1X7AW9zfgn17Yx2A",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={`${iranSans.variable} ${vazir.variable}  antialiased`}>
+    <html lang="fa" dir="rtl">
+      <body className={`${iranSans.variable} ${vazir.variable} antialiased`}>
+        {/* GA script */}
+        {GA_TRACKING_ID && (
+          <>
+            <Script
+              strategy="afterInteractive"
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+            />
+            <Script
+              id="gtag-init"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${GA_TRACKING_ID}', {
+                    page_path: window.location.pathname,
+                  });
+                `,
+              }}
+            />
+          </>
+        )}
         <Header />
-
+        <Suspense fallback={null}>
+          <GAListener />
+        </Suspense>
         {children}
         <Footer />
+        <FixedDownloadBar />
       </body>
     </html>
   );

@@ -5,16 +5,24 @@ import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
 
-const retryRequest = async (fn: () => Promise<any>, maxAttempts = 3, delay = 1000) => {
+const retryRequest = async (
+  fn: () => Promise<any>,
+  maxAttempts = 3,
+  delay = 1000
+) => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error: any) {
-      if (attempt === maxAttempts || error.response?.status === 429) throw error;
-      await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, attempt - 1))); // Exponential backoff
+      if (attempt === maxAttempts || error.response?.status === 429)
+        throw error;
+      await new Promise((resolve) =>
+        setTimeout(resolve, delay * Math.pow(2, attempt - 1))
+      ); // Exponential backoff
     }
   }
 };
+const isDisableConversation = true;
 // Environment variable validation
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_CHATBOT_KEY_NEW || "";
 if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not defined");
@@ -23,46 +31,62 @@ const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: OPENROUTER_API_KEY,
   defaultHeaders: {
-    "X-OpenRouter-Provider": "openai,deepseek", // Specify allowed providers
+    "X-OpenRouter-Provider": "openai,microsoft,deepseek", // Specify allowed providers
   },
 });
 
-// Migration function to transform chat_history to chat-history
-
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
-    const db = (await clientPromise).db("janaram-db");
+    if (isDisableConversation) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          response:
+            "جانارامی عزیز، سرویس روان‌شناس هوش مصنوعی ما به‌دلیل محدودیت‌های موقتی اینترنت کشور، فعلاً در دسترس نیست. در حال پیگیری هستیم و امیدواریم به‌زودی دوباره کنار شما باشیم. ممنون از صبوری و همراهی‌تون 🌱",
+        },
+      });
+    }
 
-    // Run migration once at the start
+    const db = (await clientPromise).db("janaram-db");
 
     const { message } = await req.json();
     if (!message || typeof message !== "string") {
-      return NextResponse.json({ success: false, message: "پیام نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "پیام نامعتبر است" },
+        { status: 400 }
+      );
     }
 
     const users = db.collection<User>("users");
     const chatHistory = db.collection("chat-history");
     const today = new Date().toISOString().split("T")[0];
 
-    // Convert user.sub to ObjectId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
     }
 
-    // Fetch user data
     let userDoc = await users.findOne({ _id: userId });
     if (!userDoc || !userDoc._id) {
       console.error("User not found or missing _id for user.sub:", user.sub);
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" },
+        { status: 404 }
+      );
     }
 
-    // Check if unlimited plan has expired
     const now = new Date();
-    if (userDoc.plan !== "free" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
+    if (
+      userDoc.plan !== "free" &&
+      userDoc.subscriptionEndDate &&
+      userDoc.subscriptionEndDate < now
+    ) {
       await users.updateOne(
         { _id: userId },
         {
@@ -72,61 +96,99 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       );
       userDoc = await users.findOne({ _id: userId });
       if (!userDoc || !userDoc._id) {
-        console.error("User not found after update for _id:", userId.toString());
-        return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
-      }
-    }
-
-    // Check conversation limit for free plan
-    if (userDoc.plan === "free") {
-      const conversationCount = userDoc.conversationCount?.date === today ? userDoc.conversationCount.count : 0;
-      if (conversationCount >= 10) {
+        console.error(
+          "User not found after update for _id:",
+          userId.toString()
+        );
         return NextResponse.json(
-          { success: false, message: "حداکثر تعداد گفت‌وگوهای روزانه برای طرح رایگان به پایان رسیده است" },
-          { status: 429 }
+          { success: false, message: "کاربر یافت نشد" },
+          { status: 404 }
         );
       }
-
-      // Increment conversation count
-      await users.updateOne(
-        { _id: userId },
-        {
-          $set: {
-            conversationCount: { date: today, count: conversationCount + 1 },
-            updatedAt: new Date(),
-          },
-        }
-      );
     }
 
-    // Prepare messages for OpenRouter
-    let messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
+    let preLimitWarning: string | null = null;
+    let conversationCount = 0;
 
-    // System prompt
-    const systemPrompt =
-      userDoc.plan === "free"
-        ? `تو یک روانشناس ایرانی با تجربه هستی. با لحن صمیمی و ساده، به سوالات کاربر درباره استرس، اضطراب، روابط، یا مشکلات روزمره پاسخ بده. راهکارهای عملی و کوتاه پیشنهاد کن`
-        : `تو یک روانشناس ایرانی با تجربه هستی. با لحن صمیمی و ساده، به سوالات کاربر درباره استرس، اضطراب، روابط، یا مشکلات روزمره پاسخ بده. راهکارهای عملی و کوتاه پیشنهاد کن.
-        نام مخاطب شما ${userDoc.name} است`;
+    if (userDoc.plan === "free") {
+      conversationCount =
+        userDoc.conversationCount?.date === today
+          ? userDoc.conversationCount.count
+          : 0;
 
-    // Retrieve last two conversations from chat-history collection
-    const recentMessages = await chatHistory.find({ userId: userId }).sort({ timestamp: -1 }).limit(2).toArray();
+      // if (conversationCount >= 10) {
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "سرویس روانشناس من فقط مخصوص کاربران Pro می باشد. 🌱",
+        },
+        { status: 429 }
+      );
+
+      // }
+
+      // if (conversationCount === 8) {
+      //   preLimitWarning =
+      //     "\n\n(❗️ توجه: شما فقط یک مکالمه رایگان دیگر امروز فرصت دارید. با ارتقاء به Pro، نه تنها چت نامحدود می‌گیرید، بلکه به گزارش‌های تحلیلی حال روحی‌تان هم دسترسی پیدا می‌کنید!)";
+      // } else
+
+      // await users.updateOne(
+      //   { _id: userId },
+      //   {
+      //     $set: {
+      //       conversationCount: { date: today, count: conversationCount + 1 },
+      //       updatedAt: new Date(),
+      //     },
+      //   }
+      // );
+    }
+    // شمارش پیام‌ها برای کنترل اینکه یکی‌در‌میان سؤال بپرسد
+    const messageCount = (await chatHistory.countDocuments({ userId })) + 1;
+
+    // اگر شماره فرد است (۱، ۳، ۵، ...) سؤال بپرس، وگرنه نه
+    const shouldAskQuestion = messageCount % 2 === 1;
+
+    const questionInstruction = shouldAskQuestion
+      ? "- در پایان پاسخ خود **یک سؤال ساده و انگیزشی** بپرس تا گفتگو ادامه پیدا کند."
+      : "";
+
+    const systemPrompt = `شما یک روانشناس فارسی زبان هوش مصنوعی حرفه‌ای و همراه کاربر هستید. 
+  - پاسخ شما صرفاً باید به زبان فارسی روان باشد و از به کار بردن هرگونه کلمه انگلیسی یا فینگلیش جداً خودداری کنید.
+  - نام مخاطب شما ${userDoc.name} است، از او با نامش یاد کنید تا رابطه صمیمانه‌تر شود. 
+  - پاسخ‌ها باید در حد چهار جمله جمله کوتاه و مفید و واضح برای کاربر فارسی زبان باشند. 
+  - هدف: ارائه راهکار عملی کوچک برای بهبود حال روحی، تمرکز بر آرامش، مدیتیشن و خودشناسی. 
+  ${questionInstruction}
+  - لحن شما دوستانه، حمایتگر و امیدوارکننده باشد.`;
+    let messages: { role: "system" | "user" | "assistant"; content: string }[] =
+      [{ role: "system", content: systemPrompt }];
+    const recentMessages = await chatHistory
+      .find({ userId: userId })
+      .sort({ timestamp: -1 })
+      .limit(2)
+      .toArray();
 
     if (recentMessages.length > 0) {
       messages.push(
         ...recentMessages.flatMap((msg) => [
-          { role: "user" as "user" | "assistant", content: msg.user },
-          { role: "assistant" as "user" | "assistant", content: msg.ai },
+          { role: "user" as const, content: msg.user },
+          { role: "assistant" as const, content: msg.ai },
         ])
       );
     }
 
-    // Add new user message and system prompt
     messages.push({ role: "user", content: message });
-    messages.push({ role: "system", content: systemPrompt });
 
-    // Call OpenRouter API
-    const models = ["openai/gpt-oss-20b:free", "deepseek/deepseek-chat-v3-0324:free"];
+    const models = [
+      "arcee-ai/trinity-large-preview:free",
+      "z-ai/glm-4.5-air",
+      "openai/gpt-oss-20b:free",
+
+      "z-ai/glm-4.5-air:free",
+      "google/gemini-2.0-flash-exp:free",
+
+      "meta-llama/llama-3.3-70b-instruct:free",
+    ];
     let completion;
     for (const model of models) {
       try {
@@ -145,36 +207,62 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           details: apiError.response?.data,
         });
         if (apiError.response?.status === 429) {
+          // این خطا مربوط به محدودیت API است، نه محدودیت کاربر.
           return NextResponse.json(
-            { success: false, message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است" },
+            {
+              success: false,
+              message:
+                "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است",
+            },
             { status: 429 }
           );
         }
         if (model === models[models.length - 1]) {
           return NextResponse.json(
-            { success: false, message: "خطای سرور هوش مصنوعی. لطفاً دوباره تلاش کنید." },
+            {
+              success: false,
+              message: "خطای سرور هوش مصنوعی. لطفاً دوباره تلاش کنید.",
+            },
             { status: apiError.response?.status || 502 }
           );
         }
-        continue; // Try next model
+        continue;
       }
     }
 
-    // Validate API response
-    if (!completion || !completion.choices || !Array.isArray(completion.choices) || completion.choices.length === 0) {
+    if (
+      !completion ||
+      !completion.choices ||
+      !Array.isArray(completion.choices) ||
+      completion.choices.length === 0
+    ) {
       console.error("Invalid OpenRouter response:", completion);
-      return NextResponse.json({ success: false, message: "پاسخ نامعتبری از هوش مصنوعی دریافت شد" }, { status: 500 });
+      return NextResponse.json(
+        { success: false, message: "پاسخ نامعتبری از هوش مصنوعی دریافت شد" },
+        { status: 500 }
+      );
     }
 
-    const aiResponse = completion.choices[0].message?.content;
+    let aiResponse = completion.choices[0].message?.content;
     if (!aiResponse) {
-      console.error("No content in OpenRouter response:", completion.choices[0]);
-      return NextResponse.json({ success: false, message: "پاسخی از هوش مصنوعی دریافت نشد" }, { status: 500 });
+      console.error(
+        "No content in OpenRouter response:",
+        completion.choices[0]
+      );
+      return NextResponse.json(
+        { success: false, message: "پاسخی از هوش مصنوعی دریافت نشد" },
+        { status: 500 }
+      );
+    }
+
+    // --- افزودن اخطار پیش از محدودیت به پاسخ هوش مصنوعی ---
+    if (preLimitWarning) {
+      aiResponse += preLimitWarning;
     }
 
     // Store new conversation in chat-history collection
     const newConversation = {
-      userId: userId,
+      userId,
       user: message,
       ai: aiResponse,
       timestamp: new Date(),
@@ -183,13 +271,16 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
 
     return NextResponse.json({
       success: true,
-      data: { response: aiResponse },
+      data: { response: aiResponse, conversationCount },
     });
   } catch (err: any) {
     console.error("Error in conversation:", {
       error: err.message,
       stack: err.stack,
     });
-    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور" },
+      { status: 500 }
+    );
   }
 });

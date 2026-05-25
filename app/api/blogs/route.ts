@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId, Sort } from "mongodb";
+import { migrateBlogs } from "@/scripts/migrateBlogs";
 
 export const GET = async (req: NextRequest) => {
   try {
@@ -34,9 +35,9 @@ export const GET = async (req: NextRequest) => {
       content: blog.content,
       authorId: blog.authorId.toString(),
       imageUrl: blog.imageUrl,
+      slug: blog.slug,
       createdAt: blog.createdAt.toISOString(),
       updatedAt: blog.updatedAt.toISOString(),
-      slug: blog.slug,
     }));
 
     return NextResponse.json({ success: true, blogs: formattedBlogs }, { status: 200 });

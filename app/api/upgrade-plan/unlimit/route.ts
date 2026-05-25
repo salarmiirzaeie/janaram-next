@@ -16,40 +16,51 @@ const plans: Plan[] = [
   {
     name: "unlimited",
     description: "طرح نامحدود با امکانات پیشرفته برای ۱ ماه",
-    features: ["گفت‌وگوهای نامحدود روزانه", "پاسخ‌های شخصی‌سازی‌شده "],
+    features: [
+      " پیشنهاد تمرینات پیشرفته آگاه سازی و آرام سازی",
+      "دسترسی به مدیتیشن های نامحدود و حرفه ای",
+      "گفت وکوی نامحدود روزانه با روانشناس من",
+      "دسترسی به گزارش‌های تحلیلی حال روحی‌",
+      "دسترسی به تاریخچه کامل گفت‌وگوها",
+      "پاسخ‌های شخصی‌سازی‌شده با تحلیل عمیق",
+    ],
     id: "123456",
-    price: 29,
+    price: 199,
     duration: 1,
   },
-  {
-    name: "premium",
-    description: "طرح نامحدود با امکانات پیشرفته برای ۳ ماه",
-    features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "پاسخ‌های شخصی‌سازی‌شده "],
-    id: "1234567",
-    price: 79,
-    duration: 3,
-  },
-  {
-    name: "pro",
-    description: "طرح نامحدود با امکانات پیشرفته برای ۶ ماه",
-    features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "پاسخ‌های شخصی‌سازی‌شده "],
-    id: "12345678",
-    price: 149,
-    duration: 6,
-  },
+
+  // {
+  //   name: "premium",
+  //   description: "طرح نامحدود با امکانات پیشرفته برای ۳ ماه",
+  //   features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "پاسخ‌های شخصی‌سازی‌شده "],
+  //   id: "1234567",
+  //   price: 79,
+  //   duration: 1,
+  // },
+  // {
+  //   name: "pro",
+  //   description: "طرح نامحدود با امکانات پیشرفته برای ۶ ماه",
+  //   features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "پاسخ‌های شخصی‌سازی‌شده با تحلیل عمیق"],
+  //   id: "12345678",
+  //   price: 149,
+  //   duration: 1,
+  // },
 ];
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
     const { id } = await req.json();
-
     // Convert user.sub to ObjectId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
     }
+    console.log(id, "paid", userId);
 
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
@@ -58,12 +69,19 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     let userDoc = await users.findOne({ _id: userId });
     if (!userDoc || !userDoc._id) {
       console.error("User not found or missing _id for user.sub:", user.sub);
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" },
+        { status: 404 }
+      );
     }
 
     // Check if unlimited plan has expired
     const now = new Date();
-    if (userDoc.plan !== "free" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
+    if (
+      userDoc.plan !== "free" &&
+      userDoc.subscriptionEndDate &&
+      userDoc.subscriptionEndDate < now
+    ) {
       await users.updateOne(
         { _id: userId },
         {
@@ -72,15 +90,28 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
         }
       );
       if (!userDoc || !userDoc._id) {
-        console.error("User not found after update for _id:", userId.toString());
-        return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+        console.error(
+          "User not found after update for _id:",
+          userId.toString()
+        );
+        return NextResponse.json(
+          { success: false, message: "کاربر یافت نشد" },
+          { status: 404 }
+        );
       }
     }
     let plan = plans.find((plan) => plan.id === id)?.name || "free";
 
     // Prevent upgrade if already on active unlimited plan
-    if (userDoc.plan === plan && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate > now) {
-      return NextResponse.json({ success: false, message: `شما از قبل در طرح ${plan} هستید` }, { status: 400 });
+    if (
+      userDoc.plan === plan &&
+      userDoc.subscriptionEndDate &&
+      userDoc.subscriptionEndDate > now
+    ) {
+      return NextResponse.json(
+        { success: false, message: `شما از قبل در طرح ${plan} هستید` },
+        { status: 400 }
+      );
     }
 
     let duration = plans.find((plan) => plan.id === id)?.duration || 1;
@@ -97,17 +128,23 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           subscriptionDuration: duration,
           subscriptionEndDate: endDate,
           updatedAt: new Date(),
-          conversationCount: { date: new Date().toISOString().split("T")[0], count: 0 },
+          conversationCount: {
+            date: new Date().toISOString().split("T")[0],
+            count: 0,
+          },
         },
       }
     );
 
     return NextResponse.json({
       success: true,
-      message: `طرح شما با موفقیت به ${plan} برای ${duration} ماه ارتقا یافت`,
+      message: `طرح شما با موفقیت به Pro برای ${duration} ماه ارتقا یافت`,
     });
   } catch (err: any) {
     console.error("Error upgrading plan:", err);
-    return NextResponse.json({ success: false, message: "خطای سرور در ارتقای طرح" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور در ارتقای طرح" },
+      { status: 500 }
+    );
   }
 });

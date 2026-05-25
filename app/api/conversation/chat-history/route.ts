@@ -35,7 +35,7 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     }
 
     // Return empty array if user does not have pro or premium plan
-    if (!["pro", "premium"].includes(userDoc.plan)) {
+    if (!["pro", "premium", "unlimited"].includes(userDoc.plan)) {
       return NextResponse.json({
         success: true,
         data: {

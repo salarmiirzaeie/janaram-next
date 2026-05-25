@@ -1,6 +1,5 @@
 import React from "react";
 import Head from "next/head";
-import localFont from "next/font/local";
 import "../../globals.css";
 
 const LoginLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -10,11 +9,19 @@ const LoginLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
-      <body className={` antialiased bg-gray-100 min-h-screen flex items-center justify-center`}>
+      <body>
         <Head>
+          <title>Admin Login</title>
           <meta name="description" content="Login to the Admin Panel" />
+          <meta charSet="UTF-8" />
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+          />
         </Head>
-        {children}
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 antialiased">
+          {children}
+        </div>
       </body>
     </html>
   );

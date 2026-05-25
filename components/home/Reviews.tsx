@@ -33,10 +33,10 @@ export default function CustomerReviewsSection() {
   return (
     <Element name="reviewSection">
       <div className="w-full  max-w-6xl mx-auto px-4 py-8 md:py-12">
-        <div className="flex  items-center gap-2 justify-center mb-6">
-          <h2 className="text-xl font-bold text-blue-500  bg-clip-text   leading-9 text-center mb-8">نظرات کاربران!</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-blue-500 leading-9 text-center mb-8">
+          نظرات کاربران
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {data.map((testimonial, index) => (
             <TestimonialCard
               key={index}
@@ -48,9 +48,9 @@ export default function CustomerReviewsSection() {
             />
           ))}
         </div>
-        <div className="text-center mt-22">
+        <div className="text-center mt-8">
           <Link href={"https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"}>
-            <button className="bg-black text-white px-4 mt-16 py-2 rounded-2xl hover:bg-white hover:text-black">
+            <button className="bg-black text-white px-6 py-2.5 rounded-2xl hover:bg-white hover:text-black border border-black transition-colors">
               مشاهده همه نظرات{" "}
             </button>
           </Link>

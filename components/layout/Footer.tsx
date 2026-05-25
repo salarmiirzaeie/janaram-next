@@ -1,33 +1,55 @@
+import Image from "next/image";
 import React from "react";
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-black text-white py-8">
+    <footer className="bg-black  text-white py-8">
       <div className="container max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <a
+              referrerPolicy="origin"
+              target="_blank"
+              href="https://trustseal.enamad.ir/?id=717598&Code=YCimzKfvD7Gjy8NE2ccSrZGA5sfYsc3M"
+              rel="noopener noreferrer"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                referrerPolicy="origin"
+                src="https://trustseal.enamad.ir/logo.aspx?id=717598&Code=YCimzKfvD7Gjy8NE2ccSrZGA5sfYsc3M"
+                alt="Enamad Trust Seal"
+                style={{ cursor: "pointer" }}
+              />
+            </a>
+          </div>
           <div className="mb-6 md:mb-0">
             <h3 className="text-lg font-semibold text-right mb-4">جانارام</h3>
             <p className="text-sm text-right">
-              آرامش خود را در هر زمان پیدا کنید. یک اپلیکیشن مدیتیشن موبایل که به بازگرداندن تعادل، کاهش استرس و بهبود
-              سلامت روان کمک می‌کند.
+              آرامش خود را در هر زمان پیدا کنید. یک اپلیکیشن مدیتیشن موبایل که
+              به بازگرداندن تعادل، کاهش استرس و بهبود سلامت روان کمک می‌کند.
             </p>
           </div>
           <div className="text-right">
             <h3 className="text-lg font-semibold mb-4">لینک‌ها</h3>
             <ul className="space-y-2">
               <li>
-                <a href="/" className="hover:text-gray-300">
-                  نظرات{" "}
+                <a href="/#reviewSection" className="hover:text-gray-300">
+                  نظرات
                 </a>
               </li>
               <li>
-                <a href="/" className="hover:text-gray-300">
+                <a href="/#faqSection" className="hover:text-gray-300">
                   سوالات متداول
                 </a>
               </li>
               <li>
-                <a href="/" className="hover:text-gray-300">
+                <a href="/#quoteForm" className="hover:text-gray-300">
                   تماس با ما
+                </a>
+              </li>
+              <li>
+                <a href="/doctor/register" className="hover:text-gray-300">
+                  ثبت‌نام روانشناس
                 </a>
               </li>
             </ul>

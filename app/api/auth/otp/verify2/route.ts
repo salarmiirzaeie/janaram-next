@@ -1,0 +1,96 @@
+import { NextResponse } from "next/server";
+import clientPromise from "@/lib/mongodb";
+import jwt from "jsonwebtoken";
+import { User } from "@/lib/types/user";
+
+// Environment variable validation
+const JWT_SECRET = process.env.JWT_SECRET || "";
+if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
+
+export async function POST(req: Request) {
+  try {
+    const { phoneNumber } = await req.json();
+    const db = (await clientPromise).db("janaram-db");
+
+    // Register or login user
+    const users = db.collection<User>("users");
+    let user: User | null = await users.findOne({ phoneNumber });
+    let isNewUser = false; // Flag to track if user is new
+    let isOnboardingSelected = true; // Flag to track if user is new
+
+    const today = new Date().toISOString().split("T")[0]; // Current date for conversation tracking
+
+    if (!user) {
+      // Create new user
+      const newUser: Omit<User, "_id"> = {
+        phoneNumber,
+        email: null,
+        googleId: null,
+        name: null,
+        picture: null,
+        plan: "free",
+        conversationCount: { date: today, count: 0 },
+        createdAt: new Date(),
+        updatedAt: null,
+        messages: [],
+      };
+      const result = await users.insertOne(newUser);
+      user = { ...newUser, _id: result.insertedId };
+      isNewUser = true;
+      isOnboardingSelected = false; // Set flag to true for new user
+    } else {
+      // Update existing user
+      await users.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            updatedAt: new Date(),
+            plan: user.plan || "free",
+            conversationCount: user.conversationCount || {
+              date: today,
+              count: 0,
+            },
+          },
+        }
+      );
+      user = {
+        ...user,
+        updatedAt: new Date(),
+        plan: user.plan || "free",
+        conversationCount: user.conversationCount || { date: today, count: 0 },
+      };
+      if (!user.name) {
+        isNewUser = true;
+      }
+      if (!user.goals) {
+        isOnboardingSelected = false;
+      }
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      {
+        sub: user._id!.toString(), // Non-null assertion since _id is set
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        plan: user.plan,
+      },
+      JWT_SECRET,
+      { expiresIn: "1y" }
+    );
+
+    return NextResponse.json({
+      success: true,
+      token,
+      user,
+      isNewUser,
+      isOnboardingSelected, // Add isNewUser flag to response
+    });
+  } catch (err: any) {
+    console.error("Error in OTP verification:", err);
+    return NextResponse.json(
+      { success: false, message: "خطای سرور" },
+      { status: 500 }
+    );
+  }
+}

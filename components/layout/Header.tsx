@@ -3,91 +3,165 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Link as LinkScroll } from "react-scroll";
+import { usePathname } from "next/navigation";
+import { event } from "@/lib/gtag"; // 👈 اضافه شد
+
+type NavItem = {
+  type: string;
+  to?: string;
+  href?: string;
+  label: string;
+  button?: boolean;
+};
+
+type NavItems = {
+  [key: string]: NavItem[];
+};
 
 const Header: React.FC = () => {
-  // State to manage the visibility of the mobile menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-  // Function to toggle the mobile menu state
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const navItems: NavItems = {
+    "/": [
+      { type: "scroll", to: "quoteForm", label: "تماس با ما" },
+      { type: "link", href: "/doctor", label: "پنل روانشناسان" },
+      { type: "link", href: "/blogs", label: "وبلاگ" },
+      { type: "scroll", to: "faqSection", label: "سوالات متداول" },
+      { type: "scroll", to: "reviewSection", label: "نظرات" },
+      {
+        type: "scroll",
+        to: "downloadSection",
+        label: "دانلود رایگان",
+        button: true,
+      },
+    ],
+    "/blogs": [
+      { type: "link", href: "/", label: "خانه" },
+      {
+        type: "link",
+        href: "/#downloadSection",
+        label: "دانلود رایگان",
+        button: true,
+      },
+    ],
+    "/psychologist": [
+      // 👈 Add this
+      { type: "link", href: "/", label: "خانه" },
+      { type: "link", href: "/blogs", label: "وبلاگ" },
+      {
+        type: "link",
+        href: "/#downloadSection",
+        label: "دانلود رایگان",
+        button: true,
+      },
+    ],
+  };
+
+  const currentNavs =
+    pathname === "/"
+      ? navItems["/"]
+      : pathname.startsWith("/blogs")
+        ? navItems["/blogs"]
+        : pathname.startsWith("/psychologist")
+          ? navItems["/psychologist"]
+          : [];
+  const downloadButtonClasses =
+    "bg-[#AB47BC] text-white px-6 py-2 rounded-full hover:bg-[#AB47BC] transition-all duration-300 shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#AB47BC]";
+
+  const normalButtonClasses = "text-gray-700 hover:text-[#AB47BC]";
+
+  const isLandingPage = pathname === "/";
+  const desktopNavItems = isLandingPage
+    ? currentNavs.filter((item) => !item.button)
+    : currentNavs;
+  const downloadNavItem = currentNavs.find((item) => item.button);
+
+  const renderNavItem = (
+    item: NavItem,
+    idx: number,
+    analyticsLabel = "header_download_button",
+  ) => {
+    const buttonClass = item.button ? downloadButtonClasses : normalButtonClasses;
+    const onClick = () => {
+      toggleMobileMenu();
+      if (item.button) {
+        event({
+          action: "download_click",
+          category: "engagement",
+          label: analyticsLabel,
+        });
+      }
+    };
+
+    if (item.type === "scroll") {
+      return (
+        <LinkScroll
+          key={idx}
+          to={item.to!}
+          offset={80}
+          spy={true}
+          smooth={true}
+          duration={500}
+          className="transition-colors duration-200"
+        >
+          <button onClick={onClick} className={buttonClass}>
+            {item.label}
+          </button>
+        </LinkScroll>
+      );
+    }
+
+    return (
+      <Link key={idx} href={item.href!} className="transition-colors duration-200">
+        <button onClick={onClick} className={buttonClass}>
+          {item.label}
+        </button>
+      </Link>
+    );
   };
 
   return (
     <div className="absolute top-0 left-0 w-full">
       <div className="px-4 pt-4 lg:pt-8">
-        <header className="relative bg-white w-full max-w-4xl mx-auto   rounded-xl  px-4 py-1 flex items-center justify-between z-50">
-          {/* Logo Section */}
-          <div className="flex items-center z-10">
-            {/* Using an SVG for a simple logo icon */}
+        <header
+          className={`relative shadow-2xl bg-white w-full mx-auto rounded-xl px-4 lg:py-1 flex items-center z-50 ${
+            isLandingPage ? "max-w-6xl lg:grid lg:grid-cols-[auto_1fr_auto]" : "max-w-4xl justify-between"
+          }`}
+        >
+          {/* Logo */}
+          <div className="flex items-center z-10 shrink-0">
             <Image src="/logo.webp" alt="Logo" width={60} height={60} />
             <span className="text-xl font-semibold text-gray-800">جانارام</span>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6  z-10">
-            <LinkScroll
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
-              to="quoteForm"
-              offset={-100}
-              spy={true}
-              smooth={true}
-              duration={500}
-            >
-              <button>تماس با ما</button>
-            </LinkScroll>
-            <Link className="text-gray-700 hover:text-blue-600 transition-colors duration-200" href="/blogs">
-              <button>وبلاگ</button>
-            </Link>
-            <LinkScroll
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
-              to="faqSection"
-              offset={-100}
-              spy={true}
-              smooth={true}
-              duration={500}
-            >
-              <button>سوالات متداول</button>
-            </LinkScroll>
-
-            <LinkScroll
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
-              to="reviewSection"
-              offset={-100}
-              spy={true}
-              smooth={true}
-              duration={500}
-            >
-              <button>نظرات</button>
-            </LinkScroll>
-            {/*           
-          <a href="#وبلاگ" className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
-            وبلاگ
-          </a> */}
-            <LinkScroll to="downloadSection" spy={true} smooth={true} offset={-100} duration={500}>
-              <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg">
-                دانلود
-              </button>
-            </LinkScroll>
+          {/* Desktop Nav — centered on landing */}
+          <nav
+            className={`hidden lg:flex items-center gap-6 z-10 ${
+              isLandingPage ? "justify-center" : "justify-end"
+            }`}
+          >
+            {desktopNavItems.map((item, idx) => renderNavItem(item, idx))}
           </nav>
 
-          {/* Mobile Menu Button (Hamburger Icon) */}
-          <div className="lg:hidden flex items-center  z-10">
+          {/* Download CTA — end of header on landing desktop */}
+          {isLandingPage && downloadNavItem && (
+            <div className="hidden lg:flex items-center justify-end z-10 shrink-0">
+              {renderNavItem(downloadNavItem, -1)}
+            </div>
+          )}
+
+          {/* Mobile Hamburger */}
+          <div className={`lg:hidden flex items-center z-10 ${isLandingPage ? "ms-auto" : ""}`}>
             <button
               onClick={toggleMobileMenu}
               className="p-2 text-gray-700 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
-              aria-label="Toggle mobile menu"
-              aria-expanded={isMobileMenuOpen}
             >
-              {/* Hamburger icon using SVG for better control and styling */}
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Conditional rendering for hamburger or close icon */}
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isMobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -97,58 +171,17 @@ const Header: React.FC = () => {
             </button>
           </div>
 
-          {/* Mobile Navigation Menu (Dropdown/Slide-in) */}
-          {/* This menu appears/disappears based on isMobileMenuOpen state */}
+          {/* Mobile Nav */}
           <nav
-            className={`lg:hidden absolute top-full left-0  z-10 right-0 bg-white bg-opacity-95 backdrop-blur-md shadow-lg rounded-b-xl mx-4 transition-all duration-300 ease-in-out transform ${
+            className={`lg:hidden absolute top-full left-0 z-10 right-0 bg-white bg-opacity-95 backdrop-blur-md shadow-lg rounded-b-xl mx-4 transition-all duration-300 ease-in-out transform ${
               isMobileMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0 pointer-events-none"
             }`}
-            style={{ zIndex: 40 }} // Ensure it's below the header but above other content
+            style={{ zIndex: 40 }}
           >
             <div className="flex flex-col items-center py-4 space-y-4">
-              <LinkScroll
-                className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-                to="quoteForm"
-                offset={-100}
-                spy={true}
-                smooth={true}
-                duration={500}
-              >
-                <button>تماس با ما</button>
-              </LinkScroll>
-              <LinkScroll
-                className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-                to="faqSection"
-                offset={-100}
-                spy={true}
-                smooth={true}
-                duration={500}
-              >
-                <button>سوالات متداول</button>
-              </LinkScroll>
-
-              <LinkScroll
-                className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-                to="reviewSection"
-                offset={-100}
-                spy={true}
-                smooth={true}
-                duration={500}
-              >
-                <button>نظرات</button>
-              </LinkScroll>
-              {/* <a
-              href="#وبلاگ"
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200 w-full text-center py-2"
-              onClick={toggleMobileMenu}
-            >
-              وبلاگ
-            </a> */}
-              <LinkScroll to="downloadSection" offset={-100} spy={true} smooth={true} duration={500}>
-                <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 shadow-lg w-fit">
-                  دانلود
-                </button>
-              </LinkScroll>
+              {currentNavs.map((item, idx) =>
+                renderNavItem(item, idx, "header_download_button_mobile"),
+              )}
             </div>
           </nav>
         </header>

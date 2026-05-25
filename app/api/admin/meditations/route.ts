@@ -1,3 +1,4 @@
+import { BASE_URL_IMAGES } from "@/lib/constants";
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
@@ -20,10 +21,17 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
         description: med.description,
         duration: med.duration,
         isSuggested: med.isSuggested,
+        accessLevel: med.accessLevel,
+        listenCount: med.listenCount,
+        file2: BASE_URL_IMAGES + med.fileUrl,
+        image2: BASE_URL_IMAGES + med.imageUrl,
       })),
     });
   } catch (error) {
     console.error("Error fetching meditations:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
   }
 });

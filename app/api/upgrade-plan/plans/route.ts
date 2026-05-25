@@ -13,6 +13,8 @@ export interface Plan {
   price: number;
   id: string;
   duration?: number; // Duration in months for unlimited plans
+  oldPrice?: number;
+  isZarinPalEnabled?: boolean;
 }
 
 export const GET = withAuth(async (req: NextRequest, user: any) => {
@@ -23,22 +25,33 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
     }
 
     const db = (await clientPromise).db("janaram-db");
     const users = db.collection<User>("users");
+    const plansConfig = db.collection("plans_config");
 
     // Fetch user data
     let userDoc = await users.findOne({ _id: userId });
     if (!userDoc || !userDoc._id) {
       console.error("User not found or missing _id for user.sub:", user.sub);
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" },
+        { status: 404 }
+      );
     }
 
     // Check if unlimited plan has expired
     const now = new Date();
-    if (userDoc.plan === "unlimited" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
+    if (
+      userDoc.plan === "unlimited" &&
+      userDoc.subscriptionEndDate &&
+      userDoc.subscriptionEndDate < now
+    ) {
       await users.updateOne(
         { _id: userId },
         {
@@ -47,12 +60,23 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
         }
       );
       if (!userDoc || !userDoc._id) {
-        console.error("User not found after update for _id:", userId.toString());
-        return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+        console.error(
+          "User not found after update for _id:",
+          userId.toString()
+        );
+        return NextResponse.json(
+          { success: false, message: "کاربر یافت نشد" },
+          { status: 404 }
+        );
       }
     }
 
-    // Define plans
+    // Fetch unlimited plan from database
+    const unlimitedPlanFromDb = await plansConfig.findOne({
+      name: "unlimited",
+    });
+
+    // Define plans with unlimited plan data from DB
     const plans: Plan[] = [
       {
         name: "free",
@@ -64,30 +88,25 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
       },
       {
         name: "unlimited",
-        description: "طرح نامحدود با امکانات پیشرفته برای ۱ ماه",
-        features: ["گفت‌وگوهای نامحدود روزانه", "امکان شخصی سازی روانشناس"],
-        isActive: userDoc.plan === "unlimited" && (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
-        id: "123456",
-        price: 29,
-        duration: 1,
-      },
-      {
-        name: "premium",
-        description: "طرح نامحدود با امکانات پیشرفته برای ۳ ماه",
-        features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "امکان شخصی سازی روانشناس"],
-        isActive: userDoc.plan === "premium" && userDoc.subscriptionDuration === 3,
-        id: "1234567",
-        price: 79,
-        duration: 3,
-      },
-      {
-        name: "pro",
-        description: "طرح نامحدود با امکانات پیشرفته برای ۶ ماه",
-        features: ["گفت‌وگوهای نامحدود روزانه", "دسترسی به تاریخچه کامل گفت‌وگوها", "امکان شخصی سازی روانشناس"],
-        isActive: userDoc.plan === "pro" && userDoc.subscriptionDuration === 6,
-        id: "12345678",
-        price: 149,
-        duration: 6,
+        description:
+          unlimitedPlanFromDb?.description || "طرح نامحدود برای ۱ ماه",
+        features: unlimitedPlanFromDb?.features || [
+          "Pro پیشنهاد روزانه تمرینات پیشرفته آگاه سازی و آرام سازی",
+          "Pro دسترسی به تست های روانشناسی علمی و حرفه ای",
+          "Pro دسترسی به مدیتیشن های نامحدود و حرفه ای",
+          "گفت وگوی نامحدود با روانشناس هوش مصنوعی من",
+          "دسترسی به گزارش‌ مخصوص حال روحی‌ تو",
+          "دسترسی به تاریخچه کامل گفت‌وگوها",
+          "پاسخ‌های شخصی‌سازی‌شده با تحلیل عمیق شخصیت من",
+        ],
+        isActive:
+          userDoc.plan === "unlimited" &&
+          (userDoc.subscriptionDuration === 1 || !userDoc.subscriptionDuration),
+        id: unlimitedPlanFromDb?.id || "123456",
+        price: unlimitedPlanFromDb?.price || 199,
+        duration: unlimitedPlanFromDb?.duration || 1,
+        oldPrice: unlimitedPlanFromDb?.oldPrice || 500,
+        isZarinPalEnabled: unlimitedPlanFromDb?.isZarinPalEnabled || false,
       },
     ];
 
@@ -97,6 +116,9 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
     });
   } catch (err: any) {
     console.error("Error fetching plans:", err);
-    return NextResponse.json({ success: false, message: "خطای سرور در دریافت طرح‌ها" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور در دریافت طرح‌ها" },
+      { status: 500 }
+    );
   }
 });

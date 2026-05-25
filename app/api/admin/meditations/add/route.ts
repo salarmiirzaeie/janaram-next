@@ -2,185 +2,152 @@ import { withAdminAuth } from "@/lib/middleware/withAdmin";
 import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { ObjectId } from "mongodb";
-import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { s3 } from "@/lib/s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { s3 } from "@/lib/s3"; // your S3 client instance
+import { sendToAll } from "@/lib/notifications";
 
-export const PUT = withAdminAuth(async function (req: NextRequest, { params }: { params: { id: string } }) {
+export const POST = withAdminAuth(async function (req: NextRequest) {
   try {
-    const id = req.nextUrl.pathname.split("/").pop();
-    if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid meditation ID" }, { status: 400 });
-    }
-
-    // Parse multipart/form-data
     const formData = await req.formData();
     const title = formData.get("title")?.toString();
     const type = formData.get("type")?.toString();
     const description = formData.get("description")?.toString();
     const duration = formData.get("duration")?.toString();
     const isSuggested = formData.get("isSuggested")?.toString() === "true";
-    const file = formData.get("file") as File | null;
-    const image = formData.get("image") as File | null;
+    const accessLevel = formData.get("accessLevel")?.toString() as
+      | "free"
+      | "unlimited"; // 👈 new
+    const file = formData.get("file") as File;
+    const image = formData.get("image") as File;
 
     // Validate input
-    if (!title && !type && !description && !duration && !file && !image) {
-      return NextResponse.json({ success: false, message: "At least one field must be provided" }, { status: 400 });
+    if (
+      !title ||
+      !type ||
+      !file ||
+      !description ||
+      !duration ||
+      !image ||
+      !accessLevel
+    ) {
+      return NextResponse.json(
+        { success: false, message: "All fields are required" },
+        { status: 400 }
+      );
     }
 
-    // Validate meditation type if provided
-    if (type) {
-      const validTypes = ["instrumental", "nature", "love", "calm", "sleep", "sleep-music", "story"];
-      if (!validTypes.includes(type)) {
-        return NextResponse.json({ success: false, message: "Invalid meditation type" }, { status: 400 });
-      }
+    const validTypes = [
+      "instrumental",
+      "nature",
+      "love",
+      "calm",
+      "sleep",
+      "sleep-music",
+      "story",
+    ];
+    if (!validTypes.includes(type)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid meditation type" },
+        { status: 400 }
+      );
     }
 
-    // Connect to MongoDB
+    const validAccessLevels = ["free", "unlimited"];
+    if (!validAccessLevels.includes(accessLevel)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid access level" },
+        { status: 400 }
+      );
+    }
+
+    // Generate unique file names
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "mp3";
+    const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";
+    const uniqueFileName = `meditations/${randomUUID()}.${fileExtension}`;
+    const uniqueImageName = `images/${randomUUID()}.${imageExtension}`;
+
+    // Convert files to buffers
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const imageBuffer = Buffer.from(await image.arrayBuffer());
+
+    const bucketName = process.env.LIARA_BUCKET_NAME;
+
+    // Upload audio
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: uniqueFileName,
+        Body: fileBuffer,
+        ContentType: file.type,
+      })
+    );
+
+    // Upload image
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: uniqueImageName,
+        Body: imageBuffer,
+        ContentType: image.type,
+      })
+    );
+
+    const fileUrl = `/${uniqueFileName}`;
+    const imageUrl = `/${uniqueImageName}`;
+
+    // Insert into MongoDB
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const collection = db.collection("meditations");
 
-    // Prepare update object
-    const update: any = {};
-    if (title) update.title = title;
-    if (type) update.type = type;
-    if (description) update.description = description;
-    if (duration) update.duration = parseInt(duration);
-    if (isSuggested !== undefined) update.isSuggested = isSuggested;
+    const result = await collection.insertOne({
+      title,
+      type,
+      description,
+      duration,
+      fileUrl,
+      imageUrl,
+      isSuggested,
+      accessLevel, // 👈 store it
+      createdAt: new Date(),
+    });
 
-    // Handle file uploads if provided
-    if (file) {
-      // Extract file extension from file name or default to .mp3
-      const fileExtension = file.name.split(".").pop()?.toLowerCase() || "mp3";
-      const uniqueFileName = `${randomUUID()}.${fileExtension}`;
-      const fileBuffer = Buffer.from(await file.arrayBuffer());
-
-      const command = new PutObjectCommand({
-        Bucket: process.env.LIARA_BUCKET_NAME,
-        Key: `meditations/${uniqueFileName}`,
-        Body: fileBuffer,
-      });
-      await s3.send(command);
-      update.fileUrl = `/meditations/${uniqueFileName}`;
-    }
-
-    if (image) {
-      // Extract image extension from file name or default to .jpg
-      const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";
-      const uniqueImageName = `${randomUUID()}.${imageExtension}`;
-      const imageBuffer = Buffer.from(await image.arrayBuffer());
-
-      const command = new PutObjectCommand({
-        Bucket: process.env.LIARA_BUCKET_NAME,
-        Key: `images/${uniqueImageName}`,
-        Body: imageBuffer,
-      });
-      await s3.send(command);
-      update.imageUrl = `/images/${uniqueImageName}`;
-    }
-
-    // Update meditation in MongoDB
-    const result = await collection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { ...update, updatedAt: new Date() } }
-    );
-
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ success: false, message: "Meditation not found" }, { status: 404 });
-    }
-
-    // Fetch the updated meditation
-    const updatedMeditation = await collection.findOne({ _id: new ObjectId(id) });
-
-    if (!updatedMeditation) {
-      return NextResponse.json({ success: false, message: "Meditation not found" }, { status: 404 });
-    }
+    await sendToAll({
+      title: "مدیتیشن جدید منتشر شد 🧘‍♂️",
+      body:
+        type === "story"
+          ? `قصه جدید ${title} منتشر شد`
+          : `مدیتیشن جدید ${title} اضافه شد`,
+      data: {
+        meditationId: result.insertedId.toString(),
+        type,
+        accessLevel,
+      },
+    });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Meditation updated successfully",
+        message: "Meditation created successfully",
         meditation: {
-          id: id,
-          title: updatedMeditation.title,
-          type: updatedMeditation.type,
-          fileUrl: updatedMeditation.fileUrl,
-          imageUrl: updatedMeditation.imageUrl,
-          description: updatedMeditation.description,
-          duration: updatedMeditation.duration,
-          isSuggested: updatedMeditation.isSuggested,
+          id: result.insertedId.toString(),
+          title,
+          type,
+          fileUrl,
+          imageUrl,
+          description,
+          duration: parseInt(duration),
+          isSuggested,
+          accessLevel,
         },
       },
-      { status: 200 }
+      { status: 201 }
     );
   } catch (error) {
-    console.error("Error updating meditation:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
-  }
-});
-
-export const DELETE = withAdminAuth(async function (req: NextRequest) {
-  try {
-    const id = req.nextUrl.pathname.split("/").pop();
-    if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid meditation ID" }, { status: 400 });
-    }
-
-    // Connect to MongoDB
-    const client = await clientPromise;
-    const db = client.db("janaram-db");
-    const collection = db.collection("meditations");
-
-    // Find the meditation to get file paths
-    const meditation = await collection.findOne({ _id: new ObjectId(id) });
-    if (!meditation) {
-      return NextResponse.json({ success: false, message: "Meditation not found" }, { status: 404 });
-    }
-
-    // Delete associated files from S3
-    if (meditation.fileUrl) {
-      const fileKey = meditation.fileUrl.replace("/meditations/", "");
-      try {
-        const command = new DeleteObjectCommand({
-          Bucket: process.env.LIARA_BUCKET_NAME,
-          Key: `meditations/${fileKey}`,
-        });
-        await s3.send(command);
-      } catch (error) {
-        console.warn(`Failed to delete S3 file ${fileKey}:`, error);
-      }
-    }
-
-    if (meditation.imageUrl) {
-      const imageKey = meditation.imageUrl.replace("/images/", "");
-      try {
-        const command = new DeleteObjectCommand({
-          Bucket: process.env.LIARA_BUCKET_NAME,
-          Key: `images/${imageKey}`,
-        });
-        await s3.send(command);
-      } catch (error) {
-        console.warn(`Failed to delete S3 image ${imageKey}:`, error);
-      }
-    }
-
-    // Delete meditation from MongoDB
-    const result = await collection.deleteOne({ _id: new ObjectId(id) });
-
-    if (result.deletedCount === 0) {
-      return NextResponse.json({ success: false, message: "Meditation not found" }, { status: 404 });
-    }
-
+    console.error("Error creating meditation:", error);
     return NextResponse.json(
-      {
-        success: true,
-        message: "Meditation deleted successfully",
-      },
-      { status: 200 }
+      { success: false, message: "Internal server error" },
+      { status: 500 }
     );
-  } catch (error) {
-    console.error("Error deleting meditation:", error);
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }
 });

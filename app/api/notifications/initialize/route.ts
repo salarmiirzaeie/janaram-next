@@ -3,42 +3,66 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
-import { Expo } from "expo-server-sdk";
+import { getMessaging } from "firebase-admin/messaging";
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
-    const { pushToken } = await req.json();
-    // Validate request body
-    if (!pushToken) {
-      return NextResponse.json({ success: false, message: "توکن اعلان الزامی است" }, { status: 400 });
-    }
+    const db = (await clientPromise).db("janaram-db");
+    const users = db.collection<User>("users");
 
-    // Convert user.sub to ObjectId
     let userId: ObjectId;
     try {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شناسه کاربر نامعتبر است" },
+        { status: 400 }
+      );
+    }
+    let userDoc = await users.findOne({ _id: userId });
+    if (!userDoc || !userDoc._id) {
+      console.error("User not found or missing _id for user.sub:", user.sub);
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" },
+        { status: 404 }
+      );
     }
 
-    const db = (await clientPromise).db("janaram-db");
-    const users = db.collection<User>("users");
+    const { pushToken } = await req.json();
+    if (!pushToken) {
+      return NextResponse.json(
+        { success: false, message: "توکن اعلان الزامی است" },
+        { status: 400 }
+      );
+    }
 
-    // Update user with push token
-    const result = await users.updateOne({ _id: userId }, { $set: { pushToken, updatedAt: new Date() } });
+    // Save the push token in DB
+    const result = await users.updateOne(
+      { _id: userId },
+      { $set: { pushToken, updatedAt: new Date() } }
+    );
 
     if (result.matchedCount === 0) {
       console.error("User not found for _id:", userId.toString());
-      return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "کاربر یافت نشد" },
+        { status: 404 }
+      );
     }
+
+    // 🔑 Subscribe the token to "new-content" topic
+    await getMessaging().subscribeToTopic([pushToken], "new-content");
 
     return NextResponse.json({
       success: true,
-      message: "توکن اعلان با موفقیت ذخیره شد",
+      message: "توکن اعلان ذخیره و در موضوع new-content عضو شد",
     });
   } catch (err: any) {
-    console.error("Error saving push token:", err);
-    return NextResponse.json({ success: false, message: "خطای سرور در ذخیره توکن اعلان" }, { status: 500 });
+    // console.error("Error saving push token:", err);
+    return NextResponse.json(
+      { success: false, message: "خطای سرور در ذخیره توکن اعلان" },
+      { status: 500 }
+    );
   }
 });

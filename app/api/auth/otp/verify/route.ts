@@ -18,7 +18,10 @@ export async function POST(req: Request) {
 
     // Input validation
     if (!phoneNumber || !otp || !validateOtp(otp)) {
-      return NextResponse.json({ success: false, message: "شماره تلفن یا کد نامعتبر است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "شماره تلفن یا کد نامعتبر است" },
+        { status: 400 }
+      );
     }
 
     const db = (await clientPromise).db("janaram-db");
@@ -30,17 +33,20 @@ export async function POST(req: Request) {
     });
 
     if (!otpRecord) {
-      return NextResponse.json({ success: false, message: "کد نامعتبر یا منقضی شده است" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "کد نامعتبر یا منقضی شده است" },
+        { status: 400 }
+      );
     }
 
     // Mark OTP as verified
-    await db.collection("otp_codes").updateOne({ _id: otpRecord._id }, { $set: { verified: true } });
+    await db
+      .collection("otp_codes")
+      .updateOne({ _id: otpRecord._id }, { $set: { verified: true } });
 
     // Register or login user
     const users = db.collection<User>("users");
-    console.log(phoneNumber);
     let user: User | null = await users.findOne({ phoneNumber });
-    console.log(user);
     let isNewUser = false; // Flag to track if user is new
     let isOnboardingSelected = true; // Flag to track if user is new
 
@@ -72,7 +78,10 @@ export async function POST(req: Request) {
           $set: {
             updatedAt: new Date(),
             plan: user.plan || "free",
-            conversationCount: user.conversationCount || { date: today, count: 0 },
+            conversationCount: user.conversationCount || {
+              date: today,
+              count: 0,
+            },
           },
         }
       );
@@ -102,7 +111,6 @@ export async function POST(req: Request) {
       { expiresIn: "1y" }
     );
 
-    console.log("User authenticated via OTP:", user._id);
     return NextResponse.json({
       success: true,
       token,
@@ -112,6 +120,9 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     console.error("Error in OTP verification:", err);
-    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "خطای سرور" },
+      { status: 500 }
+    );
   }
 }

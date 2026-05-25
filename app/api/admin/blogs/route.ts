@@ -3,20 +3,19 @@ import clientPromise from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { ObjectId, Sort } from "mongodb";
-import { generateUniqueSlug } from "@/lib/slugify";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/s3";
+import { createSlug } from "@/lib/createSlug";
 
 export const POST = withAdminAuth(async function (req: NextRequest) {
   try {
-    // Parse multipart/form-data
     const formData = await req.formData();
     const title = formData.get("title")?.toString();
     const content = formData.get("content")?.toString();
     const authorId = formData.get("authorId")?.toString();
+    const description = formData.get("description")?.toString();
     const image = formData.get("image") as File;
 
-    // Validate input
     if (!title || !content || !authorId || !image) {
       return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 });
     }
@@ -24,14 +23,11 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid authorId" }, { status: 400 });
     }
 
-    // Generate unique slug
-    const slug = await generateUniqueSlug(title);
+    // ✅ ساخت slug فارسی از عنوان
+    const slug = createSlug(title);
 
-    // Generate unique filename for image
     const imageExtension = image.name.split(".").pop()?.toLowerCase() || "jpg";
     const uniqueImageName = `${randomUUID()}.${imageExtension}`;
-
-    // Upload image to S3
     const imageBuffer = Buffer.from(await image.arrayBuffer());
     const command = new PutObjectCommand({
       Bucket: process.env.LIARA_BUCKET_NAME,
@@ -40,21 +36,20 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     });
     await s3.send(command);
 
-    // Generate public URL for the image
     const imageUrl = `/images/${uniqueImageName}`;
 
-    // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db("janaram-db");
     const collection = db.collection("blogs");
 
-    // Insert blog into MongoDB
+    // ✅ ذخیره slug در دیتابیس
     const result = await collection.insertOne({
       title,
       slug,
       content,
       authorId: new ObjectId(authorId),
       imageUrl,
+      description,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -70,6 +65,7 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
           content,
           authorId,
           imageUrl,
+          description,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -81,7 +77,6 @@ export const POST = withAdminAuth(async function (req: NextRequest) {
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }
 });
-
 export const GET = withAdminAuth(async function (req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -111,12 +106,13 @@ export const GET = withAdminAuth(async function (req: NextRequest) {
     const formattedBlogs = blogs.map((blog) => ({
       _id: blog._id.toString(),
       title: blog.title,
-      slug: blog.slug,
+
       content: blog.content,
       authorId: blog.authorId.toString(),
       imageUrl: blog.imageUrl,
       createdAt: blog.createdAt.toISOString(),
       updatedAt: blog.updatedAt.toISOString(),
+      description: blog.description,
     }));
 
     return NextResponse.json({ success: true, blogs: formattedBlogs }, { status: 200 });
