@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import { DOCTOR_TERMS_VERSION } from "@/lib/doctor-terms";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +18,31 @@ export async function POST(req: NextRequest) {
       categoryId,
       medicalLicenseNumber, // شماره نظام پزشکی (اجباری)
       baleId, // آیدی بله (اختیاری)
+      termsAccepted,
+      termsVersion,
     } = body;
+
+    if (!termsAccepted) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "پذیرش قوانین و مقررات برای ثبت‌نام الزامی است",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (termsVersion && termsVersion !== DOCTOR_TERMS_VERSION) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "نسخه قوانین به‌روز شده است. لطفاً صفحه را رفرش کنید و دوباره تلاش کنید.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const acceptedAt = new Date();
 
     // اعتبارسنجی
     if (!name || !phone || !password) {
@@ -98,7 +123,9 @@ export async function POST(req: NextRequest) {
       schedule: {},
       offDays: [],
       isActive: true,
-      baleId: cleanedBaleId || null, // اضافه شد
+      baleId: cleanedBaleId || null,
+      termsAcceptedAt: acceptedAt,
+      termsVersion: DOCTOR_TERMS_VERSION,
       createdAt: new Date(),
       updatedAt: new Date(),
       rating: 5,

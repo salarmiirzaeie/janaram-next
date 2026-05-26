@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { DoctorTermsModal } from "@/components/doctor/DoctorTermsModal";
+import { DOCTOR_TERMS_VERSION } from "@/lib/doctor-terms";
 
 // تابع تبدیل اعداد فارسی/عربی به انگلیسی
 const toEnglishNumber = (str: string): string => {
@@ -24,8 +25,8 @@ const getEnglishNumberFromInput = (value: string): number => {
 };
 
 export default function DoctorRegisterPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [formData, setFormData] = useState({
@@ -102,43 +103,40 @@ export default function DoctorRegisterPage() {
     setError("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = (): { ok: true; experienceNum: number; sessionPriceNum: number } | { ok: false } => {
     setError("");
     setSuccess("");
 
-    // اعتبارسنجی فیلدهای اجباری
     if (!formData.name || !formData.phone || !formData.password) {
       setError("نام، شماره تلفن و رمز عبور الزامی هستند");
-      return;
+      return { ok: false };
     }
 
     if (!formData.medicalLicenseNumber) {
       setError("شماره نظام پزشکی الزامی است");
-      return;
+      return { ok: false };
     }
 
     if (formData.password !== formData.confirmPassword) {
       setError("رمز عبور و تکرار آن مطابقت ندارند");
-      return;
+      return { ok: false };
     }
 
     if (formData.password.length < 6) {
       setError("رمز عبور باید حداقل ۶ کاراکتر باشد");
-      return;
+      return { ok: false };
     }
 
     if (formData.phone.length < 11) {
       setError("شماره تلفن نامعتبر است");
-      return;
+      return { ok: false };
     }
 
     if (formData.specialties.length === 0) {
       setError("حداقل یک تخصص را انتخاب کنید");
-      return;
+      return { ok: false };
     }
 
-    // تبدیل و اعتبارسنجی قیمت جلسه (نباید صفر باشد)
     const experienceNum = getEnglishNumberFromInput(formData.experience);
     const sessionPriceNum = getEnglishNumberFromInput(formData.sessionPrice);
 
@@ -146,9 +144,16 @@ export default function DoctorRegisterPage() {
       setError(
         "قیمت هر جلسه نمی‌تواند صفر یا منفی باشد. لطفاً مبلغ معتبر وارد کنید."
       );
-      return;
+      return { ok: false };
     }
 
+    return { ok: true, experienceNum, sessionPriceNum };
+  };
+
+  const submitRegistration = async (
+    experienceNum: number,
+    sessionPriceNum: number
+  ) => {
     setIsLoading(true);
 
     try {
@@ -157,26 +162,28 @@ export default function DoctorRegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
-          phone: formData.phone, // قبلاً به انگلیسی تبدیل شده
+          phone: formData.phone,
           password: formData.password,
           specialty: formData.specialties[0],
           specialties: formData.specialties,
-          experience: experienceNum, // عدد انگلیسی
-          sessionPrice: sessionPriceNum, // عدد انگلیسی (بیشتر از صفر)
+          experience: experienceNum,
+          sessionPrice: sessionPriceNum,
           bio: formData.bio,
           categoryId: formData.categoryId,
-          medicalLicenseNumber: formData.medicalLicenseNumber, // قبلاً به انگلیسی تبدیل شده
+          medicalLicenseNumber: formData.medicalLicenseNumber,
           baleId: formData.baleId || null,
+          termsAccepted: true,
+          termsVersion: DOCTOR_TERMS_VERSION,
         }),
       });
 
       const data = await res.json();
 
       if (data.success) {
+        setShowTermsModal(false);
         setSuccess(
           "ثبت‌نام با موفقیت انجام شد. پس از تأیید ادمین می‌توانید وارد پنل شوید."
         );
-        // پاک کردن فرم
         setFormData({
           name: "",
           phone: "",
@@ -194,15 +201,37 @@ export default function DoctorRegisterPage() {
       } else {
         setError(data.message || "خطا در ثبت‌نام");
       }
-    } catch (err) {
+    } catch {
       setError("خطا در ارتباط با سرور");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const validation = validateForm();
+    if (!validation.ok) return;
+    setShowTermsModal(true);
+  };
+
+  const handleTermsAccept = async () => {
+    const validation = validateForm();
+    if (!validation.ok) {
+      setShowTermsModal(false);
+      return;
+    }
+    await submitRegistration(validation.experienceNum, validation.sessionPriceNum);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-8 px-4" dir="rtl">
+      <DoctorTermsModal
+        open={showTermsModal}
+        onClose={() => !isLoading && setShowTermsModal(false)}
+        onAccept={handleTermsAccept}
+        isSubmitting={isLoading}
+      />
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">

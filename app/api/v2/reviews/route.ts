@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withAuth } from "@/lib/middleware/withAuth";
 import { isReviewWindowOpen } from "@/lib/booking-lifecycle";
+import { asAppointmentLike } from "@/lib/appointment-doc";
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
@@ -42,7 +43,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       );
     }
 
-    if (!isReviewWindowOpen(appointment)) {
+    if (!isReviewWindowOpen(asAppointmentLike(appointment))) {
       return NextResponse.json(
         {
           success: false,

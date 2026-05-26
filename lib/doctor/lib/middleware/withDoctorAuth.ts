@@ -10,7 +10,7 @@ export function withDoctorAuth(
     params?: Record<string, string>
   ) => Promise<NextResponse>
 ) {
-  return async (req: NextRequest, context?: RouteContext) => {
+  return async (req: NextRequest, context: RouteContext) => {
     try {
       const authHeader = req.headers.get("authorization");
       if (!authHeader || !authHeader.startsWith("Bearer ")) {

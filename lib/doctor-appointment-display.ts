@@ -1,4 +1,5 @@
 import { PATIENT_REFUND_MIN_HOURS } from "@/lib/booking-lifecycle";
+import type { StoredAppointment } from "@/lib/appointment-doc";
 
 /** Doctor-facing note for a cancelled appointment */
 export function getDoctorCancelledAppointmentNote(
@@ -32,17 +33,7 @@ export function doctorGetsPaidForCancellation(
 }
 
 export function serializeDoctorAppointment(
-  app: {
-    _id: { toString(): string };
-    date: string;
-    time: string;
-    status: string;
-    sessionPrice?: number;
-    createdAt?: Date;
-    cancelReason?: string;
-    cancelledAt?: Date;
-    payoutStatus?: string;
-  },
+  app: StoredAppointment,
   user: { name: string; phone: string } | undefined
 ) {
   const cancelReason = app.cancelReason as string | undefined;

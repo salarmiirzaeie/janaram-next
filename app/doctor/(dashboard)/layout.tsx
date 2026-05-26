@@ -13,6 +13,7 @@ import {
   User2,
   Calendar1,
 } from "lucide-react";
+import { FloatingSupportButton } from "@/components/doctor/FloatingSupportButton";
 
 const menuItems = [
   { name: "داشبورد", href: "/doctor", icon: LayoutDashboard },
@@ -182,6 +183,8 @@ export default function DoctorLayout({
           {children}
         </main>
       </div>
+
+      <FloatingSupportButton />
     </div>
   );
 }

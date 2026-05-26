@@ -8,6 +8,7 @@ import {
   isReviewWindowOpen,
   PATIENT_REFUND_MIN_HOURS,
 } from "@/lib/booking-lifecycle";
+import { asAppointmentLike } from "@/lib/appointment-doc";
 
 export const GET = withAuth(async (req: NextRequest, user: any) => {
   try {
@@ -47,14 +48,17 @@ export const GET = withAuth(async (req: NextRequest, user: any) => {
 
     const enriched = myAppointments.map((a) => {
       const id = a._id.toString();
+      const slot = asAppointmentLike(a);
       const hasReview = reviewedSet.has(id);
       const canReview =
-        a.status === "completed" && !hasReview && isReviewWindowOpen(a);
+        slot.status === "completed" &&
+        !hasReview &&
+        isReviewWindowOpen(slot);
 
       const canCancelWithRefund =
-        a.status === "confirmed" &&
+        slot.status === "confirmed" &&
         a.payoutStatus === "held" &&
-        canPatientCancelWithRefund(a);
+        canPatientCancelWithRefund(slot);
 
       return {
         id,

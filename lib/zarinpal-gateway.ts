@@ -1,12 +1,11 @@
-import { isAxiosError } from "axios";
+import { getAxiosResponseData, isAxiosError } from "@/lib/axios-error";
 import { getZarinpal, getPaymentRedirectUrl } from "@/lib/zarinpal";
 
 export function getZarinpalErrorCode(err: unknown): number | undefined {
-  if (!isAxiosError(err)) return undefined;
-  const body = err.response?.data as {
+  const body = getAxiosResponseData<{
     errors?: { code?: number };
     data?: { code?: number };
-  };
+  }>(err);
   return body?.errors?.code ?? body?.data?.code;
 }
 
@@ -84,7 +83,7 @@ export async function createZarinpalPayment(params: {
     }
 
     if (isAxiosError(err)) {
-      const body = err.response?.data as { errors?: { message?: string } };
+      const body = getAxiosResponseData<{ errors?: { message?: string } }>(err);
       return {
         ok: false,
         message: body?.errors?.message || "خطا در اتصال به درگاه پرداخت",

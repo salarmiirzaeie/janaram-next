@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import axios from "axios";
 import { randomBytes } from "crypto";
 const MelipayamakApi = require("melipayamak");
 const https = require("https");

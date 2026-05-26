@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withDoctorAuth } from "@/lib/doctor/lib/middleware/withDoctorAuth";
 import { getTodayTehran } from "@/lib/booking";
+import { asStoredAppointment } from "@/lib/appointment-doc";
 import { serializeDoctorAppointment } from "@/lib/doctor-appointment-display";
 
 export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
@@ -36,7 +37,10 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
     });
 
     const result = upcomingAppointments.map((app) =>
-      serializeDoctorAppointment(app, userMap.get(app.userId))
+      serializeDoctorAppointment(
+        asStoredAppointment(app),
+        userMap.get(app.userId)
+      )
     );
 
     return NextResponse.json({

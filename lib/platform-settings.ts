@@ -2,6 +2,13 @@ import type { Db } from "mongodb";
 
 const SETTINGS_ID = "financial";
 
+type PlatformSettingsDoc = {
+  _id: string;
+  commissionRate?: number;
+  updatedAt?: Date;
+  updatedBy?: string | null;
+};
+
 export type PlatformFinancialSettings = {
   /** 0–1 fraction kept by platform; 0 = doctor gets 100% */
   commissionRate: number;
@@ -29,7 +36,9 @@ export function getCommissionPercentLabel(rate: number): string {
 export async function getPlatformFinancialSettings(
   db: Db
 ): Promise<PlatformFinancialSettings> {
-  const doc = await db.collection("platform_settings").findOne({ _id: SETTINGS_ID });
+  const doc = await db
+    .collection<PlatformSettingsDoc>("platform_settings")
+    .findOne({ _id: SETTINGS_ID });
   if (!doc || typeof doc.commissionRate !== "number") {
     return { ...DEFAULT };
   }
@@ -37,7 +46,7 @@ export async function getPlatformFinancialSettings(
   return {
     commissionRate: rate,
     updatedAt: doc.updatedAt,
-    updatedBy: doc.updatedBy,
+    updatedBy: doc.updatedBy ?? undefined,
   };
 }
 
@@ -52,7 +61,7 @@ export async function setPlatformCommissionRate(
   adminSub?: string
 ): Promise<PlatformFinancialSettings> {
   const rate = Math.min(1, Math.max(0, commissionRate));
-  await db.collection("platform_settings").updateOne(
+  await db.collection<PlatformSettingsDoc>("platform_settings").updateOne(
     { _id: SETTINGS_ID },
     {
       $set: {
