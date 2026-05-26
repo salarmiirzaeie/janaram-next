@@ -6,6 +6,7 @@ import moment from "moment-jalaali";
 import { Calendar, Clock, User, Phone, CheckCircle, XCircle, Filter, AlertCircle } from "lucide-react";
 import { canDoctorMarkCompleted, canDoctorMarkNoShow, NO_SHOW_GRACE_MINUTES } from "@/lib/booking-lifecycle";
 import { useFeedbackModal } from "@/components/doctor/useFeedbackModal";
+import { doctorSelectSmClass } from "@/lib/doctor-form-styles";
 
 // تنظیم moment-jalaali
 moment.loadPersian({ dialect: "persian-modern", usePersianDigits: false });
@@ -431,7 +432,7 @@ export default function DoctorAppointmentsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="flex-1 sm:flex-initial min-w-0 px-3 sm:px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`${doctorSelectSmClass} flex-1 sm:flex-initial min-w-0`}
             >
               <option value="all">همه وضعیت‌ها</option>
               <option value="pending_payment">در انتظار پرداخت</option>

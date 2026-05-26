@@ -59,7 +59,7 @@ export default function DoctorLayout({
   }
 
   return (
-    <div dir="rtl" className="flex h-screen overflow-hidden">
+    <div dir="rtl" className="doctor-ui flex h-screen overflow-hidden">
       {/* سایدبار برای موبایل (اورلی) */}
       <div
         className={`fixed inset-0 z-40 lg:hidden ${

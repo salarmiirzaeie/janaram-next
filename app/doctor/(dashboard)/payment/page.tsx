@@ -14,6 +14,11 @@ import {
   Eye,
 } from "lucide-react";
 import { useFeedbackModal } from "@/components/doctor/useFeedbackModal";
+import {
+  doctorInputClassLtr,
+  doctorInputClassRight,
+  doctorSelectSmClass,
+} from "@/lib/doctor-form-styles";
 
 interface Transaction {
   id: string;
@@ -399,7 +404,7 @@ export default function DoctorPaymentsPage() {
                     accountName: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                className={doctorInputClassRight}
                 placeholder="نام کامل"
               />
             </div>
@@ -415,7 +420,7 @@ export default function DoctorPaymentsPage() {
                     cardNumber: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                className={`${doctorInputClassLtr} font-mono`}
                 placeholder="6037991234567890"
                 dir="ltr"
               />
@@ -427,7 +432,7 @@ export default function DoctorPaymentsPage() {
                 type="text"
                 value={editedAccount.sheba}
                 onChange={(e) => setEditedAccount({ ...editedAccount, sheba: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                className={`${doctorInputClassLtr} font-mono`}
                 placeholder="IR820540123456789012345678"
                 dir="ltr"
               />
@@ -553,7 +558,7 @@ export default function DoctorPaymentsPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={doctorSelectSmClass}
               >
                 <option value="all">همه وضعیت‌ها</option>
                 <option value="success">موفق</option>
@@ -563,7 +568,7 @@ export default function DoctorPaymentsPage() {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={doctorSelectSmClass}
               >
                 <option value="all">همه نوع‌ها</option>
                 <option value="deposit">واریز</option>

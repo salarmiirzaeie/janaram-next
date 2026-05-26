@@ -96,7 +96,7 @@ const InputField: React.FC<InputFieldProps> = ({ label, error, ...props }) => (
     <label className="text-gray-700 font-medium mb-1">{label}</label>
     <input
       {...props}
-      className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${
+      className={`w-full p-3 border rounded-xl bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ${
         error ? "border-red-500" : "border-gray-300"
       }`}
     />

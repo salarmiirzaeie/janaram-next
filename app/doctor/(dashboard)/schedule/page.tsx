@@ -15,6 +15,7 @@ import {
   Moon,
 } from "lucide-react";
 import { useFeedbackModal } from "@/components/doctor/useFeedbackModal";
+import { doctorDateInputClass } from "@/lib/doctor-form-styles";
 
 type Schedule = {
   [key: number]: string[];
@@ -480,7 +481,7 @@ export default function DoctorSchedulePage() {
                 type="date"
                 value={offDayInput}
                 onChange={(e) => setOffDayInput(e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-base min-h-[48px]"
+                className={doctorDateInputClass}
               />
               <button
                 type="button"

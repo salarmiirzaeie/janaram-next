@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  doctorInputClass,
+  doctorInputClassLtr,
+} from "@/lib/doctor-form-styles";
 
 export default function DoctorLoginPage() {
   const router = useRouter();
@@ -71,7 +75,7 @@ export default function DoctorLoginPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="09123456789"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+              className={doctorInputClassLtr}
               dir="ltr"
             />
           </div>
@@ -83,7 +87,7 @@ export default function DoctorLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+              className={doctorInputClassLtr}
               dir="ltr"
             />
           </div>

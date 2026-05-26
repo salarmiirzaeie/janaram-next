@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { DoctorTermsModal } from "@/components/doctor/DoctorTermsModal";
 import { DOCTOR_TERMS_VERSION } from "@/lib/doctor-terms";
+import {
+  doctorInputClassLtr,
+  doctorInputClassRight,
+  doctorSelectClass,
+  doctorTextareaClass,
+} from "@/lib/doctor-form-styles";
 
 // تابع تبدیل اعداد فارسی/عربی به انگلیسی
 const toEnglishNumber = (str: string): string => {
@@ -267,7 +273,7 @@ export default function DoctorRegisterPage() {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="دکتر سارا محمدی"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                className={doctorInputClassRight}
               />
             </div>
 
@@ -283,7 +289,7 @@ export default function DoctorRegisterPage() {
                 onChange={handleChange}
                 placeholder="09123456789"
                 dir="ltr"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={doctorInputClassLtr}
               />
               <p className="text-gray-400 text-xs mt-1 text-right">
                 با این شماره وارد پنل خواهید شد (فقط اعداد انگلیسی)
@@ -302,7 +308,7 @@ export default function DoctorRegisterPage() {
                 onChange={handleChange}
                 placeholder="مثال: ۱۲۳۴۵۶"
                 dir="ltr"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={doctorInputClassLtr}
               />
             </div>
 
@@ -317,7 +323,7 @@ export default function DoctorRegisterPage() {
                 onChange={handleChange}
                 placeholder="@username یا username"
                 dir="ltr"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={doctorInputClassLtr}
               />
               <p className="text-gray-400 text-xs mt-1 text-right">
                 برای ارتباط با بیماران، آیدی خود را در پیام‌رسان بله وارد کنید
@@ -334,7 +340,7 @@ export default function DoctorRegisterPage() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="********"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={doctorInputClassLtr}
               />
             </div>
 
@@ -348,7 +354,7 @@ export default function DoctorRegisterPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="********"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={doctorInputClassLtr}
               />
             </div>
 
@@ -390,7 +396,7 @@ export default function DoctorRegisterPage() {
                 name="categoryId"
                 value={formData.categoryId}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                className={doctorSelectClass}
               >
                 {categories.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -411,7 +417,7 @@ export default function DoctorRegisterPage() {
                 value={formData.experience}
                 onChange={handleChange}
                 placeholder="مثال: ۱۲"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                className={doctorInputClassRight}
                 dir="ltr"
               />
             </div>
@@ -428,7 +434,7 @@ export default function DoctorRegisterPage() {
                 value={formData.sessionPrice}
                 onChange={handleChange}
                 placeholder="مثال: ۲۵۰۰۰۰"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                className={doctorInputClassRight}
                 dir="ltr"
               />
               <p className="text-gray-400 text-xs mt-1 text-right">
@@ -446,7 +452,7 @@ export default function DoctorRegisterPage() {
                 onChange={handleChange}
                 rows={4}
                 placeholder="توضیحات درباره خود، تخصص‌ها و روش درمانی..."
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                className={doctorTextareaClass}
               />
             </div>
 

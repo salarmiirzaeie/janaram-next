@@ -20,7 +20,41 @@
 }
 
 body {
-  color: var(--background);
+  color: var(--foreground);
   background: var(--background);
   font-family: var(--font-vazir), sans-serif;
+}
+
+/* Doctor panel / auth — typed text dark, placeholder muted (no -webkit-text-fill on base) */
+.doctor-field {
+  color: #111827;
+  background-color: #ffffff;
+}
+
+.doctor-field::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+.doctor-field::-webkit-input-placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+.doctor-field::-moz-placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+.doctor-field:disabled {
+  color: #6b7280;
+  background-color: #f9fafb;
+}
+
+.doctor-field:-webkit-autofill,
+.doctor-field:-webkit-autofill:hover,
+.doctor-field:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111827;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  transition: background-color 9999s ease-out 0s;
 }

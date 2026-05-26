@@ -20,6 +20,13 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { useFeedbackModal } from "@/components/doctor/useFeedbackModal";
+import {
+  doctorInputClassLtr,
+  doctorInputClassRight,
+  doctorInputDisabledClass,
+  doctorSelectClass,
+  doctorTextareaClass,
+} from "@/lib/doctor-form-styles";
 
 // تابع تبدیل اعداد فارسی/عربی به انگلیسی
 const toEnglishNumber = (str: string): string => {
@@ -287,7 +294,7 @@ export default function DoctorProfilePage() {
               type="text"
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+              className={doctorInputClassRight}
               placeholder="دکتر سارا محمدی"
               disabled={profile.status === "pending"}
             />
@@ -303,7 +310,7 @@ export default function DoctorProfilePage() {
               type="tel"
               value={profile.phone}
               disabled
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-right text-gray-500"
+              className={doctorInputDisabledClass}
               dir="ltr"
             />
             <p className="text-gray-400 text-xs mt-1 text-right flex items-center gap-1">
@@ -414,7 +421,7 @@ export default function DoctorProfilePage() {
               type="text"
               value={profile.medicalLicenseNumber}
               disabled
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-right text-gray-500"
+              className={doctorInputDisabledClass}
               dir="ltr"
             />
             <p className="text-gray-400 text-xs mt-1 text-right">
@@ -435,7 +442,7 @@ export default function DoctorProfilePage() {
                 setProfile({ ...profile, baleId: e.target.value })
               }
               disabled={profile.status === "pending"}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className={doctorInputClassLtr}
               placeholder="@username یا username"
               dir="ltr"
             />
@@ -454,7 +461,7 @@ export default function DoctorProfilePage() {
               type="text"
               value={profile.successfulConsultations}
               disabled
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-right text-gray-500"
+              className={doctorInputDisabledClass}
             />
           </div>
 
@@ -506,7 +513,7 @@ export default function DoctorProfilePage() {
                 setProfile({ ...profile, categoryId: e.target.value })
               }
               disabled={profile.status === "pending"}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className={doctorSelectClass}
             >
               <option value="">انتخاب دسته‌بندی</option>
               {CATEGORIES.map((cat) => (
@@ -529,7 +536,7 @@ export default function DoctorProfilePage() {
               value={profile.experience === 0 ? "" : profile.experience}
               onChange={handleExperienceChange}
               disabled={profile.status === "pending"}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className={doctorInputClassLtr}
               placeholder="مثال: ۱۲"
               dir="ltr"
             />
@@ -547,11 +554,9 @@ export default function DoctorProfilePage() {
               value={profile.sessionPrice === 0 ? "" : profile.sessionPrice}
               onChange={handlePriceChange}
               disabled={profile.status === "pending"}
-              className={`w-full px-4 py-3 rounded-xl border ${
-                priceError
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-200 focus:ring-blue-500"
-              } focus:outline-none focus:ring-2 focus:border-transparent text-right`}
+              className={`${doctorInputClassLtr} ${
+                priceError ? "border-red-500 focus:ring-red-500" : ""
+              }`}
               placeholder="مثال: ۲۵۰۰۰۰"
               dir="ltr"
             />
@@ -577,7 +582,7 @@ export default function DoctorProfilePage() {
               onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
               disabled={profile.status === "pending"}
               rows={5}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              className={doctorTextareaClass}
               placeholder="توضیحات درباره خود، تخصص‌ها و روش درمانی..."
             />
           </div>

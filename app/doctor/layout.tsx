@@ -11,8 +11,11 @@ export default function DoctorLayout({
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light" />
       </head>
-      <body>{children}</body>
+      <body className="doctor-ui text-gray-900 bg-gray-50 antialiased">
+        {children}
+      </body>
     </html>
   );
 }
