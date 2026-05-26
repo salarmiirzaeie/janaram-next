@@ -1,16 +1,23 @@
-import https from "https";
+// import https from "https";
+// const MELI_HOST = "console.melipayamak.com";
+// const MELI_PATH =
+//   process.env.SMS_MELIPAYAMAK_PATH ||
+//   "/api/send/shared/6be212aadaea410b97e5ba4e98171dca";
 
-const MELI_HOST = "console.melipayamak.com";
-const MELI_PATH =
-  process.env.SMS_MELIPAYAMAK_PATH ||
-  "/api/send/shared/6be212aadaea410b97e5ba4e98171dca";
-
-/** Fire-and-forget SMS (same provider as OTP) */
+/** SMS temporarily disabled — re-enable by restoring the https.request block below */
 export function sendSms(
   phone: string,
   bodyId: number,
   args: string[]
 ): Promise<void> {
+  console.log("[sms] disabled — skip send", {
+    phone,
+    bodyId,
+    argsCount: args.length,
+  });
+  return Promise.resolve();
+
+  /*
   return new Promise((resolve) => {
     const normalized = phone.replace(/\s/g, "");
     if (!/^(\+98|0)?9\d{9}$/.test(normalized)) {
@@ -46,6 +53,7 @@ export function sendSms(
     req.write(data);
     req.end();
   });
+  */
 }
 
 function bodyId(envKey: string, fallback: number): number {

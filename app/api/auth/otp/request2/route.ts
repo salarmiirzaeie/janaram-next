@@ -1,28 +1,19 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
 import { randomBytes } from "crypto";
-const MelipayamakApi = require("melipayamak");
-const https = require("https");
 
-// Environment variable validation
-const SMS_API_KEY = process.env.SMS_API_KEY_PRO || "";
-if (!SMS_API_KEY) throw new Error("SMS_API_KEY_PRO is not defined");
+// const MelipayamakApi = require("melipayamak");
+// const SMS_API_KEY = process.env.SMS_API_KEY_PRO || "";
+// if (!SMS_API_KEY) throw new Error("SMS_API_KEY_PRO is not defined");
 
-// Phone number validation (for Iranian numbers)
 const validatePhoneNumber = (phone: string): boolean => {
   return /^(\+98|0)?9\d{9}$/.test(phone);
 };
 
-// App hash validation (11 characters or null/undefined)
-// const validateAppHash = (appHash: string | null | undefined): boolean => {
-//   return appHash == null || (typeof appHash === "string" && appHash.length === 11);
-// };
-
+/** Dev OTP — SMS disabled; OTP returned in response body */
 export async function POST(req: Request) {
   try {
     const { phoneNumber } = await req.json();
 
-    // Input validation
     if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
       return NextResponse.json(
         { success: false, message: "شماره تلفن نامعتبر است" },
@@ -34,16 +25,16 @@ export async function POST(req: Request) {
       .toString()
       .padStart(6, "0");
 
+    console.log("[otp] SMS disabled — OTP for", phoneNumber, ":", otp);
+
     return NextResponse.json({
       success: true,
       message: "کد تایید ارسال شد",
       data: { otp },
     });
-  } catch (err: any) {
-    console.error("Error in OTP sending:", {
-      error: err.message,
-      stack: err.stack,
-    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "unknown";
+    console.error("Error in OTP sending:", message);
     return NextResponse.json(
       { success: false, message: "خطای سرور" },
       { status: 500 }

@@ -1,7 +1,4 @@
-import {
-  NO_SHOW_GRACE_MINUTES,
-  PATIENT_REFUND_MIN_HOURS,
-} from "@/lib/booking-lifecycle";
+import { NO_SHOW_GRACE_MINUTES, PATIENT_REFUND_MIN_HOURS } from "@/lib/booking-lifecycle";
 
 /** Bump when terms text changes materially */
 export const DOCTOR_TERMS_VERSION = "2026-05-25";
@@ -43,6 +40,10 @@ export function getDoctorTermsSections(): DoctorTermsSection[] {
         "اطلاعات حرفه‌ای (نظام پزشکی، قیمت جلسه و ...) باید صحیح و به‌روز باشد.",
         "با تکمیل ثبت‌نام، این قوانین و مقررات را می‌پذیرید.",
       ],
+    },
+    {
+      title: " سهم شما در درآمد ",
+      items: ["سهم شما در درآمد به صورت ثابت ۸۰٪ است.", "درآمد شما به صورت روزانه واریز می‌شود."],
     },
   ];
 }

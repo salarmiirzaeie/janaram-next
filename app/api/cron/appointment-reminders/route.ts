@@ -1,21 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
-import {
-  formatSessionDateTimeFa,
-  getAppointmentStartUtc,
-} from "@/lib/booking-lifecycle";
-import { smsAppointmentReminder } from "@/lib/sms";
+
+// import clientPromise from "@/lib/mongodb";
+// import { ObjectId } from "mongodb";
+// import {
+//   formatSessionDateTimeFa,
+//   getAppointmentStartUtc,
+// } from "@/lib/booking-lifecycle";
+// import { smsAppointmentReminder } from "@/lib/sms";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
-/** Call periodically (e.g. every 15 min): POST with Authorization: Bearer CRON_SECRET */
+/** Cron reminders disabled — re-enable by restoring handler below */
 export async function POST(req: NextRequest) {
   const auth = req.headers.get("authorization");
   if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  return NextResponse.json({
+    success: true,
+    disabled: true,
+    message: "appointment-reminders cron is temporarily disabled",
+    sent24h: 0,
+    sent1h: 0,
+  });
+
+  /*
   const db = (await clientPromise).db("janaram-db");
   const appointments = db.collection("appointments");
   const users = db.collection("users");
@@ -90,4 +100,5 @@ export async function POST(req: NextRequest) {
     sent24h: sent24,
     sent1h: sent1,
   });
+  */
 }
