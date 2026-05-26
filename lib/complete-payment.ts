@@ -47,13 +47,9 @@ async function sendPaymentNotifications(
     const doctor = await psychologists.findOne({
       _id: new ObjectId(appointment.doctorId),
     });
-    const patient = await users.findOne({
-      _id: new ObjectId(appointment.userId),
-    });
     if (doctor?.phone) {
       await smsDoctorNewBooking({
         phone: doctor.phone,
-        patientName: patient?.name || "مراجع",
         sessionWhen,
       });
     }

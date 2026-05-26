@@ -65,14 +65,29 @@ export function isReviewWindowOpen(appointment: AppointmentLike): boolean {
   return new Date(appointment.reviewEligibleUntil) > new Date();
 }
 
+/** e.g. «۴ اردیبهشت ساعت ۱۶:۳۰» */
 export function formatSessionDateTimeFa(date: string, time: string): string {
   try {
     const d = new Date(`${date}T${time}:00+03:30`);
-    return new Intl.DateTimeFormat("fa-IR", {
-      timeZone: "Asia/Tehran",
-      dateStyle: "long",
-      timeStyle: "short",
+    const opts = {
+      timeZone: "Asia/Tehran" as const,
+      calendar: "persian" as const,
+    };
+    const day = new Intl.DateTimeFormat("fa-IR", {
+      ...opts,
+      day: "numeric",
     }).format(d);
+    const month = new Intl.DateTimeFormat("fa-IR", {
+      ...opts,
+      month: "long",
+    }).format(d);
+    const clock = new Intl.DateTimeFormat("fa-IR", {
+      timeZone: "Asia/Tehran",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(d);
+    return `${day} ${month} ساعت ${clock}`;
   } catch {
     return `${date} ${time}`;
   }
