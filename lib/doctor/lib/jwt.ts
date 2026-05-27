@@ -4,7 +4,7 @@ const SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export function signJwt(payload: any): Promise<string> {
   return new Promise((resolve, reject) => {
-    jwt.sign(payload, SECRET, { expiresIn: "30d" }, (err, token) => {
+    jwt.sign(payload, SECRET, { expiresIn: "365d" }, (err, token) => {
       if (err) reject(err);
       else resolve(token as string);
     });

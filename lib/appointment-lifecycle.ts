@@ -69,6 +69,11 @@ export async function applyDoctorStatusChange(
       }
     );
 
+    await psychologists.updateOne(
+      { _id: new ObjectId(appointment.doctorId) },
+      { $inc: { successfulConsultations: 1 } }
+    );
+
     await releaseDoctorEarningsFromAppointment(
       db,
       appointment._id.toString()
