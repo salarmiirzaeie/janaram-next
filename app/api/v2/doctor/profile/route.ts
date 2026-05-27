@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withDoctorAuth } from "@/lib/doctor/lib/middleware/withDoctorAuth";
+import { avatarApiUrl } from "@/lib/storage-url";
 
 // GET : دریافت اطلاعات پروفایل
 export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
@@ -52,7 +53,7 @@ export const GET = withDoctorAuth(async (req: NextRequest, doctor: any) => {
         bio: doctorDoc.bio || "",
         experience: doctorDoc.experience || 0,
         sessionPrice: doctorDoc.sessionPrice || 0,
-        avatar: doctorDoc.avatar || null,
+        avatar: avatarApiUrl(doctorDoc.avatar as string | null),
         categoryId: doctorDoc.categoryId || "individual",
         isActive: doctorDoc.isActive ?? true,
         createdAt: doctorDoc.createdAt,
@@ -204,7 +205,7 @@ export const PUT = withDoctorAuth(async (req: NextRequest, doctor: any) => {
         bio: updatedDoctor?.bio || "",
         experience: updatedDoctor?.experience || 0,
         sessionPrice: updatedDoctor?.sessionPrice || 0,
-        avatar: updatedDoctor?.avatar || null,
+        avatar: avatarApiUrl(updatedDoctor?.avatar as string | null),
         categoryId: updatedDoctor?.categoryId || "individual",
         status: updatedDoctor?.status || "pending",
         baleId: updatedDoctor?.baleId || null, // اضافه شد

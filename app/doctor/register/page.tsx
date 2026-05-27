@@ -70,11 +70,7 @@ export default function DoctorRegisterPage() {
     { id: "sexual", name: "مشاور جنسی" },
   ];
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     // برای فیلدهای عددی، ابتدا اعداد فارسی را به انگلیسی تبدیل کن
@@ -82,7 +78,7 @@ export default function DoctorRegisterPage() {
       const englishValue = toEnglishNumber(value);
       setFormData({ ...formData, [name]: englishValue });
     } else if (name === "phone" || name === "medicalLicenseNumber") {
-      // شماره تلفن و نظام پزشکی: فقط اعداد انگلیسی و بدون کاراکتر غیرمجاز
+      // شماره تلفن و نظام روانشناسی: فقط اعداد انگلیسی و بدون کاراکتر غیرمجاز
       const englishValue = toEnglishNumber(value).replace(/[^0-9]/g, "");
       setFormData({ ...formData, [name]: englishValue });
     } else {
@@ -119,7 +115,7 @@ export default function DoctorRegisterPage() {
     }
 
     if (!formData.medicalLicenseNumber) {
-      setError("شماره نظام پزشکی الزامی است");
+      setError("شماره نظام روانشناسی الزامی است");
       return { ok: false };
     }
 
@@ -147,19 +143,14 @@ export default function DoctorRegisterPage() {
     const sessionPriceNum = getEnglishNumberFromInput(formData.sessionPrice);
 
     if (sessionPriceNum <= 0) {
-      setError(
-        "قیمت هر جلسه نمی‌تواند صفر یا منفی باشد. لطفاً مبلغ معتبر وارد کنید."
-      );
+      setError("قیمت هر جلسه نمی‌تواند صفر یا منفی باشد. لطفاً مبلغ معتبر وارد کنید.");
       return { ok: false };
     }
 
     return { ok: true, experienceNum, sessionPriceNum };
   };
 
-  const submitRegistration = async (
-    experienceNum: number,
-    sessionPriceNum: number
-  ) => {
+  const submitRegistration = async (experienceNum: number, sessionPriceNum: number) => {
     setIsLoading(true);
 
     try {
@@ -187,9 +178,7 @@ export default function DoctorRegisterPage() {
 
       if (data.success) {
         setShowTermsModal(false);
-        setSuccess(
-          "ثبت‌نام با موفقیت انجام شد. پس از تأیید ادمین می‌توانید وارد پنل شوید."
-        );
+        setSuccess("ثبت‌نام با موفقیت انجام شد. پس از تأیید ادمین می‌توانید وارد پنل شوید.");
         setFormData({
           name: "",
           phone: "",
@@ -241,12 +230,7 @@ export default function DoctorRegisterPage() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-blue-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -256,9 +240,7 @@ export default function DoctorRegisterPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-800">ثبت‌نام روانشناس</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            اطلاعات خود را تکمیل کنید
-          </p>
+          <p className="text-gray-500 text-sm mt-1">اطلاعات خود را تکمیل کنید</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -298,7 +280,7 @@ export default function DoctorRegisterPage() {
 
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
-                شماره نظام پزشکی <span className="text-red-500">*</span>
+                شماره نظام روانشناسی <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -313,9 +295,7 @@ export default function DoctorRegisterPage() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">
-                آیدی بله (Bale ID)
-              </label>
+              <label className="block text-gray-700 font-medium mb-2 text-right">آیدی بله (Bale ID)</label>
               <input
                 type="text"
                 name="baleId"
@@ -361,9 +341,7 @@ export default function DoctorRegisterPage() {
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
                 تخصص‌ها <span className="text-red-500">*</span>
-                <span className="text-gray-400 text-xs mr-2">
-                  (می‌توانید چند مورد را انتخاب کنید)
-                </span>
+                <span className="text-gray-400 text-xs mr-2">(می‌توانید چند مورد را انتخاب کنید)</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {specialtiesList.map((item) => (
@@ -389,9 +367,7 @@ export default function DoctorRegisterPage() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">
-                دسته‌بندی
-              </label>
+              <label className="block text-gray-700 font-medium mb-2 text-right">دسته‌بندی</label>
               <select
                 name="categoryId"
                 value={formData.categoryId}
@@ -407,9 +383,7 @@ export default function DoctorRegisterPage() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">
-                سال‌های تجربه
-              </label>
+              <label className="block text-gray-700 font-medium mb-2 text-right">سال‌های تجربه</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -424,8 +398,7 @@ export default function DoctorRegisterPage() {
 
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-right">
-                قیمت هر جلسه (تومان)(نیم ساعت){" "}
-                <span className="text-red-500">*</span>
+                قیمت هر جلسه (تومان)(نیم ساعت) <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -437,15 +410,11 @@ export default function DoctorRegisterPage() {
                 className={doctorInputClassRight}
                 dir="ltr"
               />
-              <p className="text-gray-400 text-xs mt-1 text-right">
-                قیمت هر جلسه مشاوره به تومان (حداقل ۱ تومان)
-              </p>
+              <p className="text-gray-400 text-xs mt-1 text-right">قیمت هر جلسه مشاوره به تومان (حداقل ۱ تومان)</p>
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2 text-right">
-                بیوگرافی
-              </label>
+              <label className="block text-gray-700 font-medium mb-2 text-right">بیوگرافی</label>
               <textarea
                 name="bio"
                 value={formData.bio}
@@ -456,16 +425,8 @@ export default function DoctorRegisterPage() {
               />
             </div>
 
-            {error && (
-              <div className="bg-red-50 text-red-500 p-3 rounded-xl text-center text-sm">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="bg-green-50 text-green-600 p-3 rounded-xl text-center text-sm">
-                {success}
-              </div>
-            )}
+            {error && <div className="bg-red-50 text-red-500 p-3 rounded-xl text-center text-sm">{error}</div>}
+            {success && <div className="bg-green-50 text-green-600 p-3 rounded-xl text-center text-sm">{success}</div>}
 
             <button
               type="submit"
@@ -476,10 +437,7 @@ export default function DoctorRegisterPage() {
             </button>
 
             <div className="text-center">
-              <a
-                href="/doctor/login"
-                className="text-blue-500 hover:text-blue-600 text-sm"
-              >
+              <a href="/doctor/login" className="text-blue-500 hover:text-blue-600 text-sm">
                 قبلاً ثبت‌نام کرده‌اید؟ وارد شوید
               </a>
             </div>

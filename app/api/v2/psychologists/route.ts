@@ -5,6 +5,7 @@ import {
   getPersianWeekdayNumber,
   getTodayTehran,
 } from "@/lib/booking";
+import { avatarApiUrl } from "@/lib/storage-url";
 
 function getCategorySpecialty(categoryId: string): string | null {
   const categoryMap: Record<string, string> = {
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
     const today = getTodayTehran();
     const todayWeekday = getPersianWeekdayNumber(today);
 
-    const list = docs.map(({ _id, schedule, password, ...rest }) => {
+    const list = docs.map(({ _id, schedule, password, avatar, ...rest }) => {
       let availableToday = false;
       const todaySlots =
         schedule?.[todayWeekday] ?? schedule?.[String(todayWeekday)];
@@ -80,6 +81,7 @@ export async function GET(req: NextRequest) {
       return {
         id: _id.toString(),
         ...rest,
+        avatar: avatarApiUrl(avatar as string | null),
         availableToday,
       };
     });

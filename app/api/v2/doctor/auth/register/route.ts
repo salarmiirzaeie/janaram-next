@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       sessionPrice,
       bio,
       categoryId,
-      medicalLicenseNumber, // شماره نظام پزشکی (اجباری)
+      medicalLicenseNumber, // شماره نظام روانشناسی (اجباری)
       baleId, // آیدی بله (اختیاری)
       termsAccepted,
       termsVersion,
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
           success: false,
           message: "پذیرش قوانین و مقررات برای ثبت‌نام الزامی است",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
           success: false,
           message: "نسخه قوانین به‌روز شده است. لطفاً صفحه را رفرش کنید و دوباره تلاش کنید.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -46,25 +46,16 @@ export async function POST(req: NextRequest) {
 
     // اعتبارسنجی
     if (!name || !phone || !password) {
-      return NextResponse.json(
-        { success: false, message: "نام، شماره تلفن و رمز عبور الزامی هستند" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "نام، شماره تلفن و رمز عبور الزامی هستند" }, { status: 400 });
     }
 
-    // اعتبارسنجی شماره نظام پزشکی
+    // اعتبارسنجی شماره نظام روانشناسی
     if (!medicalLicenseNumber) {
-      return NextResponse.json(
-        { success: false, message: "شماره نظام پزشکی الزامی است" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "شماره نظام نظام روانشناسی الزامی است" }, { status: 400 });
     }
 
     if (password.length < 6) {
-      return NextResponse.json(
-        { success: false, message: "رمز عبور باید حداقل ۶ کاراکتر باشد" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "رمز عبور باید حداقل ۶ کاراکتر باشد" }, { status: 400 });
     }
 
     const db = (await clientPromise).db("janaram-db");
@@ -73,20 +64,17 @@ export async function POST(req: NextRequest) {
     // بررسی تکراری نبودن شماره تلفن
     const existingDoctor = await psychologists.findOne({ phone });
     if (existingDoctor) {
-      return NextResponse.json(
-        { success: false, message: "این شماره تلفن قبلاً ثبت شده است" },
-        { status: 409 }
-      );
+      return NextResponse.json({ success: false, message: "این شماره تلفن قبلاً ثبت شده است" }, { status: 409 });
     }
 
-    // بررسی تکراری نبودن شماره نظام پزشکی
+    // بررسی تکراری نبودن شماره نظام روانشناسی
     const existingLicense = await psychologists.findOne({
       medicalLicenseNumber,
     });
     if (existingLicense) {
       return NextResponse.json(
-        { success: false, message: "این شماره نظام پزشکی قبلاً ثبت شده است" },
-        { status: 409 }
+        { success: false, message: "این شماره نظام روانشناسی قبلاً ثبت شده است" },
+        { status: 409 },
       );
     }
 
@@ -135,15 +123,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message:
-        "ثبت‌نام با موفقیت انجام شد. پس از تأیید ادمین می‌توانید وارد پنل شوید.",
+      message: "ثبت‌نام با موفقیت انجام شد. پس از تأیید ادمین می‌توانید وارد پنل شوید.",
       data: { id: result.insertedId.toString(), status: "pending" },
     });
   } catch (err: any) {
     console.error("Error in doctor registration:", err);
-    return NextResponse.json(
-      { success: false, message: "خطای سرور" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
   }
 }

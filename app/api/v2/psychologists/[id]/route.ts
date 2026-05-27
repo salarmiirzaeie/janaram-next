@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { APPROVED_DOCTOR_FILTER } from "@/lib/booking";
+import { avatarApiUrl } from "@/lib/storage-url";
 
 export async function GET(
   req: NextRequest,
@@ -36,7 +37,7 @@ export async function GET(
         bio: rest.bio || "",
         experience: rest.experience || 0,
         sessionPrice: rest.sessionPrice || 0,
-        avatar: rest.avatar || null,
+        avatar: avatarApiUrl(rest.avatar as string | null),
         categoryId: rest.categoryId || "individual",
         medicalLicenseNumber: rest.medicalLicenseNumber || "",
         successfulConsultations: rest.successfulConsultations || 0,

@@ -58,23 +58,11 @@ export default function AdminPsychologistsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return (
-          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-            تأیید شده
-          </span>
-        );
+        return <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">تأیید شده</span>;
       case "pending":
-        return (
-          <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">
-            در انتظار تأیید
-          </span>
-        );
+        return <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">در انتظار تأیید</span>;
       case "rejected":
-        return (
-          <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
-            رد شده
-          </span>
-        );
+        return <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">رد شده</span>;
       default:
         return null;
     }
@@ -97,9 +85,7 @@ export default function AdminPsychologistsPage() {
               <button
                 onClick={() => setStatusFilter("all")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  statusFilter === "all"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  statusFilter === "all" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 همه
@@ -107,9 +93,7 @@ export default function AdminPsychologistsPage() {
               <button
                 onClick={() => setStatusFilter("pending")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  statusFilter === "pending"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  statusFilter === "pending" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 در انتظار تأیید
@@ -117,9 +101,7 @@ export default function AdminPsychologistsPage() {
               <button
                 onClick={() => setStatusFilter("approved")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  statusFilter === "approved"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  statusFilter === "approved" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 تأیید شده
@@ -127,9 +109,7 @@ export default function AdminPsychologistsPage() {
               <button
                 onClick={() => setStatusFilter("rejected")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  statusFilter === "rejected"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  statusFilter === "rejected" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 رد شده
@@ -139,7 +119,7 @@ export default function AdminPsychologistsPage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="جستجوی نام، تلفن یا شماره نظام پزشکی..."
+                placeholder="جستجوی نام، تلفن یا شماره نظام روانشناسی..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-80 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
@@ -168,32 +148,18 @@ export default function AdminPsychologistsPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
             </div>
           ) : psychologists.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              روانشناسی یافت نشد
-            </div>
+            <div className="p-12 text-center text-gray-500">روانشناسی یافت نشد</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr className="text-right">
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                      نام
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                      تخصص
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                      شماره نظام پزشکی
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                      تاریخ ثبت
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                      وضعیت
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
-                      عملیات
-                    </th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">نام</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">تخصص</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">شماره نظام روانشناسی</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">تاریخ ثبت</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">وضعیت</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">عملیات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -202,11 +168,7 @@ export default function AdminPsychologistsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {psych.avatar ? (
-                            <img
-                              src={psych.avatar}
-                              alt={psych.name}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
+                            <img src={psych.avatar} alt={psych.name} className="w-8 h-8 rounded-full object-cover" />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
                               <svg
@@ -224,9 +186,7 @@ export default function AdminPsychologistsPage() {
                               </svg>
                             </div>
                           )}
-                          <span className="text-sm font-medium text-gray-800">
-                            {psych.name}
-                          </span>
+                          <span className="text-sm font-medium text-gray-800">{psych.name}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
@@ -234,26 +194,19 @@ export default function AdminPsychologistsPage() {
                           ? psych.specialties.slice(0, 2).join("، ")
                           : psych.specialty || "-"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dir-ltr">
-                        {psych.medicalLicenseNumber || "-"}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatDate(psych.createdAt)}
-                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dir-ltr">{psych.medicalLicenseNumber || "-"}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{formatDate(psych.createdAt)}</td>
                       <td className="px-6 py-4">
                         {getStatusBadge(psych.status)}
-                        {psych.status === "rejected" &&
-                          psych.rejectionReason && (
-                            <div className="text-xs text-red-500 mt-1 max-w-[200px] truncate">
-                              {psych.rejectionReason}
-                            </div>
-                          )}
+                        {psych.status === "rejected" && psych.rejectionReason && (
+                          <div className="text-xs text-red-500 mt-1 max-w-[200px] truncate">
+                            {psych.rejectionReason}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() =>
-                            router.push(`/admin/psychologists/${psych.id}`)
-                          }
+                          onClick={() => router.push(`/admin/psychologists/${psych.id}`)}
                           className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs transition"
                         >
                           مشاهده جزئیات

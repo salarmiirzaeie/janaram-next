@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { withAdminAuth } from "@/lib/middleware/withAdmin";
+import { avatarApiUrl } from "@/lib/storage-url";
 
 export const GET = withAdminAuth(async (req: NextRequest) => {
   try {
@@ -29,9 +30,10 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
       .sort({ createdAt: -1 })
       .toArray();
 
-    const list = docs.map(({ _id, password, ...rest }) => ({
+    const list = docs.map(({ _id, password, avatar, ...rest }) => ({
       id: _id.toString(),
       ...rest,
+      avatar: avatarApiUrl(avatar as string | null),
     }));
 
     return NextResponse.json({ success: true, data: list });

@@ -101,23 +101,11 @@ export default function AdminPsychologistDetailPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return (
-          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-            تأیید شده
-          </span>
-        );
+        return <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">تأیید شده</span>;
       case "pending":
-        return (
-          <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
-            در انتظار تأیید
-          </span>
-        );
+        return <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">در انتظار تأیید</span>;
       case "rejected":
-        return (
-          <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-            رد شده
-          </span>
-        );
+        return <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">رد شده</span>;
       default:
         return null;
     }
@@ -187,15 +175,13 @@ export default function AdminPsychologistDetailPage() {
               </div>
             )}
           </div>
-          {psychologist.status === "rejected" &&
-            psychologist.rejectionReason && (
-              <div className="mt-4 p-3 bg-red-50 rounded-lg">
-                <p className="text-red-700 text-sm">
-                  <span className="font-bold">دلیل رد شدن:</span>{" "}
-                  {psychologist.rejectionReason}
-                </p>
-              </div>
-            )}
+          {psychologist.status === "rejected" && psychologist.rejectionReason && (
+            <div className="mt-4 p-3 bg-red-50 rounded-lg">
+              <p className="text-red-700 text-sm">
+                <span className="font-bold">دلیل رد شدن:</span> {psychologist.rejectionReason}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* اطلاعات شخصی */}
@@ -210,58 +196,32 @@ export default function AdminPsychologistDetailPage() {
                 <p className="text-gray-800 font-medium">{psychologist.name}</p>
               </div>
               <div>
-                <label className="block text-gray-500 text-sm">
-                  شماره تلفن
-                </label>
-                <p className="text-gray-800 font-medium dir-ltr">
-                  {psychologist.phone}
-                </p>
+                <label className="block text-gray-500 text-sm">شماره تلفن</label>
+                <p className="text-gray-800 font-medium dir-ltr">{psychologist.phone}</p>
               </div>
               <div>
-                <label className="block text-gray-500 text-sm">
-                  شماره نظام پزشکی
-                </label>
-                <p className="text-gray-800 font-medium">
-                  {psychologist.medicalLicenseNumber || "-"}
-                </p>
+                <label className="block text-gray-500 text-sm">شماره نظام روانشناسی</label>
+                <p className="text-gray-800 font-medium">{psychologist.medicalLicenseNumber || "-"}</p>
               </div>
               <div>
-                <label className="block text-gray-500 text-sm">
-                  تعداد مشاوره‌های موفق
-                </label>
-                <p className="text-gray-800 font-medium">
-                  {psychologist.successfulConsultations}
-                </p>
+                <label className="block text-gray-500 text-sm">تعداد مشاوره‌های موفق</label>
+                <p className="text-gray-800 font-medium">{psychologist.successfulConsultations}</p>
               </div>
               <div>
-                <label className="block text-gray-500 text-sm">
-                  سال‌های تجربه
-                </label>
-                <p className="text-gray-800 font-medium">
-                  {psychologist.experience} سال
-                </p>
+                <label className="block text-gray-500 text-sm">سال‌های تجربه</label>
+                <p className="text-gray-800 font-medium">{psychologist.experience} سال</p>
               </div>
               <div>
-                <label className="block text-gray-500 text-sm">
-                  قیمت هر جلسه
-                </label>
-                <p className="text-gray-800 font-medium">
-                  {psychologist.sessionPrice.toLocaleString()} تومان
-                </p>
+                <label className="block text-gray-500 text-sm">قیمت هر جلسه</label>
+                <p className="text-gray-800 font-medium">{psychologist.sessionPrice.toLocaleString()} تومان</p>
               </div>
               <div>
                 <label className="block text-gray-500 text-sm">دسته‌بندی</label>
-                <p className="text-gray-800 font-medium">
-                  {psychologist.categoryId || "-"}
-                </p>
+                <p className="text-gray-800 font-medium">{psychologist.categoryId || "-"}</p>
               </div>
               <div>
-                <label className="block text-gray-500 text-sm">
-                  تاریخ ثبت‌نام
-                </label>
-                <p className="text-gray-800 font-medium">
-                  {formatDate(psychologist.createdAt)}
-                </p>
+                <label className="block text-gray-500 text-sm">تاریخ ثبت‌نام</label>
+                <p className="text-gray-800 font-medium">{formatDate(psychologist.createdAt)}</p>
               </div>
             </div>
           </div>
@@ -274,20 +234,14 @@ export default function AdminPsychologistDetailPage() {
           </div>
           <div className="p-6">
             <div className="flex flex-wrap gap-2">
-              {psychologist.specialties &&
-              psychologist.specialties.length > 0 ? (
+              {psychologist.specialties && psychologist.specialties.length > 0 ? (
                 psychologist.specialties.map((spec, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
-                  >
+                  <span key={index} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
                     {spec}
                   </span>
                 ))
               ) : (
-                <p className="text-gray-500">
-                  {psychologist.specialty || "تخصصی ثبت نشده"}
-                </p>
+                <p className="text-gray-500">{psychologist.specialty || "تخصصی ثبت نشده"}</p>
               )}
             </div>
           </div>
@@ -299,9 +253,7 @@ export default function AdminPsychologistDetailPage() {
             <h2 className="text-lg font-bold text-gray-800">بیوگرافی</h2>
           </div>
           <div className="p-6">
-            <p className="text-gray-700 leading-relaxed">
-              {psychologist.bio || "بیوگرافی ثبت نشده است"}
-            </p>
+            <p className="text-gray-700 leading-relaxed">{psychologist.bio || "بیوگرافی ثبت نشده است"}</p>
           </div>
         </div>
 
@@ -309,18 +261,14 @@ export default function AdminPsychologistDetailPage() {
         {showRejectModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-md w-full p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
-                رد کردن روانشناس
-              </h2>
-              <p className="text-gray-600 mb-4">
-                لطفاً دلیل رد کردن این روانشناس را وارد کنید:
-              </p>
+              <h2 className="text-xl font-bold text-gray-800 mb-4">رد کردن روانشناس</h2>
+              <p className="text-gray-600 mb-4">لطفاً دلیل رد کردن این روانشناس را وارد کنید:</p>
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={4}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="مثال: مدارک ناقص، شماره نظام پزشکی نامعتبر، ..."
+                placeholder="مثال: مدارک ناقص، شماره نظام روانشناسی نامعتبر، ..."
               />
               <div className="flex gap-3 mt-6">
                 <button
