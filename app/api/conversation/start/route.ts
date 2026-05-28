@@ -5,24 +5,17 @@ import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
 
-const retryRequest = async (
-  fn: () => Promise<any>,
-  maxAttempts = 3,
-  delay = 1000
-) => {
+const retryRequest = async (fn: () => Promise<any>, maxAttempts = 3, delay = 1000) => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error: any) {
-      if (attempt === maxAttempts || error.response?.status === 429)
-        throw error;
-      await new Promise((resolve) =>
-        setTimeout(resolve, delay * Math.pow(2, attempt - 1))
-      ); // Exponential backoff
+      if (attempt === maxAttempts || error.response?.status === 429) throw error;
+      await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, attempt - 1))); // Exponential backoff
     }
   }
 };
-const isDisableConversation = true;
+const isDisableConversation = false;
 // Environment variable validation
 const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_CHATBOT_KEY_NEW || "";
 if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not defined");
@@ -51,10 +44,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
 
     const { message } = await req.json();
     if (!message || typeof message !== "string") {
-      return NextResponse.json(
-        { success: false, message: "پیام نامعتبر است" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "پیام نامعتبر است" }, { status: 400 });
     }
 
     const users = db.collection<User>("users");
@@ -66,44 +56,28 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       userId = new ObjectId(user.sub);
     } catch (err) {
       console.error("Invalid user.sub format:", user.sub, err);
-      return NextResponse.json(
-        { success: false, message: "شناسه کاربر نامعتبر است" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "شناسه کاربر نامعتبر است" }, { status: 400 });
     }
 
     let userDoc = await users.findOne({ _id: userId });
     if (!userDoc || !userDoc._id) {
       console.error("User not found or missing _id for user.sub:", user.sub);
-      return NextResponse.json(
-        { success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, message: "کاربر یافت نشد یا شناسه معتبر نیست" }, { status: 404 });
     }
 
     const now = new Date();
-    if (
-      userDoc.plan !== "free" &&
-      userDoc.subscriptionEndDate &&
-      userDoc.subscriptionEndDate < now
-    ) {
+    if (userDoc.plan !== "free" && userDoc.subscriptionEndDate && userDoc.subscriptionEndDate < now) {
       await users.updateOne(
         { _id: userId },
         {
           $set: { plan: "free", updatedAt: now },
           $unset: { subscriptionEndDate: "", subscriptionDuration: "" },
-        }
+        },
       );
       userDoc = await users.findOne({ _id: userId });
       if (!userDoc || !userDoc._id) {
-        console.error(
-          "User not found after update for _id:",
-          userId.toString()
-        );
-        return NextResponse.json(
-          { success: false, message: "کاربر یافت نشد" },
-          { status: 404 }
-        );
+        console.error("User not found after update for _id:", userId.toString());
+        return NextResponse.json({ success: false, message: "کاربر یافت نشد" }, { status: 404 });
       }
     }
 
@@ -111,76 +85,68 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     let conversationCount = 0;
 
     if (userDoc.plan === "free") {
-      conversationCount =
-        userDoc.conversationCount?.date === today
-          ? userDoc.conversationCount.count
-          : 0;
+      conversationCount = userDoc.conversationCount?.date === today ? userDoc.conversationCount.count : 0;
 
-      // if (conversationCount >= 10) {
+      if (conversationCount >= 10) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "تعداد مکالمه‌های رایگان امروز شما به پایان رسیده است. لطفاً فردا دوباره تلاش کنید یا حساب خود را ارتقا دهید.",
+          },
+          { status: 429 },
+        );
+      }
 
-      return NextResponse.json(
+      if (conversationCount === 8) {
+        preLimitWarning =
+          "\n\n(❗️ توجه: شما فقط یک مکالمه رایگان دیگر امروز فرصت دارید. با ارتقاء به Pro، نه تنها چت نامحدود می‌گیرید، بلکه به گزارش‌های تحلیلی حال روحی‌تان هم دسترسی پیدا می‌کنید!)";
+      }
+
+      await users.updateOne(
+        { _id: userId },
         {
-          success: false,
-          message: "سرویس روانشناس من فقط مخصوص کاربران Pro می باشد. 🌱",
+          $set: {
+            conversationCount: { date: today, count: conversationCount + 1 },
+            updatedAt: new Date(),
+          },
         },
-        { status: 429 }
       );
-
-      // }
-
-      // if (conversationCount === 8) {
-      //   preLimitWarning =
-      //     "\n\n(❗️ توجه: شما فقط یک مکالمه رایگان دیگر امروز فرصت دارید. با ارتقاء به Pro، نه تنها چت نامحدود می‌گیرید، بلکه به گزارش‌های تحلیلی حال روحی‌تان هم دسترسی پیدا می‌کنید!)";
-      // } else
-
-      // await users.updateOne(
-      //   { _id: userId },
-      //   {
-      //     $set: {
-      //       conversationCount: { date: today, count: conversationCount + 1 },
-      //       updatedAt: new Date(),
-      //     },
-      //   }
-      // );
     }
     // شمارش پیام‌ها برای کنترل اینکه یکی‌در‌میان سؤال بپرسد
     const messageCount = (await chatHistory.countDocuments({ userId })) + 1;
 
     // اگر شماره فرد است (۱، ۳، ۵، ...) سؤال بپرس، وگرنه نه
-    const shouldAskQuestion = messageCount % 2 === 1;
+    // const shouldAskQuestion = messageCount % 2 === 1;
 
-    const questionInstruction = shouldAskQuestion
-      ? "- در پایان پاسخ خود **یک سؤال ساده و انگیزشی** بپرس تا گفتگو ادامه پیدا کند."
-      : "";
+    // const questionInstruction = shouldAskQuestion
+    //   ? "- در پایان پاسخ خود **یک سؤال ساده و انگیزشی** بپرس تا گفتگو ادامه پیدا کند."
+    //   : "";
 
     const systemPrompt = `شما یک روانشناس فارسی زبان هوش مصنوعی حرفه‌ای و همراه کاربر هستید. 
   - پاسخ شما صرفاً باید به زبان فارسی روان باشد و از به کار بردن هرگونه کلمه انگلیسی یا فینگلیش جداً خودداری کنید.
   - نام مخاطب شما ${userDoc.name} است، از او با نامش یاد کنید تا رابطه صمیمانه‌تر شود. 
   - پاسخ‌ها باید در حد چهار جمله جمله کوتاه و مفید و واضح برای کاربر فارسی زبان باشند. 
   - هدف: ارائه راهکار عملی کوچک برای بهبود حال روحی، تمرکز بر آرامش، مدیتیشن و خودشناسی. 
-  ${questionInstruction}
+ 
   - لحن شما دوستانه، حمایتگر و امیدوارکننده باشد.`;
-    let messages: { role: "system" | "user" | "assistant"; content: string }[] =
-      [{ role: "system", content: systemPrompt }];
-    const recentMessages = await chatHistory
-      .find({ userId: userId })
-      .sort({ timestamp: -1 })
-      .limit(2)
-      .toArray();
+    let messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      { role: "system", content: systemPrompt },
+    ];
+    const recentMessages = await chatHistory.find({ userId: userId }).sort({ timestamp: -1 }).limit(2).toArray();
 
     if (recentMessages.length > 0) {
       messages.push(
         ...recentMessages.flatMap((msg) => [
           { role: "user" as const, content: msg.user },
           { role: "assistant" as const, content: msg.ai },
-        ])
+        ]),
       );
     }
 
     messages.push({ role: "user", content: message });
 
     const models = [
-      "arcee-ai/trinity-large-preview:free",
       "z-ai/glm-4.5-air",
       "openai/gpt-oss-20b:free",
 
@@ -196,7 +162,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           client.chat.completions.create({
             model,
             messages,
-          })
+          }),
         );
         break;
       } catch (apiError: any) {
@@ -211,10 +177,9 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
           return NextResponse.json(
             {
               success: false,
-              message:
-                "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است",
+              message: "حداکثر تعداد درخواست‌های روزانه برای حساب رایگان به پایان رسیده است",
             },
-            { status: 429 }
+            { status: 429 },
           );
         }
         if (model === models[models.length - 1]) {
@@ -223,36 +188,22 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
               success: false,
               message: "خطای سرور هوش مصنوعی. لطفاً دوباره تلاش کنید.",
             },
-            { status: apiError.response?.status || 502 }
+            { status: apiError.response?.status || 502 },
           );
         }
         continue;
       }
     }
 
-    if (
-      !completion ||
-      !completion.choices ||
-      !Array.isArray(completion.choices) ||
-      completion.choices.length === 0
-    ) {
+    if (!completion || !completion.choices || !Array.isArray(completion.choices) || completion.choices.length === 0) {
       console.error("Invalid OpenRouter response:", completion);
-      return NextResponse.json(
-        { success: false, message: "پاسخ نامعتبری از هوش مصنوعی دریافت شد" },
-        { status: 500 }
-      );
+      return NextResponse.json({ success: false, message: "پاسخ نامعتبری از هوش مصنوعی دریافت شد" }, { status: 500 });
     }
 
     let aiResponse = completion.choices[0].message?.content;
     if (!aiResponse) {
-      console.error(
-        "No content in OpenRouter response:",
-        completion.choices[0]
-      );
-      return NextResponse.json(
-        { success: false, message: "پاسخی از هوش مصنوعی دریافت نشد" },
-        { status: 500 }
-      );
+      console.error("No content in OpenRouter response:", completion.choices[0]);
+      return NextResponse.json({ success: false, message: "پاسخی از هوش مصنوعی دریافت نشد" }, { status: 500 });
     }
 
     // --- افزودن اخطار پیش از محدودیت به پاسخ هوش مصنوعی ---
@@ -278,9 +229,6 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
       error: err.message,
       stack: err.stack,
     });
-    return NextResponse.json(
-      { success: false, message: "خطای سرور" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: "خطای سرور" }, { status: 500 });
   }
 });

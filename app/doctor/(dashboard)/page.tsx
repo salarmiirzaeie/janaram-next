@@ -13,6 +13,8 @@ import {
   Banknote,
   ListChecks,
   ArrowLeft,
+  Smartphone,
+  ExternalLink,
 } from "lucide-react";
 
 type QuickStat = {
@@ -187,7 +189,7 @@ export default function DoctorDashboard() {
 
   return (
     <div className="space-y-6" dir="rtl">
-      <div className="bg-gradient-to-l from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-linear-to-l from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
         <h1 className="text-2xl font-bold mb-1">
           خوش آمدید، دکتر {doctorName || "عزیز"}
         </h1>
@@ -199,6 +201,47 @@ export default function DoctorDashboard() {
             day: "numeric",
           })}
         </p>
+      </div>
+
+      <div className="bg-linear-to-l from-indigo-600 via-violet-600 to-fuchsia-600 rounded-2xl shadow-lg p-5 sm:p-6 text-white overflow-hidden relative">
+        <div className="absolute -left-8 -top-10 w-32 h-32 rounded-full bg-white/10 blur-xl" />
+        <div className="absolute -right-8 -bottom-10 w-36 h-36 rounded-full bg-white/10 blur-xl" />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 bg-white/15 px-3 py-1 rounded-full text-xs sm:text-sm">
+            <Smartphone className="w-4 h-4" />
+            <span>معرفی شما در اپ جانارام</span>
+          </div>
+
+          <h2 className="text-lg sm:text-xl font-extrabold mt-3 leading-relaxed">
+            پروفایل شما در اپ جانارام نمایش داده می‌شود و کاربران می‌توانند مستقیم
+            برای شما نوبت رزرو کنند.
+          </h2>
+          <p className="text-white/90 text-sm sm:text-base mt-2 leading-relaxed">
+            با کامل کردن پروفایل و جدول زمانی، شانس دیده‌شدن و دریافت رزروهای
+            بیشتر را بالا ببرید.
+          </p>
+
+          <div className="flex flex-wrap gap-3 mt-4">
+            <Link
+              href="https://myket.ir/app/com.salarmiirzapour.Janaram"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white text-indigo-700 font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-indigo-50 transition"
+            >
+              مشاهده در مایکت
+              <ExternalLink className="w-4 h-4" />
+            </Link>
+            <Link
+              href="https://cafebazaar.ir/app/com.salarmiirzapour.Janaram"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white/15 border border-white/40 text-white font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-white/25 transition"
+            >
+              مشاهده در کافه‌بازار
+              <ExternalLink className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
       </div>
 
       <div
@@ -337,7 +380,7 @@ export default function DoctorDashboard() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div
-                    className={`bg-gradient-to-br ${item.accent} p-3 rounded-xl text-white shadow-sm`}
+                    className={`bg-linear-to-br ${item.accent} p-3 rounded-xl text-white shadow-sm`}
                   >
                     <Icon className="w-6 h-6" />
                   </div>
