@@ -7,7 +7,7 @@ import semver from "semver"; // For version comparison
 export const GET = async (req: NextRequest) => {
   try {
     const version = req.nextUrl.pathname.split("/").pop(); // Extract version from URL
-    const currentVersion = "1.2.3";
+    const currentVersion = "1.2.4";
 
     // Check if version is provided and valid
     if (!version || version.trim() === "") {

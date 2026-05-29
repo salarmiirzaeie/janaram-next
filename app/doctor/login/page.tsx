@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   doctorInputClass,
   doctorInputClassLtr,
@@ -10,10 +10,18 @@ import {
 
 export default function DoctorLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("reset") === "success") {
+      setSuccess("رمز عبور با موفقیت تغییر کرد. اکنون وارد شوید.");
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +89,15 @@ export default function DoctorLoginPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-2 text-right">رمز عبور</label>
+            <div className="flex items-center justify-between mb-2">
+              <Link
+                href="/doctor/login/forgot-password"
+                className="text-blue-500 hover:text-blue-600 text-sm"
+              >
+                فراموشی رمز عبور
+              </Link>
+              <label className="block text-gray-700 font-medium text-right">رمز عبور</label>
+            </div>
             <input
               type="password"
               value={password}
@@ -92,6 +108,9 @@ export default function DoctorLoginPage() {
             />
           </div>
 
+          {success && (
+            <div className="bg-green-50 text-green-600 p-3 rounded-xl text-center text-sm">{success}</div>
+          )}
           {error && <div className="bg-red-50 text-red-500 p-3 rounded-xl text-center text-sm">{error}</div>}
 
           <button
