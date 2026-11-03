@@ -12,7 +12,9 @@ export function withAdminAuth(handler: (req: NextRequest, admin: any) => Promise
     }
 
     const admin = verifyToken(token);
-    if (!admin) {
+    // A valid signature is not enough: ordinary user and doctor tokens are signed
+    // with the same secret, so the role claim must be checked explicitly.
+    if (!admin || admin.role !== "admin") {
       return NextResponse.json({ success: false, message: "دسترسی غیرمجاز: فقط ادمین‌ها مجاز هستند" }, { status: 403 });
     }
 

@@ -43,3 +43,7 @@ next-env.d.ts
 /.cloud/
 .cloud/
 /.cloud
+# secrets: never commit
+*firebase-adminsdk*.json
+*serviceAccount*.json
+!.env.example

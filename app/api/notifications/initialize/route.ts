@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { User } from "@/lib/types/user";
 import { withAuth } from "@/lib/middleware/withAuth";
 import { getMessaging } from "firebase-admin/messaging";
+import { ensureFirebase } from "@/lib/notifications";
 
 export const POST = withAuth(async (req: NextRequest, user: any) => {
   try {
@@ -52,6 +53,7 @@ export const POST = withAuth(async (req: NextRequest, user: any) => {
     }
 
     // 🔑 Subscribe the token to "new-content" topic
+    ensureFirebase();
     await getMessaging().subscribeToTopic([pushToken], "new-content");
 
     return NextResponse.json({
